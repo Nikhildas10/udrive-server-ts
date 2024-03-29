@@ -2,12 +2,12 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface ICustomer extends Document {
   name: string;
-  contactNumber: string;
-  abroadNumber: string;
-  nativeNumber: string;
+  contactNumber: number;
+  abroadNumber: number;
+  nativeNumber: number;
   email: string;
   passportNumber: string;
-  pincode: string;
+  pincode: number;
   status: string;
   address: string;
   locality: string;
@@ -20,13 +20,13 @@ const customerSchema: Schema = new Schema({
     type: String,
   },
   contactNumber: {
-    type: String,
+    type: Number,
   },
   abroadNumber: {
-    type: String,
+    type: Number,
   },
   nativeNumber: {
-    type: String,
+    type: Number,
   },
   email: {
     type: String,
@@ -35,7 +35,7 @@ const customerSchema: Schema = new Schema({
     type: String,
   },
   pincode: {
-    type: String,
+    type: Number,
   },
   status: {
     type: String,
