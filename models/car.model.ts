@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface ICar extends Document {
-  carName: string;
   modelName: string;
   manufacturingCompany: string;
   yearOfManufacturing: number;
@@ -16,10 +15,6 @@ export interface ICar extends Document {
 }
 
 const carSchema = new Schema<ICar>({
-  carName: {
-    type: String,
-    required: true,
-  },
   modelName: {
     type: String,
     required: true,

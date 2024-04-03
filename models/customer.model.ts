@@ -24,14 +24,13 @@ const customerSchema: Schema = new Schema({
   contactNumber: {
     type: Number,
     required: true,
+    message:"Contact number should contain minimum 10 digits."
   },
   abroadNumber: {
     type: Number,
-    required: true,
   },
   nativeNumber: {
     type: Number,
-    required: true,
   },
   email: {
     type: String,
