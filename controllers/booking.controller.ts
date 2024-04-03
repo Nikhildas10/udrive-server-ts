@@ -6,6 +6,7 @@ import * as carService from "../services/car.service";
 import * as customerService from "../services/customer.service";
 import customerModel from "../models/customer.model";
 import BookingModel from "../models/booking.model";
+import employeeModel from "../models/employee.model ";
 
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -15,6 +16,12 @@ export const createBooking = catchAsyncErrors(
       const customerId = customerSelected._id 
 
       const customer = await customerModel.findById(customerId);
+      if (!customer) {
+        return next(new ErrorHandler("Customer not found", 404));
+      }
+      const employeeId = employeeSelected._id 
+
+      const employee = await employeeModel.findById(customerId);
       if (!customer) {
         return next(new ErrorHandler("Customer not found", 404));
       }
