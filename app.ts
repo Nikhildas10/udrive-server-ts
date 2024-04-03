@@ -24,7 +24,7 @@ app.use(
 app.use("/api", userRouter);
 app.use("/api/employee", employeeRouter);
 app.use("/api", carRouter);
-app.use("/api", bookingRouter);
+app.use("/api/booking", bookingRouter);
 app.use("/api/customer", customerRouter);
 
 

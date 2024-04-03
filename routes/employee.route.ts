@@ -5,10 +5,10 @@ import {
   updateProfilePicture,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middleware/auth";
-import { blockEmployee, createEmployee, deleteEmployee, editEmployee, getAllEmployeesInfo, getSingleEmployeeInfo, loginEmployee, logoutEmployee, updateAcessToken } from "../controllers/employee.controller";
+import { blockEmployee, createEmployee, deleteEmployee, editEmployee, forgotPassword, getAllEmployeesInfo, getSingleEmployeeInfo, getUserInfo, loginEmployee, logoutEmployee, updateAcessToken } from "../controllers/employee.controller";
 const employeeRouter = express.Router();
 employeeRouter.post("/create", createEmployee);
-employeeRouter.get("/get-all-employee",isAuthenticated, getAllEmployeesInfo);
+employeeRouter.get("/get-all-employee", getAllEmployeesInfo);
 employeeRouter.get("/get-single-employee/:id", getSingleEmployeeInfo);
 employeeRouter.put("/edit/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), editEmployee);
 employeeRouter.put("/update-pass/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), editEmployee);
@@ -17,6 +17,8 @@ employeeRouter.post("/logout", isAuthenticated,authorizeRoles("admin","superAdmi
 employeeRouter.put("/block/:id", isAuthenticated,authorizeRoles("admin","superAdmin","user"), blockEmployee);
 employeeRouter.post("/login", loginEmployee);
 employeeRouter.get("/refresh-employee", updateAcessToken);
+employeeRouter.get("/me", isAuthenticated, getUserInfo);
+employeeRouter.post("/forgot-password", forgotPassword);
 
 
 

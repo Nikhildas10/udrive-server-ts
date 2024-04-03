@@ -8,13 +8,13 @@ export const createCustomer = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await customerModel.create(req.body);
-      res.status(201).json({ success: true, data });
+      res.status(200).json({ success: true, data });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-
+ 
 export const updateCustomer = async (
   req: Request,
   res: Response,

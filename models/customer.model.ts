@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { IBooking } from "./booking.model";
 
 export interface ICustomer extends Document {
   name: string;
@@ -8,51 +9,61 @@ export interface ICustomer extends Document {
   email: string;
   passportNumber: string;
   pincode: number;
-  status: string;
+  state: string;
   address: string;
   locality: string;
   cityOrDistrict: string;
-  bookings: mongoose.Types.ObjectId[];
+  bookings: IBooking[];
 }
 
 const customerSchema: Schema = new Schema({
   name: {
     type: String,
+    required: true,
   },
   contactNumber: {
     type: Number,
+    required: true,
   },
   abroadNumber: {
     type: Number,
+    required: true,
   },
   nativeNumber: {
     type: Number,
+    required: true,
   },
   email: {
     type: String,
+    required: true,
   },
   passportNumber: {
     type: String,
+    required: true,
   },
   pincode: {
     type: Number,
+    required: true,
   },
-  status: {
+  state: {
     type: String,
+    required: true,
   },
   address: {
     type: String,
+    required: true,
   },
   locality: {
     type: String,
+    required: true,
   },
   cityOrDistrict: {
     type: String,
+    required: true,
   },
   bookings: [
     {
-      type: mongoose.Types.ObjectId,
-      ref: "Booking",
+      type: Object,
     },
   ],
 });

@@ -4,27 +4,24 @@ import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import * as bookingService from "../services/booking.service";
 import * as carService from "../services/car.service";
 import * as customerService from "../services/customer.service";
+import customerModel from "../models/customer.model";
+import BookingModel from "../models/booking.model";
 
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { carId, customerId, ...bookingData } = req.body;
+      const { customerSelected, ...bookingData } = req.body;
 
-      // const car = await carService.get_car_by_id(carId);
-      // if (!car) {
-      //   return next(new ErrorHandler("Car not found", 404));
-      // }
+      const customerId = customerSelected._id 
 
-      const customer = await customerService.getSingleCustomer(customerId);
+      const customer = await customerModel.findById(customerId);
       if (!customer) {
         return next(new ErrorHandler("Customer not found", 404));
       }
-      const booking = await bookingService.createBooking(bookingData);
 
-      // car.bookings.push(booking._id);
-      // await car.save();
+      const booking = await BookingModel.create(bookingData);
 
-      customer.bookings.push(booking._id);
+      customer.bookings.push(booking);
       await customer.save();
 
       res.status(201).json({ success: true, booking });
@@ -33,7 +30,6 @@ export const createBooking = catchAsyncErrors(
     }
   }
 );
-
 export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -52,3 +48,14 @@ export const deleteBooking = catchAsyncErrors(
     }
   }
 );
+
+export const getAllBooking=catchAsyncErrors(
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      const bookings=await BookingModel.find({})
+      res.status(200).json({success:true,bookings})
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+)

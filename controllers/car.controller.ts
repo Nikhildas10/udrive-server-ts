@@ -77,7 +77,7 @@ export const getCars = async (
 ) => {
   try {
     const cars: ICar[] = await CarModel.find({});
-    res.json(cars);
+    res.status(200).json(cars);
   } catch (err: any) {
     next(new Error(`Error getting cars: ${err.message}`));
   }
@@ -91,7 +91,7 @@ export const deleteCars = async (
   try {
     const { _id } = req.params;
     const deletedCar = await CarModel.findByIdAndDelete(_id);
-    res.json({ message: "Car deleted successfully", deletedCar });
+    res.status(200).json({ message: "Car deleted successfully", deletedCar });
   } catch (err: any) {
     next(new Error(`Error deleting car: ${err.message}`));
   }
@@ -136,7 +136,7 @@ export const updateCars = async (
       { new: true }
     );
 
-    res.json(updatedCar);
+    res.status(200).json(updatedCar);
   } catch (err: any) {
     next(new Error(`Error updating car: ${err.message}`));
   }

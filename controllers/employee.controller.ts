@@ -1,5 +1,6 @@
 require("dotenv").config();
 import { Request, Response, NextFunction } from "express";
+import nodeMailer, { Transporter } from "nodemailer";
 import userModel, { IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
@@ -9,10 +10,13 @@ import {
   refreshTokenOptions,
   sendToken,
 } from "../utils/jwt";
+import ejs from "ejs"
 import { redis } from "../utils/redis";
 import { getUserById } from "../services/user.services";
 import cloudinary from "cloudinary";
 import employeeModel from "../models/employee.model ";
+import { sendMail } from "../utils/sendMail";
+import path from "path";
 interface IRegistrationBody {
   name: string;
   email: string;
@@ -113,6 +117,9 @@ export const loginEmployee = catchAsyncErrors(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email and password", 400));
       }
+      if (user.isBlocked) {
+        return next(new ErrorHandler("Your account is blocked", 400));
+      }
       sendToken(user, 200, res);
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -164,7 +171,7 @@ export const blockEmployee = catchAsyncErrors(
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
-      user.isBlocked = !isBlocked;
+      user.isBlocked = isBlocked;
       await user.save();
       res.status(201).json({
         success: true,
@@ -307,6 +314,7 @@ export const updateAcessToken = catchAsyncErrors(
       res.status(200).json({
         status: "success",
         accessToken,
+        user,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -329,23 +337,6 @@ interface ISocialAuthBody {
   name: string;
   avatar: string;
 }
-//social auth
-// export const socialAuth = catchAsyncErrors(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { email, name, avatar } = req.body as ISocialAuthBody;
-//       const user = await userModel.findOne({ email });
-//       if (!user) {
-//         const newUser = await userModel.create({ email, name, avatar });
-//         sendToken(newUser, 200, res);
-//       } else {
-//         sendToken(user, 200, res);
-//       }
-//     } catch (err: any) {
-//       return next(new ErrorHandler(err.message, 400));
-//     }
-//   }
-// );
 
 //updateUserInfo
 
@@ -375,6 +366,57 @@ export const updateUserInfo = catchAsyncErrors(
       });
       await user?.save();
       await redis.set(userId, JSON.stringify(user));
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+interface IForgotPasswordRequest {
+  email: string;
+}
+
+export const forgotPassword = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body as IForgotPasswordRequest;
+
+      // Check if user with the given email exists
+      const user = await employeeModel.findOne({ email });
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+
+      // Create a password reset token with limited expiration time
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET_KEY as string,
+        { expiresIn: "15m" } // Example: Expires in 15 minutes
+      );
+
+      // Construct the URL for the password reset link
+      const resetPasswordLink = `http://localhost:8000/api/employee/reset-password/${token}`;
+
+      // Prepare data for the email template
+      const data = { resetPasswordLink };
+
+      // Render the email template
+      const html = await ejs.renderFile(
+        path.join(__dirname, "../mails/reset-password.ejs"),
+        data
+      );
+
+      // Send the email
+      await sendMail({
+        email: user.email,
+        subject: "Reset Your Password",
+        html,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Password reset link has been sent to your email",
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
@@ -460,4 +502,3 @@ export const updateProfilePicture = catchAsyncErrors(
     }
   }
 );
-
