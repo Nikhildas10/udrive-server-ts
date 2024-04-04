@@ -3,6 +3,7 @@ require("dotenv").config();
 import mongoose, { Document, Model, Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { IBooking } from "./booking.model";
 const emailRegexPattern: RegExp =
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -18,6 +19,7 @@ export interface IEmployee extends Document {
   comparePassword: (password: string) => Promise<boolean>;
   signAccessToken: () => string;
   signRefreshToken: () => string;
+  bookings: IBooking[];
 }
 
 const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
@@ -44,7 +46,7 @@ const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
       type: String,
       select: false,
     },
-    isBlocked:{
+    isBlocked: {
       type: Boolean,
       default: false,
     },
@@ -74,7 +76,13 @@ const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
         "Access list must have at least one item",
       ],
     },
+    bookings: [
+      {
+        type: Object,
+      },
+    ],
   },
+
   { timestamps: true }
 );
 

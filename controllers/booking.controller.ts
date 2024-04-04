@@ -11,7 +11,7 @@ import employeeModel from "../models/employee.model ";
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected, ...bookingData } = req.body;
+      const { customerSelected,employeeSelected, ...bookingData } = req.body;
 
       const customerId = customerSelected._id 
 
@@ -21,14 +21,15 @@ export const createBooking = catchAsyncErrors(
       }
       const employeeId = employeeSelected._id 
 
-      const employee = await employeeModel.findById(customerId);
-      if (!customer) {
+      const employee = await employeeModel.findById(employeeId);
+      if (!employee) {
         return next(new ErrorHandler("Customer not found", 404));
       }
 
       const booking = await BookingModel.create(bookingData);
 
       customer.bookings.push(booking);
+      employee.bookings.push(booking);
       await customer.save();
 
       res.status(201).json({ success: true, booking });
