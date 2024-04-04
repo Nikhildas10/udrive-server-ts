@@ -26,6 +26,7 @@ export const accessTokenOptions: ITokenOptions = {
   maxAge: accessTokenExpires * 60 * 60 * 1000,
   httpOnly: true,
   sameSite: "none",
+  secure:true
 };
 //3 days
 export const refreshTokenOptions: ITokenOptions = {
@@ -36,6 +37,7 @@ export const refreshTokenOptions: ITokenOptions = {
    for navigation or redirection but information
    cannot be accessed without the consent of the owner */
   sameSite: "none",
+  secure:true
 };
 /**/
 
