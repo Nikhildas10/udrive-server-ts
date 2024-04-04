@@ -8,7 +8,7 @@ interface ITokenOptions {
   expires: Date;
   maxAge: number;
   httpOnly: boolean;
-  sameSite: "lax" | "strict" | "none" | undefined;
+  sameSite: "none" | "strict" | "none" | undefined;
   secure?: boolean;
 }
 
@@ -25,17 +25,17 @@ export const accessTokenOptions: ITokenOptions = {
   expires: new Date(Date.now() + accessTokenExpires * 60 * 60 * 1000),
   maxAge: accessTokenExpires * 60 * 60 * 1000,
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: "none",
 };
 //3 days
 export const refreshTokenOptions: ITokenOptions = {
   expires: new Date(Date.now() + refreshTokenExpires * 24 * 60 * 60 * 1000),
   maxAge: refreshTokenExpires * 24 * 60 * 60 * 1000,
   httpOnly: true,
-  /* lax means cookie can be used 
+  /* none means cookie can be used 
    for navigation or redirection but information
    cannot be accessed without the consent of the owner */
-  sameSite: "lax",
+  sameSite: "none",
 };
 /**/
 
