@@ -108,37 +108,39 @@ export const editCar = catchAsyncErrors(
         return next(new ErrorHandler("Invalid car ID", 400));
       }
 
-      const files = await req.files;
-      const urlArray: string[] = [];
+      const rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
+        folder: "cars",
+      });
 
-      for (let index: any = 0; index < files.length; index++) {
-        const file = files[index];
-        const fileUri = getDataUri(file);
+      const insurancePolicyResult = await cloudinary.uploader.upload(
+        req.body.insurancePolicy,
+        {
+          folder: "cars",
+        }
+      );
 
-        const myCloud: any = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload(fileUri, (error, result) => {
-            if (error) {
-              reject(new Error(`Error uploading file: ${error.message}`));
-            } else {
-              resolve(result);
-            }
-          });
-        });
+      const pollutionCertificateResult = await cloudinary.uploader.upload(
+        req.body.pollutionCertificate,
+        {
+          folder: "cars",
+        }
+      );
 
-        urlArray.push(myCloud.secure_url);
-      }
-
-      const updatedCarData = { ...req.body };
-
-      if (urlArray.length >= 1) {
-        updatedCarData.rcBook = urlArray[0];
-      }
-      if (urlArray.length >= 2) {
-        updatedCarData.insurancePolicy = urlArray[1];
-      }
-      if (urlArray.length >= 3) {
-        updatedCarData.pollutionCertificate = urlArray[2];
-      }
+      const updatedCarData = {
+        ...req.body,
+        rcBook: {
+          public_id: rcBookResult.public_id,
+          url: rcBookResult.secure_url,
+        },
+        insurancePolicy: {
+          public_id: insurancePolicyResult.public_id,
+          url: insurancePolicyResult.secure_url,
+        },
+        pollutionCertificate: {
+          public_id: pollutionCertificateResult.public_id,
+          url: pollutionCertificateResult.secure_url,
+        },
+      };
 
       const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
         new: true,
