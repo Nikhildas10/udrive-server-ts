@@ -11,15 +11,15 @@ import employeeModel from "../models/employee.model ";
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected,employeeSelected, ...bookingData } = req.body;
+      const { customerSelected, employeeSelected, ...bookingData } = req.body;
 
-      const customerId = customerSelected._id 
+      const customerId = customerSelected._id;
 
       const customer = await customerModel.findById(customerId);
       if (!customer) {
         return next(new ErrorHandler("Customer not found", 404));
       }
-      const employeeId = employeeSelected._id 
+      const employeeId = employeeSelected._id;
 
       const employee = await employeeModel.findById(employeeId);
       if (!employee) {
@@ -31,6 +31,7 @@ export const createBooking = catchAsyncErrors(
       customer.bookings.push(booking);
       employee.bookings.push(booking);
       await customer.save();
+      await employee.save();
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
@@ -43,10 +44,16 @@ export const deleteBooking = catchAsyncErrors(
     try {
       const { id } = req.params;
 
-      const deletedBooking = await bookingService.deleteBookingById(id);
+      const deletedBooking = await BookingModel.findByIdAndDelete(id);
       if (!deletedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }
+      const booking = await BookingModel.findById(id);
+      const customer = await customerModel.findById(booking.customerSelected);
+
+      // const customerDeleting = await customerModel.bookings.findByIdAndDelete({
+      //   id,
+      // });
 
       res
         .status(200)
@@ -57,13 +64,54 @@ export const deleteBooking = catchAsyncErrors(
   }
 );
 
-export const getAllBooking=catchAsyncErrors(
-  async(req:Request,res:Response,next:NextFunction)=>{
+export const getAllBooking = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings=await BookingModel.find({})
-      res.status(200).json({success:true,bookings})
+      const bookings = await BookingModel.find({});
+      res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
-)
+);
+
+export const getSingleBooking = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("Please provide a booking ID", 400));
+      }
+      const booking = await BookingModel.findById(id);
+      if (!booking) {
+        return next(new ErrorHandler("Booking not found", 404));
+      }
+      res.status(200).json({ success: true, booking });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const editBooking = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("invalid booking id", 400));
+      }
+      const updatedBookingData = req.body;
+      const updatedBooking = await BookingModel.findByIdAndUpdate(
+        id,
+        updatedBookingData,
+        {new:true}
+      );
+      if (!updatedBooking) {
+        return next(new ErrorHandler("Booking not found", 404));
+      }
+      res.status(200).json({ success: true, updatedBooking });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);

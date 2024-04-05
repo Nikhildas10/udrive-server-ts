@@ -3,13 +3,17 @@ import { isAuthenticated } from "../middleware/auth";
 import {
   createBooking,
   deleteBooking,
+  editBooking,
   getAllBooking,
+  getSingleBooking,
 } from "../controllers/booking.controller";
 
 const bookingRouter = express.Router();
 
 bookingRouter.post("/create", isAuthenticated, createBooking);
 bookingRouter.delete("/delete/:id", isAuthenticated, deleteBooking);
-bookingRouter.get("/get-all-bookings", isAuthenticated, getAllBooking);
+bookingRouter.get("/get-all-booking", isAuthenticated, getAllBooking);
+bookingRouter.get("/get-single-booking/:id", isAuthenticated, getSingleBooking);
+bookingRouter.put("/edit/:id", isAuthenticated, editBooking);
 
 export default bookingRouter;

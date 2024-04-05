@@ -1,44 +1,34 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
+import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import CarModel, { ICar } from "../models/car.model";
-import cloudinary, { UploadApiResponse } from "cloudinary";
-import { upload } from "../middleware/multer";
+import getDataUri from "../utils/dataUri";
+import cloudinary from "../utils/cloudinary";
+import ErrorHandler from "../utils/ErrorHandler";
 
-const cloudinaryFileUploadMethod = async (file: string) => {
-  return new Promise((resolve, reject) => {
-    cloudinary.v2.uploader.upload(
-      file,
-      (error: any, result: UploadApiResponse) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result.secure_url);
-        }
-      }
-    );
-  });
-};
-
-export const addCars = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const addCars = catchAsyncErrors(async (req: Request, res: Response) => {
   try {
-    if (!req.files || req.files.length !== 3) {
-      return res.status(400).json({ message: "Please upload exactly 3 files" });
-    }
+    const files = await req.files;
+    const urlArray: string[] = [];
 
-    const urls: string[] = [];
+    for (let index: any = 0; index < files.length; index++) {
+      const file = files[index];
+      const fileUri = getDataUri(file);
 
-    for (const file of req.files as Express.Multer.File[]) {
-      const { path } = file;
-      const newPath = await cloudinaryFileUploadMethod(path);
-      // urls.push(newPath);
+      const myCloud: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(fileUri, (error, result) => {
+          if (error) {
+            reject(new Error(`Error uploading file: ${error.message}`));
+          } else {
+            resolve(result);
+          }
+        });
+      });
+
+      urlArray.push(myCloud.secure_url);
     }
 
     const {
-      carName,
-      modelName,
+      name,
       manufacturingCompany,
       yearOfManufacturing,
       fuelType,
@@ -48,96 +38,140 @@ export const addCars = async (
       serviceInterval,
     } = req.body;
 
-    const newCar: ICar = new CarModel({
-      carName,
-      modelName,
+    const newCarData: Partial<ICar> = {
+      name,
       manufacturingCompany,
       yearOfManufacturing,
       fuelType,
       transmission,
-      insurance: new Date(insurance),
-      lastService: new Date(lastService),
-      serviceInterval,
-      rcBook: urls[0] || "",
-      insurancePolicy: urls[1] || "",
-      pollutionCertificate: urls[2] || "", 
-    });
-
-    const savedCar = await newCar.save();
-    res.status(201).json(savedCar);
-  } catch (err: any) {
-    next(new Error(`Error adding cars: ${err.message}`));
-  }
-};
-
-export const getCars = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const cars: ICar[] = await CarModel.find({});
-    res.status(200).json(cars);
-  } catch (err: any) {
-    next(new Error(`Error getting cars: ${err.message}`));
-  }
-};
-
-export const deleteCars = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { _id } = req.params;
-    const deletedCar = await CarModel.findByIdAndDelete(_id);
-    res.status(200).json({ message: "Car deleted successfully", deletedCar });
-  } catch (err: any) {
-    next(new Error(`Error deleting car: ${err.message}`));
-  }
-};
-
-export const updateCars = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { _id } = req.params;
-    const {
-      model,
-      companyName,
-      manufacturingYear,
-      fuel,
-      transmission,
-      insuranceDate,
+      insurance,
       lastService,
       serviceInterval,
-      rcBook,
-      pollutionCertificate,
-      insurancePolicy,
-    } = req.body;
+    };
 
-    const updatedCar = await CarModel.findByIdAndUpdate(
-      _id,
-      {
-        model,
-        companyName,
-        manufacturingYear,
-        fuel,
-        transmission,
-        insuranceDate,
-        lastService,
-        serviceInterval,
-        rcBook,
-        pollutionCertificate,
-        insurancePolicy,
-      },
-      { new: true }
-    );
+    const newCar: ICar = new CarModel(newCarData);
 
-    res.status(200).json(updatedCar);
-  } catch (err: any) {
-    next(new Error(`Error updating car: ${err.message}`));
+    if (urlArray.length >= 1) {
+      newCar.rcBook = urlArray[0];
+    }
+    if (urlArray.length >= 2) {
+      newCar.insurancePolicy = urlArray[1];
+    }
+    if (urlArray.length >= 3) {
+      newCar.pollutionCertificate = urlArray[2];
+    }
+
+    const savedCar = await newCar.save();
+    res.status(201).json({ success: true, car: savedCar });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-};
+});
+
+export const getAllCar = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cars = await CarModel.find({});
+      res.status(200).json({ succes: true, cars });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getSingleCar = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("Please provide a car ID", 400));
+      }
+      const cars = await CarModel.findById(id);
+      if (!cars) {
+        return next(new ErrorHandler("car not found", 404));
+      }
+      res.status(200).json({ success: true, cars });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const editCar = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("Invalid car ID", 400));
+      }
+
+      const files = await req.files;
+      const urlArray: string[] = [];
+
+      for (let index: any = 0; index < files.length; index++) {
+        const file = files[index];
+        const fileUri = getDataUri(file);
+
+        const myCloud: any = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload(fileUri, (error, result) => {
+            if (error) {
+              reject(new Error(`Error uploading file: ${error.message}`));
+            } else {
+              resolve(result);
+            }
+          });
+        });
+
+        urlArray.push(myCloud.secure_url);
+      }
+
+      const updatedCarData = { ...req.body };
+
+      if (urlArray.length >= 1) {
+        updatedCarData.rcBook = urlArray[0];
+      }
+      if (urlArray.length >= 2) {
+        updatedCarData.insurancePolicy = urlArray[1];
+      }
+      if (urlArray.length >= 3) {
+        updatedCarData.pollutionCertificate = urlArray[2];
+      }
+
+      const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
+        new: true,
+      });
+
+      if (!updatedCar) {
+        return next(new ErrorHandler("Car not found", 404));
+      }
+
+      res.status(200).json({ success: true, updatedCar });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const deleteCar = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("invalid car id", 400));
+      }
+      const deletedCar = await CarModel.findByIdAndDelete(id);
+      if (!deletedCar) {
+        return next(new ErrorHandler("car not found", 404));
+      }
+      res
+        .status(200)
+        .json({
+          success: true,
+          message: "car has been deleted successfully",
+          deletedCar,
+        });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);

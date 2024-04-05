@@ -7,12 +7,22 @@ import employeeRouter from "./routes/employee.route";
 import carRouter from "./routes/car.route";
 import bookingRouter from "./routes/booking.route";
 import customerRouter from "./routes/customer.route";
-
+require("dotenv").config();
 export const app = express();
 
+
+
 //body-parser
-app.use(express.json({ limit: "50mb" }));
-app.use(cookieParser());
+app.use(express.json({ limit: "50mb"}));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use((req, res, next) => {
+  res.setTimeout(600000, () => {
+    console.log("Request has timed out.");
+    res.status(408).send("Request Timeout");
+  });
+  next();
+});
+  app.use(cookieParser());
 app.use(
   cors({
     origin: ["https://u-drive-three.vercel.app","http://localhost:3030"],
@@ -23,7 +33,7 @@ app.use(
 
 app.use("/api", userRouter);
 app.use("/api/employee", employeeRouter);
-app.use("/api", carRouter);
+app.use("/api/car", carRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/customer", customerRouter);
 
