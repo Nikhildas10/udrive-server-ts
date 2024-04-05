@@ -8,7 +8,7 @@ import { addCars, deleteCar, editCar, getAllCar, getSingleCar } from "../control
 const carRouter = express.Router();
 
 carRouter.post("/create",isAuthenticated,addCars);
-carRouter.put("/edit/:id", isAuthenticated,multipleUpload.array("files"), editCar);
+carRouter.put("/edit/:id", isAuthenticated, editCar);
 carRouter.delete("/delete/:id", isAuthenticated, deleteCar);
 carRouter.get("/get-all-cars", isAuthenticated, getAllCar);
 carRouter.get("/get/:id", isAuthenticated, getSingleCar);
