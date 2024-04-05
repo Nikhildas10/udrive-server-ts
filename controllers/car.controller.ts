@@ -5,29 +5,42 @@ import getDataUri from "../utils/dataUri";
 import cloudinary from "../utils/cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
 
-export const addCars = catchAsyncErrors(async (req: Request, res: Response) => {
+export const addCars =catchAsyncErrors( async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const {
+    name,
+    manufacturingCompany,
+    yearOfManufacturing,
+    fuelType,
+    transmission,
+    insurance,
+    lastService,
+    serviceInterval,
+  } = req.body;
+
   try {
-    const files = await req.files;
-    const urlArray: string[] = [];
+    const rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
+      folder: "cars",
+    });
 
-    for (let index: any = 0; index < files.length; index++) {
-      const file = files[index];
-      const fileUri = getDataUri(file);
+    const insurancePolicyResult = await cloudinary.uploader.upload(
+      req.body.insurancePolicy,
+      {
+        folder: "cars",
+      }
+    );
 
-      const myCloud: any = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload(fileUri, (error, result) => {
-          if (error) {
-            reject(new Error(`Error uploading file: ${error.message}`));
-          } else {
-            resolve(result);
-          }
-        });
-      });
+    const pollutionCertificateResult = await cloudinary.uploader.upload(
+      req.body.pollutionCertificate,
+      {
+        folder: "cars",
+      }
+    );
 
-      urlArray.push(myCloud.secure_url);
-    }
-
-    const {
+    const newCarData = {
       name,
       manufacturingCompany,
       yearOfManufacturing,
@@ -36,35 +49,25 @@ export const addCars = catchAsyncErrors(async (req: Request, res: Response) => {
       insurance,
       lastService,
       serviceInterval,
-    } = req.body;
-
-    const newCarData: Partial<ICar> = {
-      name,
-      manufacturingCompany,
-      yearOfManufacturing,
-      fuelType,
-      transmission,
-      insurance,
-      lastService,
-      serviceInterval,
+      rcBook: {
+        public_id: rcBookResult.public_id,
+        url: rcBookResult.secure_url,
+      },
+      insurancePolicy: {
+        public_id: insurancePolicyResult.public_id,
+        url: insurancePolicyResult.secure_url,
+      },
+      pollutionCertificate: {
+        public_id: pollutionCertificateResult.public_id,
+        url: pollutionCertificateResult.secure_url,
+      },
     };
 
     const newCar: ICar = new CarModel(newCarData);
-
-    if (urlArray.length >= 1) {
-      newCar.rcBook = urlArray[0];
-    }
-    if (urlArray.length >= 2) {
-      newCar.insurancePolicy = urlArray[1];
-    }
-    if (urlArray.length >= 3) {
-      newCar.pollutionCertificate = urlArray[2];
-    }
-
     const savedCar = await newCar.save();
-    res.status(201).json({ success: true, car: savedCar });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(201).json({ success: true, savedCar });
+  } catch (err: any) {
+    return next(new ErrorHandler(err.message, 400));
   }
 });
 
@@ -163,13 +166,11 @@ export const deleteCar = catchAsyncErrors(
       if (!deletedCar) {
         return next(new ErrorHandler("car not found", 404));
       }
-      res
-        .status(200)
-        .json({
-          success: true,
-          message: "car has been deleted successfully",
-          deletedCar,
-        });
+      res.status(200).json({
+        success: true,
+        message: "car has been deleted successfully",
+        deletedCar,
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }

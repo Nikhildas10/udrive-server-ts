@@ -9,13 +9,12 @@ export interface ICar extends Document {
   insurance: Date;
   lastService: Date;
   serviceInterval: string;
-  rcBook?: string;
-  insurancePolicy?: string;
-  pollutionCertificate?: string;
+  rcBook?: object;
+  insurancePolicy?: object;
+  pollutionCertificate?: object;
 }
 
 const carSchema = new Schema<ICar>({
-
   name: {
     type: String,
     required: true,
@@ -42,9 +41,18 @@ const carSchema = new Schema<ICar>({
   serviceInterval: {
     type: String,
   },
-  rcBook: String,
-  insurancePolicy: String,
-  pollutionCertificate: String,
+  rcBook: {
+    public_id: String,
+    url: String,
+  },
+  insurancePolicy: {
+    public_id: String,
+    url: String,
+  },
+  pollutionCertificate: {
+    public_id: String,
+    url: String,
+  },
 });
 
 const CarModel: Model<ICar> = mongoose.model<ICar>("Car", carSchema);
