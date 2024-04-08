@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { IBooking } from "./booking.model";
 
 export interface ICar extends Document {
   name: string;
@@ -12,6 +13,7 @@ export interface ICar extends Document {
   rcBook?: object;
   insurancePolicy?: object;
   pollutionCertificate?: object;
+  bookings:IBooking[]
 }
 
 const carSchema = new Schema<ICar>({
@@ -53,6 +55,11 @@ const carSchema = new Schema<ICar>({
     public_id: String,
     url: String,
   },
+  bookings: [
+    {
+      type: Object,
+    },
+  ],
 });
 
 const CarModel: Model<ICar> = mongoose.model<ICar>("Car", carSchema);

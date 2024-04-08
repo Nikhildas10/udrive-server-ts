@@ -5,42 +5,9 @@ import getDataUri from "../utils/dataUri";
 import cloudinary from "../utils/cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
 
-export const addCars =catchAsyncErrors( async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const {
-    name,
-    manufacturingCompany,
-    yearOfManufacturing,
-    fuelType,
-    transmission,
-    insurance,
-    lastService,
-    serviceInterval,
-  } = req.body;
-
-  try {
-    const rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
-      folder: "cars",
-    });
-
-    const insurancePolicyResult = await cloudinary.uploader.upload(
-      req.body.insurancePolicy,
-      {
-        folder: "cars",
-      }
-    );
-
-    const pollutionCertificateResult = await cloudinary.uploader.upload(
-      req.body.pollutionCertificate,
-      {
-        folder: "cars",
-      }
-    );
-
-    const newCarData = {
+export const addCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {
       name,
       manufacturingCompany,
       yearOfManufacturing,
@@ -49,27 +16,72 @@ export const addCars =catchAsyncErrors( async (
       insurance,
       lastService,
       serviceInterval,
-      rcBook: {
-        public_id: rcBookResult.public_id,
-        url: rcBookResult.secure_url,
-      },
-      insurancePolicy: {
-        public_id: insurancePolicyResult.public_id,
-        url: insurancePolicyResult.secure_url,
-      },
-      pollutionCertificate: {
-        public_id: pollutionCertificateResult.public_id,
-        url: pollutionCertificateResult.secure_url,
-      },
-    };
+    } = req.body;
 
-    const newCar: ICar = new CarModel(newCarData);
-    const savedCar = await newCar.save();
-    res.status(201).json({ success: true, savedCar });
-  } catch (err: any) {
-    return next(new ErrorHandler(err.message, 400));
+    try {
+      let rcBookResult:any, insurancePolicyResult:any, pollutionCertificateResult:any;
+
+      if (req.body.rcBook) {
+        rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
+          folder: "cars",
+        });
+      }
+
+      if (req.body.insurancePolicy) {
+        insurancePolicyResult = await cloudinary.uploader.upload(
+          req.body.insurancePolicy,
+          {
+            folder: "cars",
+          }
+        );
+      }
+
+      if (req.body.pollutionCertificate) {
+        pollutionCertificateResult = await cloudinary.uploader.upload(
+          req.body.pollutionCertificate,
+          {
+            folder: "cars",
+          }
+        );
+      }
+
+      const newCarData = {
+        name,
+        manufacturingCompany,
+        yearOfManufacturing,
+        fuelType,
+        transmission,
+        insurance,
+        lastService,
+        serviceInterval,
+        rcBook: rcBookResult
+          ? {
+              public_id: rcBookResult.public_id,
+              url: rcBookResult.secure_url,
+            }
+          : undefined,
+        insurancePolicy: insurancePolicyResult
+          ? {
+              public_id: insurancePolicyResult.public_id,
+              url: insurancePolicyResult.secure_url,
+            }
+          : undefined,
+        pollutionCertificate: pollutionCertificateResult
+          ? {
+              public_id: pollutionCertificateResult.public_id,
+              url: pollutionCertificateResult.secure_url,
+            }
+          : undefined,
+      };
+
+      const newCar: ICar = new CarModel(newCarData);
+      const savedCar = await newCar.save();
+      res.status(201).json({ success: true, savedCar });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
   }
-});
+);
 
 export const getAllCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -102,45 +114,42 @@ export const getSingleCar = catchAsyncErrors(
 
 export const editCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
     try {
       const { id } = req.params;
       if (!id) {
         return next(new ErrorHandler("Invalid car ID", 400));
       }
 
-      const rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
-        folder: "cars",
-      });
+      console.log("editCar", req.body);
+      const updatedCarData: any = { ...req.body };
 
-      const insurancePolicyResult = await cloudinary.uploader.upload(
-        req.body.insurancePolicy,
-        {
-          folder: "cars",
+      // Function to upload image to Cloudinary if it doesn't have a public ID
+      const uploadImageIfNotExists = async (imageField: string) => {
+        if (!req.body[imageField]) return; // If field is empty, do nothing
+        if (!req.body[imageField].public_id) {
+          const result = await cloudinary.uploader.upload(
+            req.body[imageField],
+            {
+              folder: "cars",
+            }
+          );
+          updatedCarData[imageField] = {
+            public_id: result.public_id,
+            url: result.secure_url,
+          };
+        } else {
+          // If the image already has a public ID, retain its data
+          updatedCarData[imageField] = req.body[imageField];
         }
-      );
-
-      const pollutionCertificateResult = await cloudinary.uploader.upload(
-        req.body.pollutionCertificate,
-        {
-          folder: "cars",
-        }
-      );
-
-      const updatedCarData = {
-        ...req.body,
-        rcBook: {
-          public_id: rcBookResult.public_id,
-          url: rcBookResult.secure_url,
-        },
-        insurancePolicy: {
-          public_id: insurancePolicyResult.public_id,
-          url: insurancePolicyResult.secure_url,
-        },
-        pollutionCertificate: {
-          public_id: pollutionCertificateResult.public_id,
-          url: pollutionCertificateResult.secure_url,
-        },
       };
+
+      // Check and upload each image if necessary
+      await Promise.all([
+        uploadImageIfNotExists("rcBook"),
+        uploadImageIfNotExists("insurancePolicy"),
+        uploadImageIfNotExists("pollutionCertificate"),
+      ]);
 
       const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
         new: true,

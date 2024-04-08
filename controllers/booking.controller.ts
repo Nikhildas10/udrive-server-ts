@@ -7,31 +7,46 @@ import * as customerService from "../services/customer.service";
 import customerModel from "../models/customer.model";
 import BookingModel from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
+import CarModel from "../models/car.model";
 
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected, employeeSelected, ...bookingData } = req.body;
+      const {
+        customerSelected,
+        carSelected,
+        employeeSelected,
+        ...bookingData
+      } = req.body;
 
-      const customerId = customerSelected._id;
-
+      //pass  reference data to cutsomer
+      const customerId = customerSelected?._id;
       const customer = await customerModel.findById(customerId);
       if (!customer) {
         return next(new ErrorHandler("Customer not found", 404));
       }
-      const employeeId = employeeSelected._id;
 
+      //pass reference data to employee
+      const employeeId = employeeSelected?._id;
       const employee = await employeeModel.findById(employeeId);
       if (!employee) {
-        return next(new ErrorHandler("Customer not found", 404));
+        return next(new ErrorHandler("employee not found", 404));
       }
 
+      //pass reference data to cars
+      const carId = carSelected?._id;
+      const car = await CarModel.findById(carId);
+      if (!car) {
+        return next(new ErrorHandler("car not found", 404));
+      }
       const booking = await BookingModel.create(bookingData);
 
       customer.bookings.push(booking);
       employee.bookings.push(booking);
+      car.bookings.push(booking);
       await customer.save();
       await employee.save();
+      await car.save();
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
@@ -104,7 +119,7 @@ export const editBooking = catchAsyncErrors(
       const updatedBooking = await BookingModel.findByIdAndUpdate(
         id,
         updatedBookingData,
-        {new:true}
+        { new: true }
       );
       if (!updatedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
