@@ -27,7 +27,7 @@ export const createBooking = catchAsyncErrors(
       }
 
       //pass reference data to employee
-      const employeeId = employeeSelected?._id;
+    const employeeId = req.user?._id || "";    
       const employee = await employeeModel.findById(employeeId);
       if (!employee) {
         return next(new ErrorHandler("employee not found", 404));
