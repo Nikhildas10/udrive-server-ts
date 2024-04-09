@@ -65,36 +65,37 @@ export const deleteBooking = catchAsyncErrors(
       }
 
       const customer = await customerModel.findById(
-        booking.customerSelected?._id
+        booking?.customerSelected?._id
       );
+      
       if (customer) {
-        customer.bookings = customer.bookings.filter(
-          (bookingId) => bookingId.toString() !== id
+        customer.bookings = customer?.bookings?.filter(
+          (bookingId) => bookingId._id.toString() !== id
         );
         await customer.save();
       }
- 
+      
       const employee = await employeeModel.findById(
         req.user?.id
       );
       if (employee) {
         employee.bookings = employee.bookings.filter(
-          (bookingId) => bookingId.toString() !== id
+          (bookingId) => bookingId._id.toString() !== id
         );
         await employee.save();
       }
-
-      const car = await CarModel.findById(booking.carSelected?._id);
+      
+      const car = await CarModel.findById(booking?.carSelected?._id);
       if (car) {
         car.bookings = car.bookings.filter(
-          (bookingId) => bookingId.toString() !== id
+          (bookingId) => bookingId._id.toString() !== id
         );
         await car.save();
       }
-
+  
       res
-        .status(200)
-        .json({ success: true, message: "Booking deleted successfully" });
+      .status(200)
+      .json({ success: true, message: "Booking deleted successfully" });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
     }
