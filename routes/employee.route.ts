@@ -1,17 +1,16 @@
 import express from "express";
 import {
   socialAuth,
-  updatePassword,
   updateProfilePicture,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middleware/auth";
-import { blockEmployee, createEmployee, deleteEmployee, editEmployee, forgotPassword, getAllEmployeesInfo, getSingleEmployeeInfo, getUserInfo, loginEmployee, logoutEmployee, updateAcessToken } from "../controllers/employee.controller";
+import { blockEmployee, createEmployee, deleteEmployee, editEmployee, forgotPassword, getAllEmployeesInfo, getSingleEmployeeInfo, getUserInfo, loginEmployee, logoutEmployee, updateAcessToken, updatePassword, updatePasswords } from "../controllers/employee.controller";
 const employeeRouter = express.Router();
 employeeRouter.post("/create", createEmployee);
 employeeRouter.get("/get-all-employee", getAllEmployeesInfo);
 employeeRouter.get("/get-single-employee/:id", getSingleEmployeeInfo);
 employeeRouter.put("/edit/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), editEmployee);
-employeeRouter.put("/update-pass/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), editEmployee);
+employeeRouter.put("/update-pass/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), updatePassword);
 employeeRouter.delete("/delete/:id",isAuthenticated,authorizeRoles("admin","superAdmin","user"), deleteEmployee);
 employeeRouter.post("/logout", isAuthenticated,authorizeRoles("admin","superAdmin","user"), logoutEmployee);
 employeeRouter.put("/block/:id", isAuthenticated,authorizeRoles("admin","superAdmin","user"), blockEmployee);

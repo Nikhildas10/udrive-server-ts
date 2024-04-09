@@ -10,7 +10,7 @@ import {
   refreshTokenOptions,
   sendToken,
 } from "../utils/jwt";
-import ejs from "ejs"
+import ejs from "ejs";
 import { redis } from "../utils/redis";
 import { getUserById } from "../services/user.services";
 import cloudinary from "cloudinary";
@@ -423,16 +423,15 @@ export const forgotPassword = catchAsyncErrors(
   }
 );
 
-interface IUpdatePassword {
-  oldPassword?: string;
-  newPassword?: string;
-}
-
 export const updatePassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { oldPassword, newPassword } = req.body as IUpdatePassword;
-      const user = await userModel.findById(req.user?._id).select("+password");
+      console.log(req.body);
+
+      const { oldPassword, newPassword } = req.body;
+      const user = await employeeModel
+        .findById(req.user?._id)
+        .select("+password");
 
       if (user?.password === undefined) {
         return next(new ErrorHandler("Invalid ", 400));
