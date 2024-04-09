@@ -27,7 +27,7 @@ export const createBooking = catchAsyncErrors(
       }
 
       //pass reference data to employee
-    const employeeId = req.user?._id || "";    
+      const employeeId = req.user?._id || "";
       const employee = await employeeModel.findById(employeeId);
       if (!employee) {
         return next(new ErrorHandler("employee not found", 404));
@@ -63,18 +63,91 @@ export const deleteBooking = catchAsyncErrors(
       if (!deletedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }
-      const booking = await BookingModel.findById(id);
-      const customer = await customerModel.findById(booking.customerSelected);
 
-      // const customerDeleting = await customerModel.bookings.findByIdAndDelete({
-      //   id,
-      // });
+      const customer = await customerModel.findById(
+        deletedBooking.customerSelected
+      );
+      if (customer) {
+        customer.bookings = customer.bookings.filter(
+          (bookingId) => bookingId !== id
+        );
+        await customer.save();
+      }
 
+      const employee = await employeeModel.findById(
+        deletedBooking.employeeSelected
+      );
+      if (employee) {
+        employee.bookings = employee.bookings.filter(
+          (bookingId) => bookingId !== id
+        );
+        await employee.save();
+      }
+
+      const car = await CarModel.findById(deletedBooking.carSelected);
+      if (car) {
+        car.bookings = car.bookings.filter((bookingId) => bookingId !== id);
+        await car.save();
+      }
       res
         .status(200)
         .json({ success: true, message: "Booking deleted successfully" });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+export const editBooking = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("Invalid booking ID", 400));
+      }
+
+      const updatedBookingData = req.body;
+      const updatedBooking = await BookingModel.findByIdAndUpdate(
+        id,
+        updatedBookingData,
+        { new: true }
+      );
+      if (!updatedBooking) {
+        return next(new ErrorHandler("Booking not found", 404));
+      }
+
+      const { customerSelected, carSelected } = updatedBooking;
+
+      // edit customer bookings
+      if (customerSelected?._id) {
+        const customerId = customerSelected._id;
+        await customerModel.findByIdAndUpdate(
+          customerId,
+          { $set: { bookings: updatedBooking } },
+          { new: true }
+        );
+      }
+
+      // edit car bookings
+      if (carSelected?._id) {
+        const carId = carSelected._id;
+        await CarModel.findByIdAndUpdate(
+          carId,
+          { $set: { bookings: updatedBooking } },
+          { new: true }
+        );
+      }
+      //edit employee bookings
+      const employeeId = req.user?._id || "";
+      await employeeModel.findByIdAndUpdate(
+        employeeId,
+        { $set: { bookings: updatedBooking } },
+        { new: true }
+      );
+
+      res.status(200).json({ success: true, updatedBooking });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
     }
   }
 );
@@ -102,29 +175,6 @@ export const getSingleBooking = catchAsyncErrors(
         return next(new ErrorHandler("Booking not found", 404));
       }
       res.status(200).json({ success: true, booking });
-    } catch (err: any) {
-      return next(new ErrorHandler(err.message, 400));
-    }
-  }
-);
-
-export const editBooking = catchAsyncErrors(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      if (!id) {
-        return next(new ErrorHandler("invalid booking id", 400));
-      }
-      const updatedBookingData = req.body;
-      const updatedBooking = await BookingModel.findByIdAndUpdate(
-        id,
-        updatedBookingData,
-        { new: true }
-      );
-      if (!updatedBooking) {
-        return next(new ErrorHandler("Booking not found", 404));
-      }
-      res.status(200).json({ success: true, updatedBooking });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }

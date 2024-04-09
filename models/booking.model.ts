@@ -8,8 +8,10 @@ export interface IBooking extends Document {
   carSelected: Object;
   customerSelected: Object;
   employeeSelected: Object;
-  subTotals: Array;
+  subTotals: object;
   total: number;
+  discount: number;
+  tax: number;
   invoiceDetails: Array;
 }
 
@@ -32,15 +34,26 @@ const bookingSchema: Schema = new Schema({
   customerSelected: {
     type: Object,
   },
+  employeeSelected: {
+    type: Object,
+  },
   subTotals: {
     type: Array,
   },
   total: {
     type: Number,
   },
-  invoiceDetails: {
-    type: Array,
+  discount: {
+    type: Number,
   },
+  tax: {
+    type: Number,
+  },
+  invoiceDetails: [
+    {
+      type: Object,
+    },
+  ],
 });
 
 const BookingModel = mongoose.model<IBooking>("Booking", bookingSchema);
