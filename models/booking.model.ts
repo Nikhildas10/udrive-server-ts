@@ -1,60 +1,59 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IBooking extends Document {
-  fromDate: Date;
-  toDate: Date;
+  fromDate: string;
+  toDate: string;
   pickupPoint: string;
   dropPoint: string;
-  carSelected: Object;
-  customerSelected: Object;
-  employeeSelected: Object;
-  subTotals: object;
+  carSelected: object;
+  customerSelected: object;
+  subTotals: number;
   total: number;
   discount: number;
   tax: number;
   invoiceDetails: Array;
 }
 
-const bookingSchema: Schema = new Schema({
-  fromDate: {
-    type: Date,
-  },
-  toDate: {
-    type: Date,
-  },
-  pickupPoint: {
-    type: String,
-  },
-  dropPoint: {
-    type: String,
-  },
-  carSelected: {
-    type: Object,
-  },
-  customerSelected: {
-    type: Object,
-  },
-  employeeSelected: {
-    type: Object,
-  },
-  subTotals: {
-    type: Array,
-  },
-  total: {
-    type: Number,
-  },
-  discount: {
-    type: Number,
-  },
-  tax: {
-    type: Number,
-  },
-  invoiceDetails: [
-    {
+const bookingSchema: Schema = new Schema(
+  {
+    fromDate: {
+      type: String,
+    },
+    toDate: {
+      type: String,
+    },
+    pickupPoint: {
+      type: String,
+    },
+    dropPoint: {
+      type: String,
+    },
+    carSelected: {
       type: Object,
     },
-  ],
-});
+    customerSelected: {
+      type: Object,
+    },
+    subTotals: {
+      type: Number,
+    },
+    total: {
+      type: Number,
+    },
+    discount: {
+      type: Number,
+    },
+    tax: {
+      type: Number,
+    },
+    invoiceDetails: [
+      {
+        type: Object,
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
 const BookingModel = mongoose.model<IBooking>("Booking", bookingSchema);
 

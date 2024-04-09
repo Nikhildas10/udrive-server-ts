@@ -15,8 +15,6 @@ export const createBooking = catchAsyncErrors(
       const {
         customerSelected,
         carSelected,
-        employeeSelected,
-        ...bookingData
       } = req.body;
 
       //pass  reference data to cutsomer
@@ -39,7 +37,8 @@ export const createBooking = catchAsyncErrors(
       if (!car) {
         return next(new ErrorHandler("car not found", 404));
       }
-      const booking = await BookingModel.create(bookingData);
+      const booking = await BookingModel.create(req.body);
+      await booking.save()
 
       customer.bookings.push(booking);
       employee.bookings.push(booking);
