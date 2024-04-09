@@ -58,37 +58,40 @@ export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-
+      const booking=await BookingModel.findById(id)
       const deletedBooking = await BookingModel.findByIdAndDelete(id);
       if (!deletedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }
 
       const customer = await customerModel.findById(
-        deletedBooking.customerSelected
+        booking.customerSelected?._id
       );
       if (customer) {
         customer.bookings = customer.bookings.filter(
-          (bookingId) => bookingId !== id
+          (bookingId) => bookingId.toString() !== id
         );
         await customer.save();
       }
-
+ 
       const employee = await employeeModel.findById(
-        deletedBooking.employeeSelected
+        req.user?.id
       );
       if (employee) {
         employee.bookings = employee.bookings.filter(
-          (bookingId) => bookingId !== id
+          (bookingId) => bookingId.toString() !== id
         );
         await employee.save();
       }
 
-      const car = await CarModel.findById(deletedBooking.carSelected);
+      const car = await CarModel.findById(booking.carSelected?._id);
       if (car) {
-        car.bookings = car.bookings.filter((bookingId) => bookingId !== id);
+        car.bookings = car.bookings.filter(
+          (bookingId) => bookingId.toString() !== id
+        );
         await car.save();
       }
+
       res
         .status(200)
         .json({ success: true, message: "Booking deleted successfully" });
@@ -97,6 +100,7 @@ export const deleteBooking = catchAsyncErrors(
     }
   }
 );
+
 
 export const editBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {

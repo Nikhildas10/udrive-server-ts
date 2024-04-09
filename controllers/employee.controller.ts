@@ -426,8 +426,6 @@ export const forgotPassword = catchAsyncErrors(
 export const updatePassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(req.body);
-
       const { oldPassword, newPassword } = req.body;
       const user = await employeeModel
         .findById(req.user?._id)
