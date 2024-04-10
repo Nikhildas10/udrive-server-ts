@@ -75,8 +75,8 @@ export const deleteBooking = catchAsyncErrors(
       }
       
       const employee = await employeeModel.findById(
-        req.user?.id
-      );
+        req?.user?._id
+      );      
       if (employee) {
         employee.bookings = employee.bookings.filter(
           (bookingId) => bookingId._id.toString() !== id
