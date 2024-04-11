@@ -379,9 +379,8 @@ interface IForgotPasswordRequest {
 export const forgotPassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      
-      const  _id  = req.user?._id;      
-      const user = await employeeModel.findOne({ _id });
+      const { email } = req.body;
+      const user = await employeeModel.findOne({ email });
 
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
@@ -422,8 +421,8 @@ export const forgotPassword = catchAsyncErrors(
 export const resetPassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const resetToken=req.params.reset_token
-      const {newPassword } = req.body;
+      const resetToken = req.params.reset_token;
+      const { newPassword } = req.body;
       if (!resetToken || !newPassword) {
         return next(
           new ErrorHandler("Reset token and new password are required", 400)
