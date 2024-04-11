@@ -379,46 +379,78 @@ interface IForgotPasswordRequest {
 export const forgotPassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email } = req.body as IForgotPasswordRequest;
+      
+      const  _id  = req.user?._id;      
+      const user = await employeeModel.findOne({ _id });
 
-      // Check if user with the given email exists
-      const user = await employeeModel.findOne({ email });
       if (!user) {
         return next(new ErrorHandler("User not found", 404));
       }
 
-      // Create a password reset token with limited expiration time
-      const token = jwt.sign(
+      const resetToken = jwt.sign(
         { userId: user._id },
-        process.env.JWT_SECRET_KEY as string,
-        { expiresIn: "15m" } // Example: Expires in 15 minutes
+        process.env.JWT_SECRET_KEY,
+        {
+          expiresIn: "1h",
+        }
       );
 
-      // Construct the URL for the password reset link
-      const resetPasswordLink = `http://localhost:8000/api/employee/reset-password/${token}`;
+      const resetLink = `http://localhost:3030/reset-password/${resetToken}`;
 
-      // Prepare data for the email template
-      const data = { resetPasswordLink };
+      const data = {
+        user: { name: user.name },
+        resetLink,
+      };
 
-      // Render the email template
-      const html = await ejs.renderFile(
-        path.join(__dirname, "../mails/reset-password.ejs"),
-        data
-      );
-
-      // Send the email
       await sendMail({
         email: user.email,
         subject: "Reset Your Password",
-        html,
+        template: "reset-password.ejs",
+        data,
       });
 
       res.status(200).json({
         success: true,
-        message: "Password reset link has been sent to your email",
+        message: `Password reset link has been sent to ${user.email}`,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const resetPassword = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const resetToken=req.params.reset_token
+      const {newPassword } = req.body;
+      if (!resetToken || !newPassword) {
+        return next(
+          new ErrorHandler("Reset token and new password are required", 400)
+        );
+      }
+
+      const decoded: any = jwt.verify(resetToken, process.env.JWT_SECRET_KEY);
+      if (!decoded.userId) {
+        return next(new ErrorHandler("Invalid reset token", 400));
+      }
+
+      const userId = decoded.userId;
+      const user = await employeeModel.findById(userId);
+
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+
+      user.password = newPassword;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Password has been reset successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
     }
   }
 );
