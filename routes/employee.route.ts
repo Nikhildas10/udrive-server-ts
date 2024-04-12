@@ -17,13 +17,8 @@ employeeRouter.put("/block/:id", isAuthenticated,authorizeRoles("admin","superAd
 employeeRouter.post("/login", loginEmployee);
 employeeRouter.get("/refresh-employee", updateAcessToken);
 employeeRouter.get("/me", isAuthenticated, getUserInfo);
-employeeRouter.post(
-  "/forgot-password",
-  isAuthenticated,
-  authorizeRoles("admin", "superAdmin", "user"),
-  forgotPassword
-);
-employeeRouter.post("/reset-password/:reset_token",isAuthenticated,authorizeRoles("admin","superAdmin","user"), resetPassword);
+employeeRouter.post("/forgot-password",forgotPassword);
+employeeRouter.post("/reset-password",resetPassword);
 
 
 

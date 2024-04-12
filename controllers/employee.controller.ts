@@ -421,7 +421,7 @@ export const forgotPassword = catchAsyncErrors(
 export const resetPassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const resetToken = req.params.reset_token;
+      const {resetToken} = req.body;
       const { newPassword } = req.body;
       if (!resetToken || !newPassword) {
         return next(

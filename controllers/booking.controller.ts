@@ -110,42 +110,67 @@ export const editBooking = catchAsyncErrors(
         return next(new ErrorHandler("Invalid booking ID", 400));
       }
 
-      const updatedBookingData = req.body;
-      const updatedBooking = await BookingModel.findByIdAndUpdate(
-        id,
-        updatedBookingData,
-        { new: true }
-      );
-      if (!updatedBooking) {
+      const existingBooking = await BookingModel.findById(id);
+      if (!existingBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }
 
-      const { customerSelected, carSelected } = updatedBooking;
+      const { customerSelected: newCustomer, carSelected: newCar } = req.body;
 
-      // edit customer bookings
-      if (customerSelected?._id) {
-        const customerId = customerSelected._id;
-        await customerModel.findByIdAndUpdate(
-          customerId,
-          { $set: { bookings: updatedBooking } },
-          { new: true }
-        );
+      const prevCustomerId = existingBooking.customerSelected?._id;
+      const prevCarId = existingBooking.carSelected?._id;
+
+      // Remove booking from previos customer
+      if (
+        prevCustomerId &&
+        newCustomer?._id &&
+        prevCustomerId!== newCustomer._id
+      ) {        
+        const prevCustomer = await customerModel.findById(prevCustomerId);
+        if (prevCustomer) {
+          prevCustomer.bookings = prevCustomer.bookings.filter(
+            (bookingId) => bookingId._id.toString() !== id
+          );
+          await prevCustomer.save();
+        }
       }
 
-      // edit car bookings
-      if (carSelected?._id) {
-        const carId = carSelected._id;
-        await CarModel.findByIdAndUpdate(
-          carId,
-          { $set: { bookings: updatedBooking } },
-          { new: true }
-        );
+      // Remove booking from previous car 
+      if (prevCarId && newCar?._id && prevCarId!== newCar._id) {
+        const prevCar = await CarModel.findById(prevCarId);
+        if (prevCar) {
+          prevCar.bookings = prevCar.bookings.filter(
+            (bookingId) => bookingId._id.toString() !== id
+          );
+          await prevCar.save();
+        }
       }
-      //edit employee bookings
-      const employeeId = req.user?._id || "";
-      await employeeModel.findByIdAndUpdate(
-        employeeId,
-        { $set: { bookings: updatedBooking } },
+
+      //new customer
+      if (newCustomer?._id) {
+        const newCustomerId = newCustomer._id;
+        const customer = await customerModel.findById(newCustomerId);
+        if (!customer) {
+          return next(new ErrorHandler("New Customer not found", 404));
+        }
+        customer.bookings.push(existingBooking);
+        await customer.save();
+      }
+
+      //new car
+      if (newCar?._id) {
+        const newCarId = newCar._id;
+        const car = await CarModel.findById(newCarId);
+        if (!car) {
+          return next(new ErrorHandler("New Car not found", 404));
+        }
+        car.bookings.push(existingBooking);
+        await car.save();
+      }
+
+      const updatedBooking = await BookingModel.findByIdAndUpdate(
+        id,
+        req.body,
         { new: true }
       );
 
@@ -155,6 +180,7 @@ export const editBooking = catchAsyncErrors(
     }
   }
 );
+
 
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
