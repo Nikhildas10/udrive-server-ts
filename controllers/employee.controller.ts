@@ -130,7 +130,7 @@ export const loginEmployee = catchAsyncErrors(
 export const getAllEmployeesInfo = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await employeeModel.find({});
+      const data = await employeeModel.find({ isDeleted: false });
       res.status(201).json({ success: true, data });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -140,7 +140,10 @@ export const getAllEmployeesInfo = catchAsyncErrors(
 export const getSingleEmployeeInfo = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await employeeModel.findOne({ _id: req.params.id });
+      const data = await employeeModel.findOne({
+        _id: req.params.id,
+        isDeleted: false,
+      });
       if (!data) {
         return next(new ErrorHandler("Employee not found", 404));
       }
@@ -247,7 +250,11 @@ export const deleteEmployee = catchAsyncErrors(
       if (!user) {
         return next(new ErrorHandler("Employee not found", 404));
       }
-      const deletedUser = await employeeModel.findByIdAndDelete(userId);
+      const deletedUser = await employeeModel.findByIdAndUpdate(
+        userId,
+        { isDeleted: true },
+        { new: true }
+      );
       if (!deletedUser) {
         return next(new ErrorHandler("Failed to delete employee", 500));
       }
@@ -255,6 +262,31 @@ export const deleteEmployee = catchAsyncErrors(
         success: true,
         message: "Employee deleted",
         data: deletedUser,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const deleteMultipleEmployees = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { employeeIds } = req.body;
+
+      if (!employeeIds) {
+        return next(new ErrorHandler("Invalid employee ID provided", 400));
+      }
+
+      const deletedEmployees = await employeeModel.updateMany(
+        { _id: { $in: employeeIds } },
+        { isDeleted: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Employees deleted successfully",
+        data: deletedEmployees,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -421,7 +453,7 @@ export const forgotPassword = catchAsyncErrors(
 export const resetPassword = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {resetToken} = req.body;
+      const { resetToken } = req.body;
       const { newPassword } = req.body;
       if (!resetToken || !newPassword) {
         return next(

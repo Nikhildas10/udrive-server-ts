@@ -19,7 +19,9 @@ export const addCars = catchAsyncErrors(
     } = req.body;
 
     try {
-      let rcBookResult:any, insurancePolicyResult:any, pollutionCertificateResult:any;
+      let rcBookResult: any,
+        insurancePolicyResult: any,
+        pollutionCertificateResult: any;
 
       if (req.body.rcBook) {
         rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
@@ -86,7 +88,7 @@ export const addCars = catchAsyncErrors(
 export const getAllCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cars = await CarModel.find({});
+      const cars = await CarModel.find({ isDeleted: false });
       res.status(200).json({ succes: true, cars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -101,7 +103,8 @@ export const getSingleCar = catchAsyncErrors(
       if (!id) {
         return next(new ErrorHandler("Please provide a car ID", 400));
       }
-      const cars = await CarModel.findById(id);
+      const cars = await CarModel.findOne({ _id: id, isDeleted: false });
+
       if (!cars) {
         return next(new ErrorHandler("car not found", 404));
       }
@@ -173,7 +176,11 @@ export const deleteCar = catchAsyncErrors(
       if (!id) {
         return next(new ErrorHandler("invalid car id", 400));
       }
-      const deletedCar = await CarModel.findByIdAndDelete(id);
+      const deletedCar = await CarModel.findByIdAndUpdate(
+        id,
+        { isDeleted: true },
+        { new: true }
+      );
       if (!deletedCar) {
         return next(new ErrorHandler("car not found", 404));
       }
@@ -181,6 +188,30 @@ export const deleteCar = catchAsyncErrors(
         success: true,
         message: "car has been deleted successfully",
         deletedCar,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const deleteMultipleCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { carIds } = req.body;
+
+      if (!carIds) {
+        return next(new ErrorHandler("Invalid car Id provided", 400));
+      }
+
+      const deletedCars = await CarModel.updateMany(
+        { _id: { $in: carIds } },
+        { isDeleted: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "cars deleted successfully",
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));

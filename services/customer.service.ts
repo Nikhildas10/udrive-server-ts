@@ -16,15 +16,15 @@ export const updateCustomerById = async (
 };
 
 export const deleteCustomerById = async (customerId: string): Promise<void> => {
-  await customerModel.findByIdAndDelete(customerId);
+  await customerModel.findByIdAndUpdate(customerId, { isDeleted: true }, { new: true });
 };
 
 export const getAllCustomers = async (): Promise<ICustomer[]> => {
-  const customers = await customerModel.find({});
+  const customers = await customerModel.find({isDeleted:false});
   return customers;
 };
 
 export const getSingleCustomer=async(customerId:string):Promise<ICustomer>=>{
-  const customers= await customerModel.findById(customerId)
+  const customers = await customerModel.findOne({ _id: customerId, isDeleted: false });
   return customers;
 }

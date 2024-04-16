@@ -14,6 +14,7 @@ export interface ICustomer extends Document {
   locality: string;
   cityOrDistrict: string;
   bookings: IBooking[];
+  isDeleted:boolean;
 }
 
 const customerSchema: Schema = new Schema({
@@ -24,7 +25,7 @@ const customerSchema: Schema = new Schema({
   contactNumber: {
     type: Number,
     required: true,
-    message:"Contact number should contain minimum 10 digits."
+    message: "Contact number should contain minimum 10 digits.",
   },
   abroadNumber: {
     type: Number,
@@ -65,6 +66,10 @@ const customerSchema: Schema = new Schema({
       type: Object,
     },
   ],
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const customerModel = mongoose.model<ICustomer>("Customer", customerSchema);

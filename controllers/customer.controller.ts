@@ -14,7 +14,7 @@ export const createCustomer = catchAsyncErrors(
     }
   }
 );
- 
+
 export const updateCustomer = async (
   req: Request,
   res: Response,
@@ -83,3 +83,27 @@ export const getSingleCustomer = async (
     next(new ErrorHandler(err.message, 400));
   }
 };
+
+export const deleteMultipleCustomer = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { customerIds } = req.body;
+
+      if (!customerIds) {
+        return next(new ErrorHandler("Invalid customer IDs provided", 400));
+      }
+
+      const deletedCustomer = await customerModel.updateMany(
+        { _id: { $in: customerIds } },
+        { isDeleted: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "customers deleted successfully",
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);

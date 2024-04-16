@@ -20,6 +20,7 @@ export interface IEmployee extends Document {
   signAccessToken: () => string;
   signRefreshToken: () => string;
   bookings: IBooking[];
+  isDeleted:boolean;
 }
 
 const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
@@ -81,6 +82,10 @@ const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
         type: Object,
       },
     ],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   { timestamps: true }

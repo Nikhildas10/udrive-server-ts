@@ -13,7 +13,8 @@ export interface ICar extends Document {
   rcBook?: object;
   insurancePolicy?: object;
   pollutionCertificate?: object;
-  bookings:IBooking[]
+  bookings:IBooking[];
+  isDeleted:boolean
 }
 
 const carSchema = new Schema<ICar>({
@@ -60,6 +61,10 @@ const carSchema = new Schema<ICar>({
       type: Object,
     },
   ],
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const CarModel: Model<ICar> = mongoose.model<ICar>("Car", carSchema);

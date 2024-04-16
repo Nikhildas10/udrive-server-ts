@@ -3,6 +3,7 @@ import { isAuthenticated } from "../middleware/auth";
 import {
   createCustomer,
   deleteCustomerById,
+  deleteMultipleCustomer,
   getAllCustomers,
   getSingleCustomer,
   updateCustomer,
@@ -14,6 +15,7 @@ customerRouter.post("/create", isAuthenticated, createCustomer);
 customerRouter.put("/edit/:id", isAuthenticated, updateCustomer);
 customerRouter.get("/getall", isAuthenticated, getAllCustomers);
 customerRouter.delete("/delete/:id", isAuthenticated, deleteCustomerById);
+customerRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleCustomer);
 customerRouter.get("/getsingle/:id", isAuthenticated, getSingleCustomer);
 
 export default customerRouter;
