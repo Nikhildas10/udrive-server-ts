@@ -60,21 +60,27 @@ export const addCars = catchAsyncErrors(
           ? {
               public_id: rcBookResult.public_id,
               url: rcBookResult.secure_url,
+              filetype: rcBookResult?.format == "pdf" ? "pdf" : "image",
             }
           : undefined,
         insurancePolicy: insurancePolicyResult
           ? {
               public_id: insurancePolicyResult.public_id,
               url: insurancePolicyResult.secure_url,
+              filetype:
+                insurancePolicyResult?.format == "pdf" ? "pdf" : "image",
             }
           : undefined,
         pollutionCertificate: pollutionCertificateResult
           ? {
               public_id: pollutionCertificateResult.public_id,
               url: pollutionCertificateResult.secure_url,
+              filetype:
+                pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
             }
           : undefined,
       };
+      console.log(newCarData);
 
       const newCar: ICar = new CarModel(newCarData);
       const savedCar = await newCar.save();

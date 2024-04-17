@@ -113,6 +113,9 @@ export const loginEmployee = catchAsyncErrors(
       if (!user) {
         return next(new ErrorHandler("Invalid email and password", 400));
       }
+      if (user.isDeleted) {
+        return next(new ErrorHandler("Invalid email and password", 400));
+      }
       const isPasswordMatch = await user.comparePassword(password);
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email and password", 400));

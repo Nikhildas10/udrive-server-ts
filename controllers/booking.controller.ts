@@ -58,11 +58,7 @@ export const deleteBooking = catchAsyncErrors(
     try {
       const { id } = req.params;
       const booking=await BookingModel.findById(id)
-      const deletedBooking = await BookingModel.findByIdAndUpdate(
-        id,
-        { isDeleted: true },
-        { new: true }
-      );
+      const deletedBooking = await BookingModel.findByIdAndUpdate(id,{isDeleted:true},{new:true})
       if (!deletedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }

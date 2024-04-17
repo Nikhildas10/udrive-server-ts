@@ -24,7 +24,6 @@ const carSchema = new Schema<ICar>({
   },
   manufacturingCompany: {
     type: String,
-    required: true,
   },
   yearOfManufacturing: {
     type: Number,
@@ -47,14 +46,18 @@ const carSchema = new Schema<ICar>({
   rcBook: {
     public_id: String,
     url: String,
+    filetype:String
+
   },
   insurancePolicy: {
     public_id: String,
     url: String,
+    filetype:String
   },
   pollutionCertificate: {
     public_id: String,
     url: String,
+    filetype:String
   },
   bookings: [
     {
