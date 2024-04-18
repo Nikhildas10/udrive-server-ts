@@ -12,10 +12,7 @@ import CarModel from "../models/car.model";
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {
-        customerSelected,
-        carSelected,
-      } = req.body;
+      const { customerSelected, carSelected } = req.body;
 
       //pass  reference data to cutsomer
       const customerId = customerSelected?._id;
@@ -38,7 +35,7 @@ export const createBooking = catchAsyncErrors(
         return next(new ErrorHandler("car not found", 404));
       }
       const booking = await BookingModel.create(req.body);
-      await booking.save()
+      await booking.save();
 
       customer.bookings.push(booking);
       employee.bookings.push(booking);
@@ -57,8 +54,12 @@ export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const booking=await BookingModel.findById(id)
-      const deletedBooking = await BookingModel.findByIdAndUpdate(id,{isDeleted:true},{new:true})
+      const booking = await BookingModel.findById(id);
+      const deletedBooking = await BookingModel.findByIdAndUpdate(
+        id,
+        { isDeleted: true },
+        { new: true }
+      );
       if (!deletedBooking) {
         return next(new ErrorHandler("Booking not found", 404));
       }
@@ -66,24 +67,22 @@ export const deleteBooking = catchAsyncErrors(
       const customer = await customerModel.findById(
         booking?.customerSelected?._id
       );
-      
+
       if (customer) {
         customer.bookings = customer?.bookings?.filter(
           (bookingId) => bookingId._id.toString() !== id
         );
         await customer.save();
       }
-      
-      const employee = await employeeModel.findById(
-        req?.user?._id
-      );      
+
+      const employee = await employeeModel.findById(req?.user?._id);
       if (employee) {
         employee.bookings = employee.bookings.filter(
           (bookingId) => bookingId._id.toString() !== id
         );
         await employee.save();
       }
-      
+
       const car = await CarModel.findById(booking?.carSelected?._id);
       if (car) {
         car.bookings = car.bookings.filter(
@@ -91,10 +90,10 @@ export const deleteBooking = catchAsyncErrors(
         );
         await car.save();
       }
-  
+
       res
-      .status(200)
-      .json({ success: true, message: "Booking deleted successfully" });
+        .status(200)
+        .json({ success: true, message: "Booking deleted successfully" });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
     }
@@ -106,58 +105,44 @@ export const deleteMultipleBookings = catchAsyncErrors(
     try {
       const { bookingIds } = req.body;
 
-      // const deletedBookings = await BookingModel.updateMany(
-      //   { _id: { $in: bookingIds } },
-      //   { isDeleted: true },
-      //   { new: true }
-      // );
+      const deletedBookings = await BookingModel.updateMany(
+        { _id: { $in: bookingIds } },
+        { isDeleted: true }
+      );
+      if (!deletedBookings) {
+        return next(new ErrorHandler("Invalid booking ID", 400));
+      }
 
       for (const bookingId of bookingIds) {
         const booking = await BookingModel.findById(bookingId);
         if (!booking) {
-          continue;
+          return next(new ErrorHandler("Invalid booking ID", 400));
         }
 
-        const customerId = booking.customerSelected?._id;
-        if (customerId) {
-          const customer = await customerModel.findById(customerId);
-          if (customer) {
-            customer.bookings = customer.bookings.map((i: any) => {
-              if (i._id.toString() === bookingId) {
-                i.isDeleted = true;
-              }
-              return i;
-            });
-            await customer.save();
-          }
+        const customer = await customerModel.findById(
+          booking.customerSelected?._id
+        );
+        if (customer) {
+          customer.bookings = customer.bookings.filter(
+            (i) => i._id.toString() !== bookingId
+          );
+          await customer.save();
         }
 
-        const employeeId = req?.user?._id;
-        if (employeeId) {
-          const employee = await employeeModel.findById(employeeId);
-          if (employee) {
-            employee.bookings = employee.bookings.map((i: any) => {
-              if (i._id.toString() === bookingId) {
-                i.isDeleted = true;
-              }
-              return i;
-            });
-            await employee.save();
-          }
+        const employee = await employeeModel.findById(req.user?._id);
+        if (employee) {
+          employee.bookings = employee.bookings.filter(
+            (i) => i._id.toString() !== bookingId
+          );
+          await employee.save();
         }
 
-        const carId = booking.carSelected?._id;
-        if (carId) {
-          const car = await CarModel.findById(carId);
-          if (car) {
-            car.bookings = car.bookings.map((i: any) => {
-              if (i._id.toString() === bookingId) {
-                i.isDeleted = true;
-              }
-              return i;
-            });
-            await car.save();
-          }
+        const car = await CarModel.findById(booking.carSelected?._id);
+        if (car) {
+          car.bookings = car.bookings.filter(
+            (i) => i._id.toString() !== bookingId
+          );
+          await car.save();
         }
       }
 
@@ -169,7 +154,6 @@ export const deleteMultipleBookings = catchAsyncErrors(
     }
   }
 );
-
 
 export const editBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -193,8 +177,8 @@ export const editBooking = catchAsyncErrors(
       if (
         prevCustomerId &&
         newCustomer?._id &&
-        prevCustomerId!== newCustomer._id
-      ) {        
+        prevCustomerId !== newCustomer._id
+      ) {
         const prevCustomer = await customerModel.findById(prevCustomerId);
         if (prevCustomer) {
           prevCustomer.bookings = prevCustomer.bookings.filter(
@@ -204,8 +188,8 @@ export const editBooking = catchAsyncErrors(
         }
       }
 
-      // Remove booking from previous car 
-      if (prevCarId && newCar?._id && prevCarId!== newCar._id) {
+      // Remove booking from previous car
+      if (prevCarId && newCar?._id && prevCarId !== newCar._id) {
         const prevCar = await CarModel.findById(prevCarId);
         if (prevCar) {
           prevCar.bookings = prevCar.bookings.filter(
@@ -250,11 +234,10 @@ export const editBooking = catchAsyncErrors(
   }
 );
 
-
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({isDeleted:false});
+      const bookings = await BookingModel.find({ isDeleted: false });
       res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -269,7 +252,10 @@ export const getSingleBooking = catchAsyncErrors(
       if (!id) {
         return next(new ErrorHandler("Please provide a booking ID", 400));
       }
-      const booking = await BookingModel.findById(id);
+      const booking = await BookingModel.findOne({
+        _id: id,
+        isDeleted: false,
+      });
       if (!booking) {
         return next(new ErrorHandler("Booking not found", 404));
       }

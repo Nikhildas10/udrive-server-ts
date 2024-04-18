@@ -44,7 +44,7 @@ export const getEvent = catchAsyncErrors(
 export const getSingleEvent = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const event = await calendarModel.findById(id);
+    const event = await calendarModel.findOne({ _id: id, isDeleted: false });
     if (!event) {
       res.status(400).json({ success: false, message: "no events found" });
     }
