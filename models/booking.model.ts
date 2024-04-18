@@ -12,6 +12,7 @@ export interface IBooking extends Document {
   discount: number;
   tax: number;
   invoiceDetails: Array;
+  invoiceId:number;
   isDeleted: boolean;
 }
 
@@ -45,6 +46,9 @@ const bookingSchema: Schema = new Schema(
       type: Number,
     },
     tax: {
+      type: Number,
+    },
+    invoiceId: {
       type: Number,
     },
     invoiceDetails: [
