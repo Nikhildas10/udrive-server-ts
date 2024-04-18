@@ -101,6 +101,75 @@ export const deleteBooking = catchAsyncErrors(
   }
 );
 
+export const deleteMultipleBookings = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { bookingIds } = req.body;
+
+      const deletedBookings = await BookingModel.updateMany(
+        { _id: { $in: bookingIds } },
+        { isDeleted: true },
+        { new: true }
+      );
+
+      for (const bookingId of bookingIds) {
+        const booking = await BookingModel.findById(bookingId);
+        if (!booking) {
+          continue;
+        }
+
+        const customerId = booking.customerSelected?._id;
+        if (customerId) {
+          const customer = await customerModel.findById(customerId);
+          if (customer) {
+            customer.bookings = customer.bookings.map((i: any) => {
+              if (i._id.toString() === bookingId) {
+                i.isDeleted = true;
+              }
+              return i;
+            });
+            await customer.save();
+          }
+        }
+
+        const employeeId = req?.user?._id;
+        if (employeeId) {
+          const employee = await employeeModel.findById(employeeId);
+          if (employee) {
+            employee.bookings = employee.bookings.map((i: any) => {
+              if (i._id.toString() === bookingId) {
+                i.isDeleted = true;
+              }
+              return i;
+            });
+            await employee.save();
+          }
+        }
+
+        const carId = booking.carSelected?._id;
+        if (carId) {
+          const car = await CarModel.findById(carId);
+          if (car) {
+            car.bookings = car.bookings.map((i: any) => {
+              if (i._id.toString() === bookingId) {
+                i.isDeleted = true;
+              }
+              return i;
+            });
+            await car.save();
+          }
+        }
+      }
+
+      res
+        .status(200)
+        .json({ success: true, message: "Bookings deleted successfully" });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
 
 export const editBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -185,7 +254,7 @@ export const editBooking = catchAsyncErrors(
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({});
+      const bookings = await BookingModel.find({isDeleted:fasle});
       res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));

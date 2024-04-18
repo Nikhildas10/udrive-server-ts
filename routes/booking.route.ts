@@ -3,6 +3,7 @@ import { isAuthenticated } from "../middleware/auth";
 import {
   createBooking,
   deleteBooking,
+  deleteMultipleBookings,
   editBooking,
   getAllBooking,
   getSingleBooking,
@@ -15,5 +16,6 @@ bookingRouter.delete("/delete/:id", isAuthenticated, deleteBooking);
 bookingRouter.get("/get-all-booking", isAuthenticated, getAllBooking);
 bookingRouter.get("/get-single-booking/:id", isAuthenticated, getSingleBooking);
 bookingRouter.put("/edit/:id", isAuthenticated, editBooking);
+bookingRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleBookings);
 
 export default bookingRouter;

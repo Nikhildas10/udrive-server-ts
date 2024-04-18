@@ -133,9 +133,8 @@ export const editCar = catchAsyncErrors(
       console.log("editCar", req.body);
       const updatedCarData: any = { ...req.body };
 
-      // Function to upload image to Cloudinary if it doesn't have a public ID
       const uploadImageIfNotExists = async (imageField: string) => {
-        if (!req.body[imageField]) return; // If field is empty, do nothing
+        if (!req.body[imageField]) return; 
         if (!req.body[imageField].public_id) {
           const result = await cloudinary.uploader.upload(
             req.body[imageField],
@@ -144,16 +143,15 @@ export const editCar = catchAsyncErrors(
             }
           );
           updatedCarData[imageField] = {
-            public_id: result.public_id,
+            public_id: result.public_id, 
             url: result.secure_url,
+            filetype: result?.format == "pdf" ? "pdf" : "image",
           };
         } else {
-          // If the image already has a public ID, retain its data
           updatedCarData[imageField] = req.body[imageField];
         }
       };
 
-      // Check and upload each image if necessary
       await Promise.all([
         uploadImageIfNotExists("rcBook"),
         uploadImageIfNotExists("insurancePolicy"),
