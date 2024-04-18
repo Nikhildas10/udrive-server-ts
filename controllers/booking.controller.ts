@@ -106,11 +106,11 @@ export const deleteMultipleBookings = catchAsyncErrors(
     try {
       const { bookingIds } = req.body;
 
-      const deletedBookings = await BookingModel.updateMany(
-        { _id: { $in: bookingIds } },
-        { isDeleted: true },
-        { new: true }
-      );
+      // const deletedBookings = await BookingModel.updateMany(
+      //   { _id: { $in: bookingIds } },
+      //   { isDeleted: true },
+      //   { new: true }
+      // );
 
       for (const bookingId of bookingIds) {
         const booking = await BookingModel.findById(bookingId);
@@ -254,7 +254,7 @@ export const editBooking = catchAsyncErrors(
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({isDeleted:fasle});
+      const bookings = await BookingModel.find({isDeleted:false});
       res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));

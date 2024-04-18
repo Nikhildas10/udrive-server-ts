@@ -276,11 +276,20 @@ export const deleteMultipleEmployees = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { employeeIds } = req.body;
+      if (employeeIds.includes(req.user?.id)) {
+        return next(new ErrorHandler("self deletion not allowed", 400));
+      }
 
       if (!employeeIds) {
         return next(new ErrorHandler("Invalid employee ID provided", 400));
       }
-
+      const superAdminEmployee = await employeeModel.find({
+        _id: { $in: employeeIds },
+        role: "superAdmin",
+      });
+      if (superAdminEmployee.length > 0) {
+        return next(new ErrorHandler("Super admin cannot be deleted", 400));
+      }
       const deletedEmployees = await employeeModel.updateMany(
         { _id: { $in: employeeIds } },
         { isDeleted: true }
