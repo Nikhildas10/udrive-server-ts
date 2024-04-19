@@ -166,19 +166,17 @@ export const editBooking = catchAsyncErrors(
       const existingBooking = await BookingModel.findById(id);
       if (!existingBooking) {
         return next(new ErrorHandler("Booking not found", 404));
-      }
+      } 
 
       const { customerSelected: newCustomer, carSelected: newCar } = req.body;
-
+   const updatedBooking = await BookingModel.findByIdAndUpdate(id, req.body, {
+     new: true,
+   });
       const prevCustomerId = existingBooking.customerSelected?._id;
       const prevCarId = existingBooking.carSelected?._id;
 
       // Remove booking from previos customer
-      if (
-        prevCustomerId &&
-        newCustomer?._id &&
-        prevCustomerId !== newCustomer._id
-      ) {
+     
         const prevCustomer = await customerModel.findById(prevCustomerId);
         if (prevCustomer) {
           prevCustomer.bookings = prevCustomer.bookings.filter(
@@ -186,10 +184,8 @@ export const editBooking = catchAsyncErrors(
           );
           await prevCustomer.save();
         }
-      }
 
       // Remove booking from previous car
-      if (prevCarId && newCar?._id && prevCarId !== newCar._id) {
         const prevCar = await CarModel.findById(prevCarId);
         if (prevCar) {
           prevCar.bookings = prevCar.bookings.filter(
@@ -197,7 +193,6 @@ export const editBooking = catchAsyncErrors(
           );
           await prevCar.save();
         }
-      }
 
       //new customer
       if (newCustomer?._id) {
@@ -206,7 +201,7 @@ export const editBooking = catchAsyncErrors(
         if (!customer) {
           return next(new ErrorHandler("New Customer not found", 404));
         }
-        customer.bookings.push(existingBooking);
+        customer.bookings.push(updatedBooking);
         await customer.save();
       }
 
@@ -217,15 +212,11 @@ export const editBooking = catchAsyncErrors(
         if (!car) {
           return next(new ErrorHandler("New Car not found", 404));
         }
-        car.bookings.push(existingBooking);
+        car.bookings.push(updatedBooking);
         await car.save();
       }
 
-      const updatedBooking = await BookingModel.findByIdAndUpdate(
-        id,
-        req.body,
-        { new: true }
-      );
+   
 
       res.status(200).json({ success: true, updatedBooking });
     } catch (err: any) {
