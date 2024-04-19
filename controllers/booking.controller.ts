@@ -5,7 +5,7 @@ import * as bookingService from "../services/booking.service";
 import * as carService from "../services/car.service";
 import * as customerService from "../services/customer.service";
 import customerModel from "../models/customer.model";
-import BookingModel from "../models/booking.model";
+import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
 
@@ -260,6 +260,27 @@ export const getSingleBooking = catchAsyncErrors(
         return next(new ErrorHandler("Booking not found", 404));
       }
       res.status(200).json({ success: true, booking });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const bookingStatus = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { status } = req.body;
+      const {id}=req.params
+      const booking = await BookingModel.findById(id);
+      if (!booking) {
+        return next(new ErrorHandler("booking not found", 404));
+      }
+      booking.status = status;
+      await booking.save();
+      res.status(201).json({
+        success: true,
+        booking,
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
