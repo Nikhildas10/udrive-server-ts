@@ -193,6 +193,14 @@ export const editBooking = catchAsyncErrors(
           );
           await prevCar.save();
         }
+      // Remove booking from previous employee
+        const prevEmployee = await employeeModel.findById(req.user._id);
+        if (prevEmployee) {
+          prevEmployee.bookings = prevEmployee.bookings.filter(
+            (bookingId) => bookingId._id.toString() !== id
+          );
+          await prevEmployee.save();
+        }
 
       //new customer
       if (newCustomer?._id) {
@@ -206,6 +214,16 @@ export const editBooking = catchAsyncErrors(
       }
 
       //new car
+      if (req.user._id) {
+        const employeeId = req.user._id;
+        const employee = await employeeModel.findById(employeeId);
+        if (!employee) {
+          return next(new ErrorHandler("employee not found", 404));
+        }
+        employee.bookings.push(updatedBooking);
+        await employee.save();
+      }
+      //new employee
       if (newCar?._id) {
         const newCarId = newCar._id;
         const car = await CarModel.findById(newCarId);
