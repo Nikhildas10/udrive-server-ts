@@ -4,6 +4,7 @@ import CarModel, { ICar } from "../models/car.model";
 import getDataUri from "../utils/dataUri";
 import cloudinary from "../utils/cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
+import BookingModel from "../models/booking.model";
 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -134,7 +135,7 @@ export const editCar = catchAsyncErrors(
       const updatedCarData: any = { ...req.body };
 
       const uploadImageIfNotExists = async (imageField: string) => {
-        if (!req.body[imageField]) return; 
+        if (!req.body[imageField]) return;
         if (!req.body[imageField].public_id) {
           const result = await cloudinary.uploader.upload(
             req.body[imageField],
@@ -143,7 +144,7 @@ export const editCar = catchAsyncErrors(
             }
           );
           updatedCarData[imageField] = {
-            public_id: result.public_id, 
+            public_id: result.public_id,
             url: result.secure_url,
             filetype: result?.format == "pdf" ? "pdf" : "image",
           };
@@ -222,3 +223,85 @@ export const deleteMultipleCars = catchAsyncErrors(
     }
   }
 );
+
+export const getMostBookedCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const startDate = new Date();
+      startDate.setDate(1);
+      const endDate = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        0
+      );
+
+      //convert to string
+      const formattedStartDate = formatDate(startDate);
+      const formattedEndDate = formatDate(endDate);
+
+      const bookingAggregation = await CarModel.aggregate([
+        {
+          $match: { isDeleted: false },
+        },
+        {
+          $unwind: "$bookings",
+        },
+        {
+          $match: {
+            $or: [
+              {
+                "bookings.fromDate": {
+                  $gte: formattedStartDate,
+                  $lte: formattedEndDate,
+                },
+              },
+              {
+                "bookings.toDate": {
+                  $gte: formattedStartDate,
+                  $lte: formattedEndDate,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $sort: { count: -1 },
+        },
+        {
+          $limit: 5,
+        },
+      ]);
+
+      const series = await Promise.all(
+        bookingAggregation.map(async (booking: any) => {
+          const car = await CarModel.findById(booking._id);
+          return {
+            label: car?.name,
+            value: booking.count,
+          };
+        })
+      );
+
+      res.status(200).json({ success: true, series });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+// Function to format date to dd-mm-yyyy format
+function formatDate(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const period = date.getHours() >= 12 ? "PM" : "AM";
+  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
+}
