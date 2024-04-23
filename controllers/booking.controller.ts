@@ -301,65 +301,104 @@ export const bookingStatus = catchAsyncErrors(
 export const getRevenueChartData = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentYear = new Date().getFullYear();
-      const labels = [];
-      const monthlyRevenue = [];
+      const monthlyTotals = await calculateMonthlyTotals();
+      res.json(monthlyTotals);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+async function calculateMonthlyTotals() {
+  try {
+    const monthlyTotals = {};
 
-      for (let i = 1; i <= 12; i++) {
-        const startDate = new Date(currentYear, i - 1, 1);
-        const endDate = new Date(currentYear, i, 0, 23, 59, 59);
-        const formattedStartDate = formatDate(startDate);
-        const formattedEndDate = formatDate(endDate);
+    const result = await BookingModel.aggregate([
+      {
+        $project: {
+          month: { $month: { $toDate: "$fromDate" } },
+          year: { $year: { $toDate: "$fromDate" } },
+          total: 1,
+        },
+      },
+      {
+        $group: {
+          _id: { month: "$month", year: "$year" },
+          totalAmount: { $sum: "$total" },
+        },
+      },
+    ]);
 
-        const bookings = await BookingModel.aggregate([
-          {
-            $match: {
-              fromDate: { $gte: formattedStartDate, $lte: formattedEndDate },
-              toDate: { $gte: formattedStartDate, $lte: formattedEndDate },
-              isDeleted: false,
-            },
-          },
-          {
-            $group: {
-              total: { $sum: "$total" },
-            },
-          },
-        ]);
-        console.log(bookings);
+    // Initialize monthlyTotals object with 0 for all months
+    for (let month = 1; month <= 12; month++) {
+      const key = `${month}`;
+      monthlyTotals[key] = 0;
+    }
 
-        const total = bookings.length > 0 ? bookings[0].total : 0;
-        monthlyRevenue.push(total);
+    result.forEach((item) => {
+      const key = `${item._id.month}`;
+      monthlyTotals[key] = item.totalAmount;
+    });
 
-        const monthYear = `${String(i).padStart(2, "0")}-01-${currentYear
-          .toString()
-          .slice(-2)}`;
-        labels.push(monthYear);
-      }
+    // Get current year
+    const currentYear = new Date().getFullYear();
 
-      const chartData = {
+    // Create labels array with dates for 11 months
+    const labels = [];
+    for (let month = 1; month <= 11; month++) {
+      const date = new Date(currentYear, month - 1, 1); // Create a date object for the first day of each month
+      const formattedDate = `${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${date
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/${currentYear}`;
+      labels.push(formattedDate);
+    }
+
+    // Create data array for 11 months
+    const data = [];
+    for (let month = 1; month <= 11; month++) {
+      data.push(monthlyTotals[month.toString()]);
+    }
+
+    return {
+      chart: {
         labels: labels,
         series: [
           {
             name: "Revenue",
             type: "column",
             fill: "solid",
-            data: monthlyRevenue,
+            data: data,
           },
         ],
-      };
+      },
+    };
+  } catch (error) {
+    console.error("Error calculating monthly totals:", error);
+    throw error;
+  }
+}
 
-      res.status(200).json({ success: true, chartData });
+export const getTotalRevenue = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const totalRevenue = await BookingModel.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: "$total" },
+          },
+        },
+      ]);
+
+      const revenue =
+        totalRevenue.length > 0 ? totalRevenue[0].totalRevenue : 0;
+
+      res.status(200).json({ success: true, totalRevenue: revenue });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
-    }
-    function formatDate(date) {
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      const hours: any = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const period = hours < 12 ? "AM" : "PM";
-      return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
     }
   }
 );
