@@ -166,41 +166,45 @@ export const editBooking = catchAsyncErrors(
       const existingBooking = await BookingModel.findById(id);
       if (!existingBooking) {
         return next(new ErrorHandler("Booking not found", 404));
-      } 
+      }
 
       const { customerSelected: newCustomer, carSelected: newCar } = req.body;
-   const updatedBooking = await BookingModel.findByIdAndUpdate(id, req.body, {
-     new: true,
-   });
+      const updatedBooking = await BookingModel.findByIdAndUpdate(
+        id,
+        req.body,
+        {
+          new: true,
+        }
+      );
       const prevCustomerId = existingBooking.customerSelected?._id;
       const prevCarId = existingBooking.carSelected?._id;
 
       // Remove booking from previos customer
-     
-        const prevCustomer = await customerModel.findById(prevCustomerId);
-        if (prevCustomer) {
-          prevCustomer.bookings = prevCustomer.bookings.filter(
-            (bookingId) => bookingId._id.toString() !== id
-          );
-          await prevCustomer.save();
-        }
+
+      const prevCustomer = await customerModel.findById(prevCustomerId);
+      if (prevCustomer) {
+        prevCustomer.bookings = prevCustomer.bookings.filter(
+          (bookingId) => bookingId._id.toString() !== id
+        );
+        await prevCustomer.save();
+      }
 
       // Remove booking from previous car
-        const prevCar = await CarModel.findById(prevCarId);
-        if (prevCar) {
-          prevCar.bookings = prevCar.bookings.filter(
-            (bookingId) => bookingId._id.toString() !== id
-          );
-          await prevCar.save();
-        }
+      const prevCar = await CarModel.findById(prevCarId);
+      if (prevCar) {
+        prevCar.bookings = prevCar.bookings.filter(
+          (bookingId) => bookingId._id.toString() !== id
+        );
+        await prevCar.save();
+      }
       // Remove booking from previous employee
-        const prevEmployee = await employeeModel.findById(req.user._id);
-        if (prevEmployee) {
-          prevEmployee.bookings = prevEmployee.bookings.filter(
-            (bookingId) => bookingId._id.toString() !== id
-          );
-          await prevEmployee.save();
-        }
+      const prevEmployee = await employeeModel.findById(req.user._id);
+      if (prevEmployee) {
+        prevEmployee.bookings = prevEmployee.bookings.filter(
+          (bookingId) => bookingId._id.toString() !== id
+        );
+        await prevEmployee.save();
+      }
 
       //new customer
       if (newCustomer?._id) {
@@ -233,8 +237,6 @@ export const editBooking = catchAsyncErrors(
         car.bookings.push(updatedBooking);
         await car.save();
       }
-
-   
 
       res.status(200).json({ success: true, updatedBooking });
     } catch (err: any) {
@@ -279,7 +281,7 @@ export const bookingStatus = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { status } = req.body;
-      const {id}=req.params
+      const { id } = req.params;
       const booking = await BookingModel.findById(id);
       if (!booking) {
         return next(new ErrorHandler("booking not found", 404));
@@ -292,6 +294,72 @@ export const bookingStatus = catchAsyncErrors(
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getRevenueChartData = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const currentYear = new Date().getFullYear();
+      const labels = [];
+      const monthlyRevenue = [];
+
+      for (let i = 1; i <= 12; i++) {
+        const startDate = new Date(currentYear, i - 1, 1);
+        const endDate = new Date(currentYear, i, 0, 23, 59, 59);
+        const formattedStartDate = formatDate(startDate);
+        const formattedEndDate = formatDate(endDate);
+
+        const bookings = await BookingModel.aggregate([
+          {
+            $match: {
+              fromDate: { $gte: formattedStartDate, $lte: formattedEndDate },
+              toDate: { $gte: formattedStartDate, $lte: formattedEndDate },
+              isDeleted: false,
+            },
+          },
+          {
+            $group: {
+              total: { $sum: "$total" },
+            },
+          },
+        ]);
+        console.log(bookings);
+
+        const total = bookings.length > 0 ? bookings[0].total : 0;
+        monthlyRevenue.push(total);
+
+        const monthYear = `${String(i).padStart(2, "0")}-01-${currentYear
+          .toString()
+          .slice(-2)}`;
+        labels.push(monthYear);
+      }
+
+      const chartData = {
+        labels: labels,
+        series: [
+          {
+            name: "Revenue",
+            type: "column",
+            fill: "solid",
+            data: monthlyRevenue,
+          },
+        ],
+      };
+
+      res.status(200).json({ success: true, chartData });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+    function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours: any = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      const period = hours < 12 ? "AM" : "PM";
+      return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
     }
   }
 );
