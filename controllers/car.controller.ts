@@ -274,7 +274,7 @@ export const getMostBookedCars = catchAsyncErrors(
           $sort: { count: -1 },
         },
         {
-          $limit: 5,
+          $limit: 4,
         },
       ]);
 
