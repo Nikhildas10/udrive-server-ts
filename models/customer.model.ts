@@ -15,6 +15,7 @@ export interface ICustomer extends Document {
   cityOrDistrict: string;
   bookings: IBooking[];
   isDeleted:boolean;
+  customerImage:object;
 }
 
 const customerSchema: Schema = new Schema({
@@ -56,6 +57,10 @@ const customerSchema: Schema = new Schema({
   locality: {
     type: String,
     required: true,
+  },
+  customerImage: {
+    public_id: String,
+    url: String,
   },
   cityOrDistrict: {
     type: String,

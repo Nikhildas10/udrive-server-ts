@@ -22,7 +22,8 @@ export const addCars = catchAsyncErrors(
     try {
       let rcBookResult: any,
         insurancePolicyResult: any,
-        pollutionCertificateResult: any;
+        pollutionCertificateResult: any,
+        carImage: any;
 
       if (req.body.rcBook) {
         rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
@@ -42,6 +43,14 @@ export const addCars = catchAsyncErrors(
       if (req.body.pollutionCertificate) {
         pollutionCertificateResult = await cloudinary.uploader.upload(
           req.body.pollutionCertificate,
+          {
+            folder: "cars",
+          }
+        );
+      }
+      if (req.body.carImage) {
+        pollutionCertificateResult = await cloudinary.uploader.upload(
+          req.body.carImage,
           {
             folder: "cars",
           }
@@ -78,6 +87,12 @@ export const addCars = catchAsyncErrors(
               url: pollutionCertificateResult.secure_url,
               filetype:
                 pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
+            }
+          : undefined,
+        carImage: carImage
+          ? {
+              public_id: pollutionCertificateResult.public_id,
+              url: pollutionCertificateResult.secure_url,
             }
           : undefined,
       };
@@ -135,7 +150,10 @@ export const editCar = catchAsyncErrors(
       const updatedCarData: any = { ...req.body };
 
       const uploadImageIfNotExists = async (imageField: string) => {
+        // Check if the image field is present in the request body
         if (!req.body[imageField]) return;
+
+        // Check if the image already has a public_id (meaning it's not a new upload)
         if (!req.body[imageField].public_id) {
           const result = await cloudinary.uploader.upload(
             req.body[imageField],
@@ -146,12 +164,12 @@ export const editCar = catchAsyncErrors(
           updatedCarData[imageField] = {
             public_id: result.public_id,
             url: result.secure_url,
-            filetype: result?.format == "pdf" ? "pdf" : "image",
+            filetype: result?.format === "pdf" ? "pdf" : "image",
           };
-        } else {
-          updatedCarData[imageField] = req.body[imageField];
         }
       };
+
+      await uploadImageIfNotExists("carImage");
 
       await Promise.all([
         uploadImageIfNotExists("rcBook"),

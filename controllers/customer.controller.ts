@@ -3,11 +3,33 @@ import * as customerService from "../services/customer.service";
 import customerModel, { ICustomer } from "../models/customer.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
+import cloudinary from "../utils/cloudinary";
 
 export const createCustomer = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await customerModel.create(req.body);
+      let customerImageResult: any;
+
+      if (req.body.customerImage) {
+        customerImageResult = await cloudinary.uploader.upload(
+          req.body.customerImage,
+          {
+            folder: "customers",
+          }
+        );
+      }
+
+      const customerData = {
+        ...req.body,
+        customerImage: customerImageResult
+          ? {
+              public_id: customerImageResult.public_id,
+              url: customerImageResult.secure_url,
+            }
+          : undefined,
+      };
+
+      const data = await customerModel.create(customerData);
       res.status(200).json({ success: true, data });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -23,14 +45,36 @@ export const updateCustomer = async (
   try {
     const customerId: string = req.params.id;
     const updatedData = req.body;
-    const updatedCustomer = await customerService.updateCustomerById(
+
+    let updatedCustomerImageResult: any;
+
+    if (req.body.customerImage) {
+      updatedCustomerImageResult = await cloudinary.uploader.upload(
+        req.body.customerImage,
+        {
+          folder: "customers",
+        }
+      );
+    }
+
+    if (updatedCustomerImageResult) {
+      updatedData.customerImage = {
+        public_id: updatedCustomerImageResult.public_id,
+        url: updatedCustomerImageResult.secure_url,
+      };
+    }
+
+    const updatedCustomer = await customerModel.findByIdAndUpdate(
       customerId,
-      updatedData
+      updatedData,
+      { new: true }
     );
+
     if (!updatedCustomer) {
       res.status(404).json({ message: "Customer not found" });
       return;
     }
+
     res.status(200).json({ success: true, updatedCustomer });
   } catch (err: any) {
     next(new ErrorHandler(err.message, 400));

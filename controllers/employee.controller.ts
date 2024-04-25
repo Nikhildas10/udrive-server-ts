@@ -13,7 +13,7 @@ import {
 import ejs from "ejs";
 import { redis } from "../utils/redis";
 import { getUserById } from "../services/user.services";
-import cloudinary from "cloudinary";
+import cloudinary from "../utils/cloudinary";
 import employeeModel from "../models/employee.model ";
 import { sendMail } from "../utils/sendMail";
 import path from "path";
@@ -78,6 +78,13 @@ export const createEmployee = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, email, password, access, userName } = req.body;
+      let employeeImage:any;
+       if (req.body.employeeImage) {
+         employeeImage = await cloudinary.uploader.upload(req.body.employeeImage, {
+           folder: "employees",
+         });
+       }
+
       const existingUser = await employeeModel.findOne({ email });
       if (existingUser) {
         return next(new ErrorHandler("EMAIL already exist", 400));
@@ -88,6 +95,10 @@ export const createEmployee = catchAsyncErrors(
         password,
         access,
         userName,
+        employeeImage:{
+          public_id:employeeImage.public_id,
+          url:employeeImage.secure_url
+        }
       });
       res.status(201).json({ success: true, data });
     } catch (err: any) {
@@ -199,7 +210,7 @@ interface IupdateEmployee {
 export const editEmployee = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email, password, access, userName } =
+      const { name, email, password, access, userName, employeeImage } =
         req.body as IupdateEmployee;
       const userId = req.params?.id;
       console.log(userId);
@@ -231,7 +242,18 @@ export const editEmployee = catchAsyncErrors(
       if (userName) {
         user.userName = userName;
       }
-      // Save the updated user
+
+      let updatedEmployeeImage:any;
+      if (employeeImage) {
+        updatedEmployeeImage = await cloudinary.uploader.upload(employeeImage, {
+          folder: "employees",
+        });
+        user.employeeImage = {
+          public_id: updatedEmployeeImage.public_id,
+          url: updatedEmployeeImage.secure_url,
+        };
+      }
+
       await user.save();
 
       res.status(201).json({

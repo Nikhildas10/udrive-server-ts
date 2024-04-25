@@ -20,7 +20,8 @@ export interface IEmployee extends Document {
   signAccessToken: () => string;
   signRefreshToken: () => string;
   bookings: IBooking[];
-  isDeleted:boolean;
+  isDeleted: boolean;
+  employeeImage: object;
 }
 
 const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
@@ -58,6 +59,10 @@ const employeeSchema: Schema<IEmployee> = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    employeeImage: {
+      public_id: String,
+      url: String,
     },
     access: {
       type: [
