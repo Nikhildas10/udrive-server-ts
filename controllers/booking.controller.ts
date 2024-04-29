@@ -402,3 +402,58 @@ export const getTotalRevenue = catchAsyncErrors(
     }
   }
 );
+
+export const getUpcomingBookings = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = formatDate(currentDate);
+
+      const upcomingBookings = await BookingModel.aggregate([
+        {
+          $match: { isDeleted: false },
+        },
+       
+        {
+          $match: {
+            $or: [
+              {
+                "fromDate": {
+                  $gte: formattedDate,
+                },
+              },
+             
+             
+            ],
+          },
+        },
+      ]);
+
+      res.status(200).json({ success: true, upcomingBookings });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getCanceclledBookings=catchAsyncErrors(
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      const cancelledBookings=await BookingModel.find({isDeleted:true})
+      res.status(200).json({success:true,cancelledBookings})
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+)
+
+function formatDate(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const period = date.getHours() >= 12 ? "PM" : "AM";
+  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
+}
+ 
