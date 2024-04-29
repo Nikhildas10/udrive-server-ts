@@ -407,23 +407,20 @@ export const getUpcomingBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentDate = new Date();
-      const formattedDate = formatDate(currentDate);
-
+      const formattedDate = formatDateActive(currentDate);
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: { isDeleted: false },
         },
-       
+
         {
           $match: {
             $or: [
               {
-                "fromDate": {
-                  $gte: formattedDate,
+                fromDate: {
+                  $gt: formattedDate,
                 },
               },
-             
-             
             ],
           },
         },
@@ -436,17 +433,47 @@ export const getUpcomingBookings = catchAsyncErrors(
   }
 );
 
-export const getCanceclledBookings=catchAsyncErrors(
-  async(req:Request,res:Response,next:NextFunction)=>{
+export const getCurrentlyActiveBookings = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cancelledBookings=await BookingModel.find({isDeleted:true})
-      res.status(200).json({success:true,cancelledBookings})
+      const currentDate = new Date();
+      const formattedDate = formatDate(currentDate);
+      const activeBookings = await BookingModel.aggregate([
+        {
+          $match: { isDeleted: false },
+        },
+
+        {
+          $match: {
+            $or: [
+              {
+                toDate: {
+                  $gte: formattedDate,
+                },
+              },
+            ],
+          },
+        },
+      ]);
+
+      res.status(200).json({ success: true, activeBookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
-)
+);
 
+export const getCancelledBookings = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cancelledBookings = await BookingModel.find({ isDeleted: true });
+      res.status(200).json({ success: true, cancelledBookings });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+//format date for upcoming bookings
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -456,4 +483,14 @@ function formatDate(date: Date): string {
   const period = date.getHours() >= 12 ? "PM" : "AM";
   return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
 }
- 
+
+//format date for active bookings
+function formatDateActive(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = "00";
+  const minutes = "01";
+
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
+}

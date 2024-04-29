@@ -7,7 +7,8 @@ import {
   deleteMultipleBookings,
   editBooking,
   getAllBooking,
-  getCanceclledBookings,
+  getCancelledBookings,
+  getCurrentlyActiveBookings,
   getRevenueChartData,
   getSingleBooking,
   getTotalRevenue,
@@ -25,6 +26,8 @@ bookingRouter.get("/get-total-revenue", isAuthenticated, getTotalRevenue);
 bookingRouter.put("/edit/:id", isAuthenticated, editBooking);
 bookingRouter.put("/status/:id", isAuthenticated, bookingStatus);
 bookingRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleBookings);
-bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCanceclledBookings);
+bookingRouter.get("/get-upcoming-bookings", isAuthenticated, getUpcomingBookings);
+bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
+bookingRouter.get("/get-active-bookings", isAuthenticated, getCurrentlyActiveBookings);
 
 export default bookingRouter;

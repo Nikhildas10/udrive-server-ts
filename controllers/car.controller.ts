@@ -23,7 +23,7 @@ export const addCars = catchAsyncErrors(
       let rcBookResult: any,
         insurancePolicyResult: any,
         pollutionCertificateResult: any,
-        carImage: any;
+        carImageResult: any;
 
       if (req.body.rcBook) {
         rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
@@ -49,7 +49,7 @@ export const addCars = catchAsyncErrors(
         );
       }
       if (req.body.carImage) {
-        pollutionCertificateResult = await cloudinary.uploader.upload(
+        carImageResult = await cloudinary.uploader.upload(
           req.body.carImage,
           {
             folder: "cars",
@@ -89,10 +89,10 @@ export const addCars = catchAsyncErrors(
                 pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
             }
           : undefined,
-        carImage: carImage
+        carImage: carImageResult
           ? {
-              public_id: pollutionCertificateResult.public_id,
-              url: pollutionCertificateResult.secure_url,
+              public_id: carImageResult.public_id,
+              url: carImageResult.secure_url,
             }
           : undefined,
       };
