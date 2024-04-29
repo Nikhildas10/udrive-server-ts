@@ -14,7 +14,8 @@ export interface ICar extends Document {
   insurancePolicy?: object;
   pollutionCertificate?: object;
   bookings:IBooking[];
-  isDeleted:boolean
+  isDeleted:boolean;
+  carImage:object;
 }
 
 const carSchema = new Schema<ICar>({
@@ -58,6 +59,10 @@ const carSchema = new Schema<ICar>({
     public_id: String,
     url: String,
     filetype:String
+  },
+  carImage:{
+     public_id: String,
+    url: String,
   },
   bookings: [
     {
