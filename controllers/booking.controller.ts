@@ -438,20 +438,13 @@ export const getCurrentlyActiveBookings = catchAsyncErrors(
     try {
       const currentDate = new Date();
       const formattedDate = formatDateActive(currentDate);
+
       const activeBookings = await BookingModel.aggregate([
         {
-          $match: { isDeleted: false },
-        },
-
-        {
           $match: {
-            $and: [
-              {
-                toDate: {
-                  $gt: formattedDate,
-                },
-              },
-            ],
+            isDeleted: false,
+            fromDate: { $lte: formattedDate },
+            toDate: { $gte: formattedDate },
           },
         },
       ]);

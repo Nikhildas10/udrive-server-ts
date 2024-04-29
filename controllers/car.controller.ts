@@ -241,6 +241,35 @@ export const deleteMultipleCars = catchAsyncErrors(
     }
   }
 );
+export const getBookedCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bookedCars = await CarModel.find({
+        "bookings.0": { $exists: true },
+        isDeleted: false,
+      });
+
+      res.status(200).json({ success: true, bookedCars });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+export const getNonBookedCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const nonBookedCars = await CarModel.find({
+        "bookings.0": { $exists: false },
+        isDeleted: false,
+      });
+
+      res.status(200).json({ success: true, nonBookedCars });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
 
 export const getMostBookedCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
