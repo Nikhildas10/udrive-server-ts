@@ -28,5 +28,6 @@ bookingRouter.put("/status/:id", isAuthenticated, bookingStatus);
 bookingRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleBookings);
 bookingRouter.get("/get-upcoming-bookings", isAuthenticated, getUpcomingBookings);
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
+// bookingRouter.get("/get-active-bookings", isAuthenticated, getCurrentlyActiveBookings);
 
 export default bookingRouter;

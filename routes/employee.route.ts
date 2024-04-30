@@ -4,7 +4,7 @@ import {
   updateProfilePicture,
 } from "../controllers/user.controller";
 import { authorizeRoles, isAuthenticated } from "../middleware/auth";
-import { blockEmployee, createEmployee, deleteEmployee, deleteMultipleEmployees, editEmployee, forgotPassword, getAllEmployeesInfo, getSingleEmployeeInfo, getUserInfo, loginEmployee, logoutEmployee, resetPassword, updateAcessToken, updateEmployeeTotal, updatePassword } from "../controllers/employee.controller";
+import { blockEmployee, createEmployee, deleteEmployee, deleteMultipleEmployees, editEmployee, forgotPassword, getAllEmployeesInfo, getEmployeeRevenue, getSingleEmployeeInfo, getUserInfo, loginEmployee, logoutEmployee, resetPassword, updateAcessToken, updateEmployeeTotal, updatePassword } from "../controllers/employee.controller";
 const employeeRouter = express.Router();
 employeeRouter.post("/create", createEmployee);
 employeeRouter.get("/get-all-employee", getAllEmployeesInfo);
@@ -20,6 +20,7 @@ employeeRouter.get("/me", isAuthenticated, getUserInfo);
 employeeRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleEmployees);
 employeeRouter.post("/forgot-password",forgotPassword);
 employeeRouter.post("/reset-password",resetPassword);
+// employeeRouter.get("/get-employee-revenue/:id",getEmployeeRevenue);
 
 
 

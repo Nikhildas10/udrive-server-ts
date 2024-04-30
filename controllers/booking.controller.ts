@@ -14,27 +14,32 @@ export const createBooking = catchAsyncErrors(
     try {
       const { customerSelected, carSelected } = req.body;
 
-      //pass  reference data to cutsomer
+      // Pass reference data to customer
       const customerId = customerSelected?._id;
       const customer = await customerModel.findById(customerId);
       if (!customer) {
         return next(new ErrorHandler("Customer not found", 404));
       }
 
-      //pass reference data to employee
+      // Pass reference data to employee
       const employeeId = req.user?._id || "";
       const employee = await employeeModel.findById(employeeId);
       if (!employee) {
-        return next(new ErrorHandler("employee not found", 404));
+        return next(new ErrorHandler("Employee not found", 404));
       }
 
-      //pass reference data to cars
+      // Pass reference data to cars
       const carId = carSelected?._id;
       const car = await CarModel.findById(carId);
       if (!car) {
-        return next(new ErrorHandler("car not found", 404));
+        return next(new ErrorHandler("Car not found", 404));
       }
-      const booking = await BookingModel.create(req.body);
+
+      const bookingData = {
+        ...req.body,
+        employee
+      };
+      const booking = await BookingModel.create(bookingData);
       await booking.save();
 
       customer.bookings.push(booking);
@@ -50,6 +55,7 @@ export const createBooking = catchAsyncErrors(
     }
   }
 );
+
 export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -443,8 +449,8 @@ export const getCurrentlyActiveBookings = catchAsyncErrors(
         {
           $match: {
             isDeleted: false,
-            fromDate: { $lte: formattedDate },
             toDate: { $gte: formattedDate },
+            fromDate: { $lte: formattedDate },
           },
         },
       ]);

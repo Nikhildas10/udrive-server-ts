@@ -17,6 +17,7 @@ import cloudinary from "../utils/cloudinary";
 import employeeModel from "../models/employee.model ";
 import { sendMail } from "../utils/sendMail";
 import path from "path";
+import mongoose from "mongoose";
 interface IRegistrationBody {
   name: string;
   email: string;
@@ -591,6 +592,44 @@ export const updateProfilePicture = catchAsyncErrors(
         success: true,
         user,
       });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getEmployeeRevenue = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      // Validate employeeId here if needed
+
+      // Aggregate to calculate total revenue
+      const result = await employeeModel.aggregate([
+        {
+          $match: { _id:id }, // Assuming employeeId is MongoDB ObjectId
+        },
+        {
+          $unwind: "$bookings", // Deconstruct the bookings array
+        },
+        {
+          $group: {
+            _id: "$_id",
+            totalRevenue: { $sum: "$bookings.total" }, // Sum the 'total' field in bookings
+          },
+        },
+      ]);
+
+      // Check if employee exists
+      if (result.length === 0) {
+        return next(new ErrorHandler("Employee not found", 404));
+      }
+
+      // Extract total revenue from result
+      const totalRevenue = result[0].totalRevenue;
+
+      res.status(200).json({ success: true, totalRevenue });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }

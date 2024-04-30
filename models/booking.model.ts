@@ -37,6 +37,9 @@ const bookingSchema: Schema = new Schema(
     customerSelected: {
       type: Object,
     },
+    employee: {
+      type: Object,
+    },
     subTotals: {
       type: Number,
     },

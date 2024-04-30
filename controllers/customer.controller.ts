@@ -9,10 +9,19 @@ export const createCustomer = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       let customerImageResult: any;
+      let passportImageResult: any;
 
       if (req.body.customerImage) {
         customerImageResult = await cloudinary.uploader.upload(
           req.body.customerImage,
+          {
+            folder: "customers",
+          }
+        );
+      }
+      if (req.body.passportImage) {
+        passportImageResult = await cloudinary.uploader.upload(
+          req.body.passportImage,
           {
             folder: "customers",
           }
@@ -25,6 +34,12 @@ export const createCustomer = catchAsyncErrors(
           ? {
               public_id: customerImageResult.public_id,
               url: customerImageResult.secure_url,
+            }
+          : undefined,
+        passportImage: passportImageResult
+          ? {
+              public_id: passportImageResult.public_id,
+              url: passportImageResult.secure_url,
             }
           : undefined,
       };
@@ -47,10 +62,19 @@ export const updateCustomer = async (
     const updatedData = req.body;
 
     let updatedCustomerImageResult: any;
+    let updatedPassportImageResult: any;
 
     if (req.body.customerImage) {
       updatedCustomerImageResult = await cloudinary.uploader.upload(
         req.body.customerImage,
+        {
+          folder: "customers",
+        }
+      );
+    }
+    if (req.body.passportImage) {
+      updatedPassportImageResult = await cloudinary.uploader.upload(
+        req.body.passportImage,
         {
           folder: "customers",
         }
@@ -61,6 +85,12 @@ export const updateCustomer = async (
       updatedData.customerImage = {
         public_id: updatedCustomerImageResult.public_id,
         url: updatedCustomerImageResult.secure_url,
+      };
+    }
+    if (updatedPassportImageResult) {
+      updatedData.passportImage = {
+        public_id: updatedPassportImageResult.public_id,
+        url: updatedPassportImageResult.secure_url,
       };
     }
 

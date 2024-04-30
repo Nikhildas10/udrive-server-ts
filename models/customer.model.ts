@@ -16,6 +16,8 @@ export interface ICustomer extends Document {
   bookings: IBooking[];
   isDeleted:boolean;
   customerImage:object;
+  passportImage:object;
+  location:string;
 }
 
 const customerSchema: Schema = new Schema({
@@ -61,6 +63,13 @@ const customerSchema: Schema = new Schema({
   customerImage: {
     public_id: String,
     url: String,
+  },
+  passportImage: {
+    public_id: String,
+    url: String,
+  },
+  location:{
+  type:String
   },
   cityOrDistrict: {
     type: String,
