@@ -605,7 +605,9 @@ export const getEmployeeRevenue = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-
+ if (!id) {
+   res.status(400).json({ message: "id not found" });
+ }
       const result = await employeeModel.aggregate([
         {
           $match: { _id: new mongoose.Types.ObjectId(id) },
@@ -624,7 +626,7 @@ export const getEmployeeRevenue = catchAsyncErrors(
       console.log("Aggregation Result:", result);
 
       if (result.length === 0) {
-        return next(new ErrorHandler("Employee not found", 404));
+        return res.status(200).json({ success: true, totalRevenue: 0 });
       }
 
       const totalRevenue = result[0].totalRevenue;

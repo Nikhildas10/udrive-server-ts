@@ -5,6 +5,7 @@ import {
   deleteCustomerById,
   deleteMultipleCustomer,
   getAllCustomers,
+  getCustomerTotalRevenue,
   getSingleCustomer,
   updateCustomer,
 } from "../controllers/customer.controller";
@@ -18,6 +19,6 @@ customerRouter.get("/getall", isAuthenticated, getAllCustomers);
 customerRouter.delete("/delete/:id", isAuthenticated, deleteCustomerById);
 customerRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleCustomer);
 customerRouter.get("/getsingle/:id", isAuthenticated, getSingleCustomer);
-customerRouter.get("/get-total-revenue/:id", isAuthenticated, getTotalRevenue);
+customerRouter.get("/get-total-revenue/:id", isAuthenticated, getCustomerTotalRevenue);
 
 export default customerRouter;

@@ -37,8 +37,9 @@ export const createBooking = catchAsyncErrors(
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
-        carSelected,customerSelected,
-        employee: employee.toObject(), 
+        carSelected,
+        customerSelected,
+        employee: employee.toObject(),
       };
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
@@ -420,7 +421,6 @@ export const getUpcomingBookings = catchAsyncErrors(
         {
           $match: { isDeleted: false },
         },
-
         {
           $match: {
             $or: [
@@ -431,6 +431,9 @@ export const getUpcomingBookings = catchAsyncErrors(
               },
             ],
           },
+        },
+        {
+          $sort: { fromDate: 1 }, 
         },
       ]);
 

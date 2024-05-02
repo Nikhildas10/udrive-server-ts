@@ -4,6 +4,7 @@ import customerModel, { ICustomer } from "../models/customer.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import cloudinary from "../utils/cloudinary";
+import mongoose from "mongoose";
 
 export const createCustomer = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -189,13 +190,16 @@ export const getCustomerTotalRevenue = async (
 ) => {
   try {
     const { id } = req.params;
-
+const customerData=await customerModel.findById(id)
+ if (!customerData) {
+   res.status(400).json({ message: "customer not found" });
+ }
     const customer = await customerModel.aggregate([
       {
-        $match: { _id: id }, 
+        $match: { _id: new mongoose.Types.ObjectId(id) },
       },
       {
-        $unwind: "$bookings", 
+        $unwind: "$bookings",
       },
       {
         $group: {
@@ -203,22 +207,16 @@ export const getCustomerTotalRevenue = async (
           totalRevenue: { $sum: "$bookings.total" },
         },
       },
-      {
-        $project: {
-          _id: 0, 
-          customerId: "$_id", 
-          totalRevenue: 1,
-        },
-      },
     ]);
 
     if (customer.length === 0) {
       return res
-        .status(404)
-        .json({ success: false, message: "Customer not found" });
+        .status(200)
+        .json({ success: true, totalRevenue:0 });
     }
+      const totalRevenue = customer[0].totalRevenue;
 
-    res.status(200).json({ success: true, customer: customer[0] });
+    res.status(200).json({ success: true, totalRevenue });
   } catch (err: any) {
     next(new ErrorHandler(err.message, 400));
   }

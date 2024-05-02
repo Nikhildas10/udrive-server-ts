@@ -50,12 +50,9 @@ export const addCars = catchAsyncErrors(
         );
       }
       if (req.body.carImage) {
-        carImageResult = await cloudinary.uploader.upload(
-          req.body.carImage,
-          {
-            folder: "cars",
-          }
-        );
+        carImageResult = await cloudinary.uploader.upload(req.body.carImage, {
+          folder: "cars",
+        });
       }
 
       const newCarData = {
@@ -242,35 +239,64 @@ export const deleteMultipleCars = catchAsyncErrors(
     }
   }
 );
-export const getBookedCars = catchAsyncErrors(
+
+export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookedCars = await CarModel.find({
-        "bookings.0": { $exists: true },
-        isDeleted: false,
-      });
+      const date = new Date();
+      const currentDate = formatDate(date);
 
-      res.status(200).json({ success: true, bookedCars });
+      const runningCars = await CarModel.aggregate([
+        {
+          $match: {
+            "bookings.fromDate": { $lte: currentDate }, 
+            "bookings.toDate": { $gte: currentDate }, 
+            isDeleted: false,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            label: "$name", 
+          },
+        },
+      ]);
+
+      res.status(200).json({ success: true, series: runningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-export const getNonBookedCars = catchAsyncErrors(
+
+export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const nonBookedCars = await CarModel.find({
-        "bookings.0": { $exists: false },
-        isDeleted: false,
-      });
+      const currentDate = formatDate(new Date()) // Get the current date
 
-      res.status(200).json({ success: true, nonBookedCars });
+      const carsOnYard = await CarModel.aggregate([
+        {
+          $match: {
+            $or: [
+              { "bookings.toDate": { $lt: currentDate } }, // Bookings end before current date
+            ],
+            isDeleted: false,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            label: "$name", // Rename name field to label
+          },
+        },
+      ]);
+
+      res.status(200).json({ success: true, series: carsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-
 
 export const getMostBookedCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -361,18 +387,21 @@ export const getCarTotalRevenue = async (
 ) => {
   try {
     const { id } = req.params;
+    if(!id){
+      res.status(400).json({message:"id not found"})
+    }
 
     const car = await CarModel.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(id) }, 
+        $match: { _id: new mongoose.Types.ObjectId(id) },
       },
       {
         $unwind: "$bookings",
       },
       {
         $group: {
-          _id: "$_id", 
-          totalRevenue: { $sum: "$bookings.total" }, 
+          _id: "$_id",
+          totalRevenue: { $sum: "$bookings.total" },
         },
       },
       {
@@ -384,9 +413,9 @@ export const getCarTotalRevenue = async (
     ]);
 
     if (car.length === 0) {
-      return res.status(404).json({ success: false, message: "Car not found" });
+      return res.status(200).json({ success: true,totalRevenue:0 });
     }
-      const totalRevenue = car[0].totalRevenue;
+    const totalRevenue = car[0].totalRevenue;
 
     res.status(200).json({ success: true, totalRevenue });
   } catch (err: any) {
