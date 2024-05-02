@@ -181,3 +181,45 @@ export const deleteMultipleCustomer = catchAsyncErrors(
     }
   }
 );
+
+export const getCustomerTotalRevenue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await customerModel.aggregate([
+      {
+        $match: { _id: id }, 
+      },
+      {
+        $unwind: "$bookings", 
+      },
+      {
+        $group: {
+          _id: "$_id",
+          totalRevenue: { $sum: "$bookings.total" },
+        },
+      },
+      {
+        $project: {
+          _id: 0, 
+          customerId: "$_id", 
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    if (customer.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer not found" });
+    }
+
+    res.status(200).json({ success: true, customer: customer[0] });
+  } catch (err: any) {
+    next(new ErrorHandler(err.message, 400));
+  }
+};

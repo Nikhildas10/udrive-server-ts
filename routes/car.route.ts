@@ -3,7 +3,7 @@ import { isAuthenticated } from "../middleware/auth";
 
 import upload from "../middleware/multer";
 import multipleUpload from "../middleware/multer";
-import { addCars, deleteCar, deleteMultipleCars, editCar, getAllCar, getBookedCars, getMostBookedCars, getNonBookedCars, getSingleCar } from "../controllers/car.controller";
+import { addCars, deleteCar, deleteMultipleCars, editCar, getAllCar, getBookedCars, getCarTotalRevenue, getMostBookedCars, getNonBookedCars, getSingleCar } from "../controllers/car.controller";
 
 const carRouter = express.Router();
 
@@ -16,5 +16,6 @@ carRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleCars);
 carRouter.get("/get-running-cars", isAuthenticated, getBookedCars);
 carRouter.get("/get-cars-on-yard", isAuthenticated, getNonBookedCars);
 carRouter.get("/get/:id", isAuthenticated, getSingleCar);
+carRouter.get("/get-total-revenue/:id", isAuthenticated, getCarTotalRevenue);
 
 export default carRouter; 

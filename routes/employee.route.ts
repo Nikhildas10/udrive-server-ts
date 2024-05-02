@@ -20,7 +20,7 @@ employeeRouter.get("/me", isAuthenticated, getUserInfo);
 employeeRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleEmployees);
 employeeRouter.post("/forgot-password",forgotPassword);
 employeeRouter.post("/reset-password",resetPassword);
-// employeeRouter.get("/get-employee-revenue/:id",getEmployeeRevenue);
+employeeRouter.get("/get-employee-revenue/:id",getEmployeeRevenue);
 
 
 

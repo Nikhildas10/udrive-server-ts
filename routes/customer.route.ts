@@ -8,6 +8,7 @@ import {
   getSingleCustomer,
   updateCustomer,
 } from "../controllers/customer.controller";
+import { getTotalRevenue } from "../controllers/booking.controller";
 
 const customerRouter = express.Router();
 
@@ -17,5 +18,6 @@ customerRouter.get("/getall", isAuthenticated, getAllCustomers);
 customerRouter.delete("/delete/:id", isAuthenticated, deleteCustomerById);
 customerRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleCustomer);
 customerRouter.get("/getsingle/:id", isAuthenticated, getSingleCustomer);
+customerRouter.get("/get-total-revenue/:id", isAuthenticated, getTotalRevenue);
 
 export default customerRouter;

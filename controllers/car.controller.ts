@@ -5,6 +5,7 @@ import getDataUri from "../utils/dataUri";
 import cloudinary from "../utils/cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
 import BookingModel from "../models/booking.model";
+import mongoose from "mongoose";
 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -352,3 +353,43 @@ function formatDate(date: Date): string {
   const period = date.getHours() >= 12 ? "PM" : "AM";
   return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
 }
+
+export const getCarTotalRevenue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    const car = await CarModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(id) }, 
+      },
+      {
+        $unwind: "$bookings",
+      },
+      {
+        $group: {
+          _id: "$_id", 
+          totalRevenue: { $sum: "$bookings.total" }, 
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    if (car.length === 0) {
+      return res.status(404).json({ success: false, message: "Car not found" });
+    }
+      const totalRevenue = car[0].totalRevenue;
+
+    res.status(200).json({ success: true, totalRevenue });
+  } catch (err: any) {
+    next(new ErrorHandler(err.message, 400));
+  }
+};

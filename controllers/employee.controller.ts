@@ -79,12 +79,15 @@ export const createEmployee = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, email, password, access, userName } = req.body;
-      let employeeImage:any;
-       if (req.body.employeeImage) {
-         employeeImage = await cloudinary.uploader.upload(req.body.employeeImage, {
-           folder: "employees",
-         });
-       }
+      let employeeImage: any;
+      if (req.body.employeeImage) {
+        employeeImage = await cloudinary.uploader.upload(
+          req.body.employeeImage,
+          {
+            folder: "employees",
+          }
+        );
+      }
 
       const existingUser = await employeeModel.findOne({ email });
       if (existingUser) {
@@ -96,10 +99,10 @@ export const createEmployee = catchAsyncErrors(
         password,
         access,
         userName,
-        employeeImage:{
-          public_id:employeeImage.public_id,
-          url:employeeImage.secure_url
-        }
+        employeeImage: {
+          public_id: employeeImage.public_id,
+          url: employeeImage.secure_url,
+        },
       });
       res.status(201).json({ success: true, data });
     } catch (err: any) {
@@ -244,7 +247,7 @@ export const editEmployee = catchAsyncErrors(
         user.userName = userName;
       }
 
-      let updatedEmployeeImage:any;
+      let updatedEmployeeImage: any;
       if (employeeImage) {
         updatedEmployeeImage = await cloudinary.uploader.upload(employeeImage, {
           folder: "employees",
@@ -603,30 +606,27 @@ export const getEmployeeRevenue = catchAsyncErrors(
     try {
       const { id } = req.params;
 
-      // Validate employeeId here if needed
-
-      // Aggregate to calculate total revenue
       const result = await employeeModel.aggregate([
         {
-          $match: { _id:id }, // Assuming employeeId is MongoDB ObjectId
+          $match: { _id: new mongoose.Types.ObjectId(id) },
         },
         {
-          $unwind: "$bookings", // Deconstruct the bookings array
+          $unwind: "$bookings",
         },
         {
           $group: {
             _id: "$_id",
-            totalRevenue: { $sum: "$bookings.total" }, // Sum the 'total' field in bookings
+            totalRevenue: { $sum: "$bookings.total" },
           },
         },
       ]);
 
-      // Check if employee exists
+      console.log("Aggregation Result:", result);
+
       if (result.length === 0) {
         return next(new ErrorHandler("Employee not found", 404));
       }
 
-      // Extract total revenue from result
       const totalRevenue = result[0].totalRevenue;
 
       res.status(200).json({ success: true, totalRevenue });
