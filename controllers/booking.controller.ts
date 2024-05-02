@@ -12,7 +12,7 @@ import CarModel from "../models/car.model";
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected, carSelected } = req.body;
+      const { customerSelected, carSelected, ...bookingData } = req.body;
 
       // Pass reference data to customer
       const customerId = customerSelected?._id;
@@ -35,11 +35,13 @@ export const createBooking = catchAsyncErrors(
         return next(new ErrorHandler("Car not found", 404));
       }
 
-      const bookingData = {
-        ...req.body,
-        employee
+      const bookingDataWithoutCircularRefs = {
+        ...bookingData,
+        carSelected,customerSelected,
+        employee: employee.toObject(), 
       };
-      const booking = await BookingModel.create(bookingData);
+
+      const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
       await booking.save();
 
       customer.bookings.push(booking);
