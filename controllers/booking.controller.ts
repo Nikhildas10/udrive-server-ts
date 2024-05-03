@@ -415,34 +415,73 @@ export const getTotalRevenue = catchAsyncErrors(
 export const getUpcomingBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentDate = new Date();
-      const formattedDate = formatDateActive(currentDate);
+      const currentTime = new Date();
+
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: { isDeleted: false },
         },
         {
           $match: {
-            $or: [
-              {
-                fromDate: {
-                  $gt: formattedDate,
+            $expr: {
+              $gt: [
+                {
+                  $dateFromString: {
+                    dateString: "$fromDate",
+                  },
                 },
-              },
-            ],
+                currentTime,
+              ],
+            },
           },
         },
         {
-          $sort: { fromDate: 1 }, 
+          $sort: { fromDate: 1 },
         },
       ]);
 
-      res.status(200).json({ success: true, upcomingBookings });
+      upcomingBookings.forEach((booking) => {
+        const bookingTime:any = parseDate(booking.fromDate); 
+
+        const timeDifference = Math.abs(bookingTime - currentTime.getTime());
+
+        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        let timeLeft = "";
+        if (days > 0) {
+          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+        }
+        if (hours > 0) {
+          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
+          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+        }
+
+        booking.timeLeft = timeLeft; 
+      });
+
+      res.status(200).json({
+        success: true,
+        upcomingBookings,
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
+function parseDate(dateString: string) {
+  const parts = dateString.split("-");
+  return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+}
+
 
 export const getCurrentlyActiveBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
