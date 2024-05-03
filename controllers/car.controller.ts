@@ -6,6 +6,8 @@ import cloudinary from "../utils/cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
 import BookingModel from "../models/booking.model";
 import mongoose from "mongoose";
+import { format, parse } from "date-fns";
+
 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -240,6 +242,7 @@ export const deleteMultipleCars = catchAsyncErrors(
   }
 );
 
+
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -249,9 +252,29 @@ export const runningCars = catchAsyncErrors(
       const runningCars = await CarModel.aggregate([
         {
           $match: {
-            "bookings.fromDate": { $lte: currentDate }, 
-            "bookings.toDate": { $gte: currentDate }, 
             isDeleted: false,
+            bookings: {
+              $elemMatch: {
+                $and: [
+                  { fromDate: { $lte: currentDate } },
+                  { toDate: { $gte: currentDate } },
+                ],
+              },
+            },
+          },
+        },
+        {
+          $unwind: "$bookings",
+        },
+        {
+          $match: {
+            "bookings.fromDate": { $lte: currentDate },
+            "bookings.toDate": { $gte: currentDate },
+          },
+        },
+        {
+          $sort: {
+            "bookings.fromDate": 1, 
           },
         },
       ]);
@@ -263,37 +286,30 @@ export const runningCars = catchAsyncErrors(
   }
 );
 
+
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentTime = new Date();
-
-      const carsOnYard = await CarModel.aggregate([
-        {
-          $match: {
-              $expr: {
-              $lt: [
-                {
-                  $dateFromString: {
-                    dateString: "$fromDate",
-                  },
-                },
-                currentTime,
-              ],
+      const date = new Date();
+      const currentDate=formatDate(date)      
+      const availableCars = await CarModel.find({
+        isDeleted: false,
+        bookings: {
+          $not: {
+            $elemMatch: {
+              fromDate: { $lte: currentDate },
+              // toDate: { $gte: currentDate },
             },
-            isDeleted: false,
           },
         },
-        
-      ]);
+      }).sort({"bookings.fromDate":1});
 
-      res.status(200).json({ success: true,  carsOnYard });
+      res.status(200).json({ success: true, availableCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
