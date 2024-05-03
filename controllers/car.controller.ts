@@ -246,24 +246,17 @@ export const runningCars = catchAsyncErrors(
       const date = new Date();
       const currentDate = formatDate(date);
 
-      const countOfRunningCars = await CarModel.aggregate([
+      const runningCars = await CarModel.aggregate([
         {
           $match: {
-            "bookings.fromDate": { $lte: currentDate },
-            "bookings.toDate": { $gte: currentDate },
+            "bookings.fromDate": { $lte: currentDate }, 
+            "bookings.toDate": { $gte: currentDate }, 
             isDeleted: false,
           },
         },
-        {
-          $count: "series",
-        },
       ]);
 
-      const carCount =
-        countOfRunningCars.length > 0 ? countOfRunningCars[0].series : 0;
-      const series = [];
-      series.push({ label: "running cars", value: carCount });
-      res.status(200).json({ success: true, series });
+      res.status(200).json({ success: true, runningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
@@ -275,10 +268,10 @@ export const carsOnYard = catchAsyncErrors(
     try {
       const currentTime = new Date();
 
-      const countOfCarsOnYard = await CarModel.aggregate([
+      const carsOnYard = await CarModel.aggregate([
         {
           $match: {
-            $expr: {
+              $expr: {
               $lt: [
                 {
                   $dateFromString: {
@@ -291,16 +284,10 @@ export const carsOnYard = catchAsyncErrors(
             isDeleted: false,
           },
         },
-        {
-          $count: "carsOnYardCount",
-        },
+        
       ]);
 
-      const carsOnYardCount =
-        countOfCarsOnYard.length > 0 ? countOfCarsOnYard[0].carsOnYardCount : 0;
-      const series = [];
-      series.push({ label: "cars on yard", value: carsOnYardCount });
-      res.status(200).json({ success: true, series });
+      res.status(200).json({ success: true,  carsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
@@ -383,6 +370,7 @@ export const getMostBookedCars = catchAsyncErrors(
   }
 );
 
+// Function to format date to dd-mm-yyyy format
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -400,8 +388,8 @@ export const getCarTotalRevenue = async (
 ) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      res.status(400).json({ message: "id not found" });
+    if(!id){
+      res.status(400).json({message:"id not found"})
     }
 
     const car = await CarModel.aggregate([
@@ -426,7 +414,7 @@ export const getCarTotalRevenue = async (
     ]);
 
     if (car.length === 0) {
-      return res.status(200).json({ success: true, totalRevenue: 0 });
+      return res.status(200).json({ success: true,totalRevenue:0 });
     }
     const totalRevenue = car[0].totalRevenue;
 
