@@ -272,14 +272,21 @@ export const runningCars = catchAsyncErrors(
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentDate = formatDate(new Date()) // Get the current date
+      const currentTime = new Date();
 
       const carsOnYard = await CarModel.aggregate([
         {
           $match: {
-            $or: [
-              { "bookings.toDate": { $lt: currentDate } }, // Bookings end before current date
-            ],
+              $expr: {
+              $lt: [
+                {
+                  $dateFromString: {
+                    dateString: "$fromDate",
+                  },
+                },
+                currentTime,
+              ],
+            },
             isDeleted: false,
           },
         },
@@ -297,6 +304,11 @@ export const carsOnYard = catchAsyncErrors(
     }
   }
 );
+
+function parseDate(dateString: string) {
+  const parts = dateString.split("-");
+  return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+}
 
 export const getMostBookedCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {

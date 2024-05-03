@@ -436,12 +436,29 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
         {
-          $sort: { fromDate: 1 },
+          $addFields: {
+            parsedFromDate: {
+              $dateFromString: {
+                dateString: "$fromDate",
+              },
+            },
+          },
+        },
+        {
+          $sort: {
+            parsedFromDate: 1, 
+            fromDate: 1, 
+          },
+        },
+        {
+          $project: {
+            parsedFromDate: 0, 
+          },
         },
       ]);
 
       upcomingBookings.forEach((booking) => {
-        const bookingTime:any = parseDate(booking.fromDate); 
+        const bookingTime:any = parseDate(booking.fromDate);
 
         const timeDifference = Math.abs(bookingTime - currentTime.getTime());
 
@@ -464,7 +481,7 @@ export const getUpcomingBookings = catchAsyncErrors(
           timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
         }
 
-        booking.timeLeft = timeLeft; 
+        booking.timeLeft = timeLeft;
       });
 
       res.status(200).json({
