@@ -417,22 +417,15 @@ export const getUpcomingBookings = catchAsyncErrors(
     try {
       const currentTime = new Date();
 
+      const tolerance = formatDate(
+        new Date(currentTime.getTime() - 5 * 60 * 1000)
+      );
+
       const upcomingBookings = await BookingModel.aggregate([
         {
-          $match: { isDeleted: false },
-        },
-        {
           $match: {
-            $expr: {
-              $gt: [
-                {
-                  $dateFromString: {
-                    dateString: "$fromDate",
-                  },
-                },
-                currentTime,
-              ],
-            },
+            isDeleted: false,
+            fromDate: { $gte: tolerance },
           },
         },
         {

@@ -266,13 +266,12 @@ export const runningCars = catchAsyncErrors(
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const date=new Date()
-      const currentTime = formatDate(date)
+      const currentTime = new Date();
 
       const carsOnYard = await CarModel.aggregate([
         {
           $match: {
-            $expr: {
+              $expr: {
               $lt: [
                 {
                   $dateFromString: {
@@ -285,36 +284,15 @@ export const carsOnYard = catchAsyncErrors(
             isDeleted: false,
           },
         },
-        {
-          $lookup: {
-            from: "bookings", // Assuming the bookings collection name is "bookings"
-            localField: "_id",
-            foreignField: "carId", // Assuming the field name in bookings collection is "carId" that links to CarModel's _id
-            as: "bookings",
-          },
-        },
-        {
-          $addFields: {
-            freeUntil: {
-              $cond: {
-                if: { $eq: [{ $size: "$bookings" }, 0] }, // Check if there are no bookings
-                then: 0, // If no bookings, set freeUntil as null
-                else: {
-                  $subtract: [{ $min: "$bookings.fromDate" }, 86400000], // Subtract one day from the earliest booking's fromDate
-                },
-              },
-            },
-          },
-        },
+        
       ]);
 
-      res.status(200).json({ success: true, carsOnYard });
+      res.status(200).json({ success: true,  carsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-
 
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
