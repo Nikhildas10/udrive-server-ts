@@ -13,6 +13,7 @@ import {
   getSingleBooking,
   getTotalRevenue,
   getUpcomingBookings,
+  getUpcomingBookingsCount,
 } from "../controllers/booking.controller";
 
 const bookingRouter = express.Router();
@@ -27,7 +28,7 @@ bookingRouter.put("/edit/:id", isAuthenticated, editBooking);
 bookingRouter.put("/status/:id", isAuthenticated, bookingStatus);
 bookingRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleBookings);
 bookingRouter.get("/get-upcoming-bookings", isAuthenticated, getUpcomingBookings);
+bookingRouter.get("/get-upcoming-bookings-count", isAuthenticated, getUpcomingBookingsCount);
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
-// bookingRouter.get("/get-active-bookings", isAuthenticated, getCurrentlyActiveBookings);
 
 export default bookingRouter;

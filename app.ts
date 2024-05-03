@@ -8,6 +8,7 @@ import carRouter from "./routes/car.route";
 import bookingRouter from "./routes/booking.route";
 import customerRouter from "./routes/customer.route";
 import calendarRouter from "./routes/calendar.route";
+import dashboardRouter from "./routes/dashboard.route";
 require("dotenv").config();
 export const app = express();
 
@@ -33,6 +34,7 @@ app.use(
 
 
 app.use("/api", userRouter);
+app.use("/api",dashboardRouter );
 app.use("/api/employee", employeeRouter);
 app.use("/api/car", carRouter);
 app.use("/api/booking", bookingRouter);

@@ -446,19 +446,19 @@ export const getUpcomingBookings = catchAsyncErrors(
         },
         {
           $sort: {
-            parsedFromDate: 1, 
-            fromDate: 1, 
+            parsedFromDate: 1,
+            fromDate: 1,
           },
         },
         {
           $project: {
-            parsedFromDate: 0, 
+            parsedFromDate: 0,
           },
         },
       ]);
 
       upcomingBookings.forEach((booking) => {
-        const bookingTime:any = parseDate(booking.fromDate);
+        const bookingTime: any = parseDate(booking.fromDate);
 
         const timeDifference = Math.abs(bookingTime - currentTime.getTime());
 
@@ -498,7 +498,6 @@ function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
 }
-
 
 export const getCurrentlyActiveBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -554,3 +553,45 @@ function formatDateActive(date: Date): string {
 
   return `${day}-${month}-${year} ${hours}:${minutes}`;
 }
+
+export const getUpcomingBookingsCount = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const currentTime = new Date();
+
+      const countOfUpcomingBookings = await BookingModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            $expr: {
+              $gt: [
+                {
+                  $dateFromString: {
+                    dateString: "$fromDate",
+                  },
+                },
+                currentTime,
+              ],
+            },
+          },
+        },
+        {
+          $count: "upcomingBookings",
+        },
+      ]);
+
+      const sumOfUpcomingBookings =
+        countOfUpcomingBookings.length > 0
+          ? countOfUpcomingBookings[0].upcomingBookings
+          : 0;
+      const series = [];
+      series.push({ label: "upcoming bookings", value: sumOfUpcomingBookings });
+      res.status(200).json({
+        success: true,
+        series,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
