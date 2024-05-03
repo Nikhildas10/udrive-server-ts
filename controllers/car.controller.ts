@@ -292,7 +292,7 @@ export const carsOnYard = catchAsyncErrors(
     try {
       const date = new Date();
       const currentDate=formatDate(date)      
-      const availableCars = await CarModel.find({
+      const carsOnYard = await CarModel.find({
         isDeleted: false,
         bookings: {
           $not: {
@@ -304,7 +304,7 @@ export const carsOnYard = catchAsyncErrors(
         },
       }).sort({"bookings.fromDate":1});
 
-      res.status(200).json({ success: true, availableCars });
+      res.status(200).json({ success: true, carsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
