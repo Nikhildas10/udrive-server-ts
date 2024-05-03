@@ -67,9 +67,10 @@ const customerSchema: Schema = new Schema({
   passportImage: {
     public_id: String,
     url: String,
+    filetype: String,
   },
-  location:{
-  type:String
+  location: {
+    type: String,
   },
   cityOrDistrict: {
     type: String,

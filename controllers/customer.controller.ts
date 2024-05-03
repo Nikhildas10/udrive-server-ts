@@ -92,6 +92,7 @@ export const updateCustomer = async (
       updatedData.passportImage = {
         public_id: updatedPassportImageResult.public_id,
         url: updatedPassportImageResult.secure_url,
+        filetype: updatedPassportImageResult?.format == "pdf" ? "pdf" : "image",
       };
     }
 
