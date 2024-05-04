@@ -343,21 +343,29 @@ export const carsOnYard = catchAsyncErrors(
         {
           $project: {
             _id: 0,
-            car: "$$ROOT", // Create an array with a similar structure to carsWithBookings
+            car: "$$ROOT",
             nextAvailableDate: {
               $cond: {
                 if: { $eq: ["$bookings", []] },
                 then: null,
                 else: currentDate,
               },
-            }, // Conditionally include nextAvailableDate based on whether there are bookings or not
+            },
           },
         },
       ]);
 
       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
 
-      res.status(200).json({ success: true, carsOnYard: allCarsOnYard });
+      // Remove duplicate cars
+      const uniqueCarsOnYard = allCarsOnYard.reduce((acc, carObj) => {
+        if (!acc.some((item) => item.car._id.equals(carObj.car._id))) {
+          acc.push(carObj);
+        }
+        return acc;
+      }, []);
+
+      res.status(200).json({ success: true, carsOnYard: uniqueCarsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
