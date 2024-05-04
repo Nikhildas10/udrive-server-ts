@@ -306,7 +306,7 @@ export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const date = new Date();
-      const currentDate = parseDate(date);
+      const currentDate = formatDate(date);
 console.log(currentDate);
 
       const carsWithBookings = await CarModel.aggregate([
