@@ -246,21 +246,14 @@ export const deleteMultipleCars = catchAsyncErrors(
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const date = new Date();
-      const currentDate = formatDate(date);
+      const currentDate = formatDate(new Date());
 
       const runningCars = await CarModel.aggregate([
         {
           $match: {
             isDeleted: false,
-            bookings: {
-              $elemMatch: {
-                $and: [
-                  { fromDate: { $lte: currentDate } },
-                  { toDate: { $gte: currentDate } },
-                ],
-              },
-            },
+            "bookings.fromDate": { $lte: currentDate },
+            "bookings.toDate": { $gte: currentDate },
           },
         },
         {
@@ -273,8 +266,15 @@ export const runningCars = catchAsyncErrors(
           },
         },
         {
+          $addFields: {
+            runningDate: {
+              $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
+            },
+          },
+        },
+        {
           $sort: {
-            "bookings.fromDate": 1, 
+            "bookings.fromDate": 1,
           },
         },
       ]);
@@ -287,24 +287,64 @@ export const runningCars = catchAsyncErrors(
 );
 
 
+
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const date = new Date();
-      const currentDate=formatDate(date)      
-      const carsOnYard = await CarModel.find({
-        isDeleted: false,
-        bookings: {
-          $not: {
-            $elemMatch: {
-              fromDate: { $lte: currentDate },
-              // toDate: { $gte: currentDate },
-            },
+      const currentDate = formatDate(date);
+
+      const carsWithBookings = await CarModel.aggregate([
+        {
+          $match: { isDeleted: false },
+        },
+        {
+          $unwind: "$bookings", 
+        },
+        {
+          $match: {
+            "bookings.fromDate": { $gte: currentDate }, 
           },
         },
-      }).sort({"bookings.fromDate":1});
+        {
+          $group: {
+            _id: "$_id",
+            car: { $first: "$$ROOT" }, 
+            nextAvailableDate: { $min: "$bookings.fromDate" }, 
+          },
+        },
+        {
+          $sort: { nextAvailableDate: 1 }, 
+        },
+        {
+          $project: {
+            _id: 0,
+            car: 1,
+            nextAvailableDate: 1,
+          },
+        },
+      ]);
 
-      res.status(200).json({ success: true, carsOnYard });
+      const carsWithoutBookings = await CarModel.aggregate([
+        {
+          $match: { isDeleted: false },
+        },
+        {
+          $lookup: {
+            from: "bookings",
+            localField: "_id",
+            foreignField: "car",
+            as: "bookings",
+          },
+        },
+        {
+          $match: { bookings: [] }, 
+        },
+      ]);
+
+      const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
+
+      res.status(200).json({ success: true, carsOnYard: allCarsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
