@@ -246,6 +246,7 @@ export const runningCars = catchAsyncErrors(
     try {
       const currentDate = formatDate(new Date());
       const currentTime = new Date().getHours();
+console.log(currentDate);
 
       const runningCars = await CarModel.aggregate([
         {
@@ -277,26 +278,22 @@ export const runningCars = catchAsyncErrors(
         },
       ]);
 
-      const filteredRunningCars = runningCars.filter((car) => {
-        const fromDate = new Date(car.bookings.fromDate);
-        const fromTime = fromDate.getHours();
-        const toDate = new Date(car.bookings.toDate);
-        const toTime = toDate.getHours();
+     const filteredRunningCars = runningCars.filter((car) => {
+       const fromDateTime = new Date(car.bookings.fromDate);
+       const toDateTime = new Date(car.bookings.toDate);
 
-        if (currentTime >= 12 && toTime < 12) {
-          return false;
-        }
+       // Check if current time is after the booking end time
+       if (new Date() > toDateTime) {
+         return false;
+       }
 
-        if (
-          currentTime < fromTime ||
-          (currentTime >= 12 && fromTime < 12) ||
-          (currentTime >= 12 && toTime < 12)
-        ) {
-          return false;
-        }
+       // Check if current time is within the booking time range
+       if (new Date() >= fromDateTime && new Date() <= toDateTime) {
+         return true;
+       }
 
-        return true;
-      });
+       return false;
+     });
 
       res.status(200).json({ success: true, runningCars: filteredRunningCars });
     } catch (err: any) {
@@ -309,7 +306,8 @@ export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const date = new Date();
-      const currentDate = formatDate(date);
+      const currentDate = parseDate(date);
+console.log(currentDate);
 
       const carsWithBookings = await CarModel.aggregate([
         {
@@ -405,12 +403,9 @@ export const carsOnYard = catchAsyncErrors(
     }
   }
 );
+ 
 
 
-function parseDate(dateString: string) {
-  const parts = dateString.split("-");
-  return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
-}
 
 export const getMostBookedCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -482,17 +477,55 @@ export const getMostBookedCars = catchAsyncErrors(
     }
   }
 );
- 
+ const parseDate = (dateString) => {
+   // Split the date string into parts
+   const parts = dateString.split(" ");
+   const datePart = parts[0];
+   const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+
+   // Split the date part into day, month, and year
+   const dateParts = datePart.split("-");
+   const day = parseInt(dateParts[0]);
+   const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+   const year = parseInt(dateParts[2]);
+
+   // Split the time part into hours and minutes
+   const timeParts = timePart.split(":");
+   let hours = parseInt(timeParts[0]);
+   const minutes = parseInt(timeParts[1]);
+
+   // Adjust hours for PM if necessary
+   if (parts[2] === "PM" && hours !== 12) {
+     hours += 12;
+   }
+
+   // Create a new Date object with the parsed values
+   return new Date(year, month, day, hours, minutes);
+ };
 // Function to format date to dd-mm-yyyy format
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, "0");
+  let hours = date.getHours();
+  let period = "AM";
+
+  // Convert hours to 12-hour format and determine period
+  if (hours === 0) {
+    hours = 12;
+  } else if (hours === 12) {
+    period = "PM";
+  } else if (hours > 12) {
+    hours -= 12;
+    period = "PM";
+  }
+
+  const hoursStr = hours.toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
-  const period = date.getHours() >= 12 ? "PM" : "AM";
-  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
+
+  return `${day}-${month}-${year} ${hoursStr}:${minutes} ${period}`;
 }
+
 
 function formattDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
