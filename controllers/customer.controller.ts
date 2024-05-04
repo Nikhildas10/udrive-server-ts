@@ -41,6 +41,7 @@ export const createCustomer = catchAsyncErrors(
           ? {
               public_id: passportImageResult.public_id,
               url: passportImageResult.secure_url,
+              filetype: passportImageResult?.format == "pdf" ? "pdf" : "image",
             }
           : undefined,
       };
@@ -191,10 +192,10 @@ export const getCustomerTotalRevenue = async (
 ) => {
   try {
     const { id } = req.params;
-const customerData=await customerModel.findById(id)
- if (!customerData) {
-   res.status(400).json({ message: "customer not found" });
- }
+    const customerData = await customerModel.findById(id);
+    if (!customerData) {
+      res.status(400).json({ message: "customer not found" });
+    }
     const customer = await customerModel.aggregate([
       {
         $match: { _id: new mongoose.Types.ObjectId(id) },
@@ -211,11 +212,9 @@ const customerData=await customerModel.findById(id)
     ]);
 
     if (customer.length === 0) {
-      return res
-        .status(200)
-        .json({ success: true, totalRevenue:0 });
+      return res.status(200).json({ success: true, totalRevenue: 0 });
     }
-      const totalRevenue = customer[0].totalRevenue;
+    const totalRevenue = customer[0].totalRevenue;
 
     res.status(200).json({ success: true, totalRevenue });
   } catch (err: any) {

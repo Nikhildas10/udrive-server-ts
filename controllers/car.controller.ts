@@ -247,6 +247,7 @@ export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentDate = formatDate(new Date());
+      
 
       const runningCars = await CarModel.aggregate([
         {
@@ -344,26 +345,24 @@ export const carsOnYard = catchAsyncErrors(
           $project: {
             _id: 0,
             car: "$$ROOT",
-            nextAvailableDate: {
-              $cond: {
-                if: { $eq: ["$bookings", []] },
-                then: null,
-                else: currentDate,
-              },
-            },
+            nextAvailableDate: null,
           },
         },
       ]);
 
+      // Combine both lists
       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
 
-      // Remove duplicate cars
-      const uniqueCarsOnYard = allCarsOnYard.reduce((acc, carObj) => {
-        if (!acc.some((item) => item.car._id.equals(carObj.car._id))) {
-          acc.push(carObj);
+      // Remove duplicate cars, prioritizing cars with bookings
+      const uniqueCarsOnYard = [];
+      const addedIds = new Set();
+
+      allCarsOnYard.forEach((carObj) => {
+        if (!addedIds.has(carObj.car._id.toString())) {
+          uniqueCarsOnYard.push(carObj);
+          addedIds.add(carObj.car._id.toString());
         }
-        return acc;
-      }, []);
+      });
 
       res.status(200).json({ success: true, carsOnYard: uniqueCarsOnYard });
     } catch (err: any) {
