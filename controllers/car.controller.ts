@@ -8,7 +8,6 @@ import BookingModel from "../models/booking.model";
 import mongoose from "mongoose";
 import { format, parse } from "date-fns";
 
-
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
@@ -242,7 +241,6 @@ export const deleteMultipleCars = catchAsyncErrors(
   }
 );
 
-
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -300,16 +298,12 @@ export const runningCars = catchAsyncErrors(
         return true;
       });
 
-
       res.status(200).json({ success: true, runningCars: filteredRunningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
-
- 
-
 
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -350,8 +344,8 @@ export const carsOnYard = catchAsyncErrors(
 
       const carsWithoutBookings = await CarModel.find({
         isDeleted: false,
-        bookings: { $exists: false }, // Find cars without bookings
-      }).select("-_id car nextAvailableDate");
+        $or: [{ bookings: [] }, { bookings: { $exists: false } }],
+      });
 
       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
 
@@ -373,7 +367,6 @@ export const carsOnYard = catchAsyncErrors(
   }
 );
 
- 
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
@@ -478,8 +471,8 @@ export const getCarTotalRevenue = async (
 ) => {
   try {
     const { id } = req.params;
-    if(!id){
-      res.status(400).json({message:"id not found"})
+    if (!id) {
+      res.status(400).json({ message: "id not found" });
     }
 
     const car = await CarModel.aggregate([
@@ -504,7 +497,7 @@ export const getCarTotalRevenue = async (
     ]);
 
     if (car.length === 0) {
-      return res.status(200).json({ success: true,totalRevenue:0 });
+      return res.status(200).json({ success: true, totalRevenue: 0 });
     }
     const totalRevenue = car[0].totalRevenue;
 
