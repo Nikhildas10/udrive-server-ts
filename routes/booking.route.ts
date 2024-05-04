@@ -6,6 +6,7 @@ import {
   deleteBooking,
   deleteMultipleBookings,
   editBooking,
+  getActiveBookings,
   getAllBooking,
   getCancelledBookings,
   getCurrentlyActiveBookings,
@@ -30,6 +31,7 @@ bookingRouter.delete("/multiple-delete", isAuthenticated, deleteMultipleBookings
 bookingRouter.get("/get-upcoming-bookings", isAuthenticated, getUpcomingBookings);
 bookingRouter.get("/get-upcoming-bookings-count", isAuthenticated, getUpcomingBookingsCount);
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
+bookingRouter.get("/get-active-bookings", isAuthenticated, getActiveBookings);
 
 export default bookingRouter;
  

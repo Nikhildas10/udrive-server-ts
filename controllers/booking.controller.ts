@@ -416,16 +416,17 @@ export const getUpcomingBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentTime = new Date();
-
-      const tolerance = formatDate(
-        new Date(currentTime.getTime() - 5 * 60 * 1000)
-      );
-
+  
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: {
             isDeleted: false,
-            fromDate: { $gte: tolerance },
+            $expr: {
+              $and: [
+                { $gte: ["$fromDate", formatDateUpcoming(currentTime)] }, // Booking starts after current time
+                { $gt: ["$toDate", formatDateUpcoming(currentTime)] }, // Booking ends after current time
+              ],
+            },
           },
         },
         {
@@ -449,6 +450,12 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
+      const filteredUpcomingBookings=upcomingBookings.filter((booking)=>{
+        const fromDate=new Date(booking.fromDate)
+        if(new Date()<fromDate){
+          return true
+        }
+      })
 
       upcomingBookings.forEach((booking) => {
         const bookingTime: any = parseDate(booking.fromDate);
@@ -479,7 +486,7 @@ export const getUpcomingBookings = catchAsyncErrors(
 
       res.status(200).json({
         success: true,
-        upcomingBookings,
+       upcomingBookings: filteredUpcomingBookings,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -492,28 +499,83 @@ function parseDate(dateString: string) {
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
 }
 
-export const getCurrentlyActiveBookings = catchAsyncErrors(
+export const getActiveBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentDate = new Date();
-      const formattedDate = formatDateActive(currentDate);
+      const currentTime = new Date();
 
       const activeBookings = await BookingModel.aggregate([
         {
           $match: {
             isDeleted: false,
-            toDate: { $gte: formattedDate },
-            fromDate: { $lte: formattedDate },
+            $expr: {
+              $and: [
+                { $lte: [{ $toDate: "$fromDate" }, currentTime] }, // Booking starts before or at the current time
+                { $gt: [{ $toDate: "$toDate" }, currentTime] }, // Booking ends after the current time
+              ],
+            },
+          },
+        },
+        {
+          $addFields: {
+            parsedFromDate: {
+              $dateFromString: {
+                dateString: "$fromDate",
+              },
+            },
+            active: true, // Adding active field set to true
+          },
+        },
+        {
+          $sort: {
+            parsedFromDate: 1,
+            fromDate: 1,
+          },
+        },
+        {
+          $project: {
+            parsedFromDate: 0,
           },
         },
       ]);
 
-      res.status(200).json({ success: true, activeBookings });
+      activeBookings.forEach((booking) => {
+        const bookingTime: any = parseDate(booking.fromDate);
+
+        const timeDifference = Math.abs(bookingTime - currentTime.getTime());
+
+        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        let timeLeft = "";
+        if (days > 0) {
+          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+        }
+        if (hours > 0) {
+          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
+          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+        }
+
+        booking.timeLeft = timeLeft;
+      });
+
+      res.status(200).json({
+        success: true,
+        activeBookings,
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
 
 export const getCancelledBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -546,6 +608,30 @@ function formatDateActive(date: Date): string {
 
   return `${day}-${month}-${year} ${hours}:${minutes}`;
 }
+
+function formatDateUpcoming(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  let period = "AM";
+
+  // Convert hours to 12-hour format and determine period
+  if (hours === 0) {
+    hours = 12;
+  } else if (hours === 12) {
+    period = "PM";
+  } else if (hours > 12) {
+    hours -= 12;
+    period = "PM";
+  }
+
+  const hoursStr = hours.toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${day}-${month}-${year} ${hoursStr}:${minutes} ${period}`;
+}
+
 
 export const getUpcomingBookingsCount = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
