@@ -305,60 +305,8 @@ console.log(currentDate);
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const date = new Date();
-      const currentDate = formatDate(date);
-console.log(currentDate);
+      const currentDate = formatDate(new Date());
 
-      const carsWithBookings = await CarModel.aggregate([
-        {
-          $match: { isDeleted: false },
-        },
-        {
-          $unwind: "$bookings",
-        },
-        {
-          $match: {
-            "bookings.fromDate": { $gte: currentDate },
-          },
-        },
-        {
-          $group: {
-            _id: "$_id",
-            car: { $first: "$$ROOT" },
-            nextAvailableDate: { $min: "$bookings.fromDate" },
-          },
-        },
-        {
-          $sort: { nextAvailableDate: 1 },
-        },
-        {
-          $project: {
-            _id: 0,
-            car: 1,
-            nextAvailableDate: 1,
-          },
-        },
-      ]);
-
-      const carsWithoutBookings = await CarModel.find({
-        isDeleted: false,
-        $or: [{ bookings: [] }, { bookings: { $exists: false } }],
-      });
-
-      const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
-
-      // Remove duplicate cars
-      const addedIds = new Set();
-      const uniqueCarsOnYard = allCarsOnYard.filter((carObj) => {
-        const carId = carObj.car._id.toString();
-        if (!addedIds.has(carId)) {
-          addedIds.add(carId);
-          return true;
-        }
-        return false;
-      });
-
-      // Fetch running cars directly without calling runningCars function
       const runningCars = await CarModel.aggregate([
         {
           $match: {
@@ -376,33 +324,45 @@ console.log(currentDate);
           },
         },
         {
-          $addFields: {
-            runningDate: {
-              $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
-            },
-          },
-        },
-        {
           $sort: {
             "bookings.fromDate": 1,
           },
         },
       ]);
 
-      // Filter out cars that are also running
-      const finalCarsOnYard = uniqueCarsOnYard.filter((carObj) => {
-        const carId = carObj.car._id.toString();
-        return !runningCars.some(
-          (runningCar) => runningCar._id.toString() === carId
-        );
-      });
+      const notRunningCars = runningCars
+        .filter((car) => {
+          const fromDateTime = new Date(car.bookings.fromDate);
+          const toDateTime = new Date(car.bookings.toDate);
 
-      res.status(200).json({ success: true, carsOnYard: finalCarsOnYard });
+          // Check if current time is after the booking end time
+          if (new Date() > toDateTime) {
+            return true; // Car is not running
+          }
+
+          // Check if current time is within the booking time range
+          if (new Date() >= fromDateTime && new Date() <= toDateTime) {
+            return false; // Car is running
+          }
+
+          return true; // Car is not running
+        })
+        .map((car) => ({
+          ...car,
+          availableTimeTill:
+            new Date(car.bookings.fromDate) < new Date(currentDate)
+              ? null
+              : car.bookings.fromDate,
+        }));
+
+      res.status(200).json({ success: true, notRunningCars: notRunningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
+
  
 
 
