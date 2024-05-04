@@ -304,7 +304,7 @@ export const runningCars = catchAsyncErrors(
     }
   }
 );
-
+  
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -350,22 +350,62 @@ export const carsOnYard = catchAsyncErrors(
       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
 
       // Remove duplicate cars
-      const uniqueCarsOnYard = [];
       const addedIds = new Set();
-
-      allCarsOnYard.forEach((carObj) => {
-        if (!addedIds.has(carObj.car._id.toString())) {
-          uniqueCarsOnYard.push(carObj);
-          addedIds.add(carObj.car._id.toString());
+      const uniqueCarsOnYard = allCarsOnYard.filter((carObj) => {
+        const carId = carObj.car._id.toString();
+        if (!addedIds.has(carId)) {
+          addedIds.add(carId);
+          return true;
         }
+        return false;
       });
 
-      res.status(200).json({ success: true, carsOnYard: uniqueCarsOnYard });
+      // Fetch running cars directly without calling runningCars function
+      const runningCars = await CarModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            "bookings.fromDate": { $lte: currentDate },
+            "bookings.toDate": { $gte: currentDate },
+          },
+        },
+        {
+          $unwind: "$bookings",
+        },
+        {
+          $match: {
+            "bookings.fromDate": { $lte: currentDate },
+          },
+        },
+        {
+          $addFields: {
+            runningDate: {
+              $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
+            },
+          },
+        },
+        {
+          $sort: {
+            "bookings.fromDate": 1,
+          },
+        },
+      ]);
+
+      // Filter out cars that are also running
+      const finalCarsOnYard = uniqueCarsOnYard.filter((carObj) => {
+        const carId = carObj.car._id.toString();
+        return !runningCars.some(
+          (runningCar) => runningCar._id.toString() === carId
+        );
+      });
+
+      res.status(200).json({ success: true, carsOnYard: finalCarsOnYard });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
 
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
@@ -442,7 +482,7 @@ export const getMostBookedCars = catchAsyncErrors(
     }
   }
 );
-
+ 
 // Function to format date to dd-mm-yyyy format
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");

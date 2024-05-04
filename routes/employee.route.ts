@@ -1,5 +1,5 @@
 import express from "express";
-import {
+import { 
   socialAuth,
   updateProfilePicture,
 } from "../controllers/user.controller";

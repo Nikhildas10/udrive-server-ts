@@ -32,3 +32,4 @@ bookingRouter.get("/get-upcoming-bookings-count", isAuthenticated, getUpcomingBo
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
 
 export default bookingRouter;
+ 
