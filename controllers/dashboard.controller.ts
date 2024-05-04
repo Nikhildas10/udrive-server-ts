@@ -24,26 +24,57 @@ export const getDashboardData = catchAsyncErrors(
         },
       ]);
 
-      const countOfCarsOnYard = await CarModel.aggregate([
-        {
-          $match: {
-            $expr: {
-              $lt: [
-                {
-                  $dateFromString: {
-                    dateString: "$fromDate",
-                  },
-                },
-                currentTime,
-              ],
-            },
-            isDeleted: false,
-          },
-        },
-        {
-          $count: "carsOnYardCount",
-        },
-      ]);
+       const carsWithBookings = await CarModel.aggregate([
+         {
+           $match: { isDeleted: false },
+         },
+         {
+           $unwind: "$bookings",
+         },
+         {
+           $match: {
+             "bookings.fromDate": { $gte: currentDate },
+           },
+         },
+         {
+           $group: {
+             _id: "$_id",
+             car: { $first: "$$ROOT" },
+             nextAvailableDate: { $min: "$bookings.fromDate" },
+           },
+         },
+         {
+           $sort: { nextAvailableDate: 1 },
+         },
+         {
+           $project: {
+             _id: 0,
+             car: 1,
+             nextAvailableDate: 1,
+           },
+         },
+       ]);
+
+       const carsWithoutBookings = await CarModel.find({
+         isDeleted: false,
+         bookings: { $exists: false }, // Find cars without bookings
+       }).select("-_id car nextAvailableDate");
+
+       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
+
+       // Remove duplicate cars
+       const uniqueCarsOnYard = [];
+       const addedIds = new Set();
+
+       allCarsOnYard.forEach((carObj) => {
+         if (!addedIds.has(carObj.car._id.toString())) {
+           uniqueCarsOnYard.push(carObj);
+           addedIds.add(carObj.car._id.toString());
+         }
+       });
+
+       // Count of cars on the yard
+       const countOfCarsOnYard = uniqueCarsOnYard.length;
 
       const countOfUpcomingBookings = await BookingModel.aggregate([
         {
@@ -77,9 +108,7 @@ export const getDashboardData = catchAsyncErrors(
         {
           label: "cars on yard",
           value:
-            countOfCarsOnYard.length > 0
-              ? countOfCarsOnYard[0].carsOnYardCount
-              : 0,
+            countOfCarsOnYard 
         },
         {
           label: "upcoming bookings",

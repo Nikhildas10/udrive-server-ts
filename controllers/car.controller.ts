@@ -247,7 +247,7 @@ export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentDate = formatDate(new Date());
-      
+      const currentTime = new Date().getHours();
 
       const runningCars = await CarModel.aggregate([
         {
@@ -263,7 +263,6 @@ export const runningCars = catchAsyncErrors(
         {
           $match: {
             "bookings.fromDate": { $lte: currentDate },
-            "bookings.toDate": { $gte: currentDate },
           },
         },
         {
@@ -280,7 +279,29 @@ export const runningCars = catchAsyncErrors(
         },
       ]);
 
-      res.status(200).json({ success: true, runningCars });
+      const filteredRunningCars = runningCars.filter((car) => {
+        const fromDate = new Date(car.bookings.fromDate);
+        const fromTime = fromDate.getHours();
+        const toDate = new Date(car.bookings.toDate);
+        const toTime = toDate.getHours();
+
+        if (currentTime >= 12 && toTime < 12) {
+          return false;
+        }
+
+        if (
+          currentTime < fromTime ||
+          (currentTime >= 12 && fromTime < 12) ||
+          (currentTime >= 12 && toTime < 12)
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+
+
+      res.status(200).json({ success: true, runningCars: filteredRunningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
@@ -288,6 +309,7 @@ export const runningCars = catchAsyncErrors(
 );
 
  
+
 
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -326,34 +348,14 @@ export const carsOnYard = catchAsyncErrors(
         },
       ]);
 
-      const carsWithoutBookings = await CarModel.aggregate([
-        {
-          $match: { isDeleted: false },
-        },
-        {
-          $lookup: {
-            from: "bookings",
-            localField: "_id",
-            foreignField: "car",
-            as: "bookings",
-          },
-        },
-        {
-          $match: { bookings: [] },
-        },
-        {
-          $project: {
-            _id: 0,
-            car: "$$ROOT",
-            nextAvailableDate: null,
-          },
-        },
-      ]);
+      const carsWithoutBookings = await CarModel.find({
+        isDeleted: false,
+        bookings: { $exists: false }, // Find cars without bookings
+      }).select("-_id car nextAvailableDate");
 
-      // Combine both lists
       const allCarsOnYard = [...carsWithBookings, ...carsWithoutBookings];
 
-      // Remove duplicate cars, prioritizing cars with bookings
+      // Remove duplicate cars
       const uniqueCarsOnYard = [];
       const addedIds = new Set();
 
@@ -456,6 +458,16 @@ function formatDate(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
   const period = date.getHours() >= 12 ? "PM" : "AM";
+  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
+}
+
+function formattDate(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = "12";
+  const minutes = "00";
+  const period = "PM";
   return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
 }
 
