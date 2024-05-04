@@ -286,7 +286,7 @@ export const runningCars = catchAsyncErrors(
   }
 );
 
-
+ 
 
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -299,22 +299,22 @@ export const carsOnYard = catchAsyncErrors(
           $match: { isDeleted: false },
         },
         {
-          $unwind: "$bookings", 
+          $unwind: "$bookings",
         },
         {
           $match: {
-            "bookings.fromDate": { $gte: currentDate }, 
+            "bookings.fromDate": { $gte: currentDate },
           },
         },
         {
           $group: {
             _id: "$_id",
-            car: { $first: "$$ROOT" }, 
-            nextAvailableDate: { $min: "$bookings.fromDate" }, 
+            car: { $first: "$$ROOT" },
+            nextAvailableDate: { $min: "$bookings.fromDate" },
           },
         },
         {
-          $sort: { nextAvailableDate: 1 }, 
+          $sort: { nextAvailableDate: 1 },
         },
         {
           $project: {
@@ -338,7 +338,14 @@ export const carsOnYard = catchAsyncErrors(
           },
         },
         {
-          $match: { bookings: [] }, 
+          $match: { bookings: [] },
+        },
+        {
+          $project: {
+            _id: 0,
+            car: "$$ROOT", // Create an array with a similar structure to carsWithBookings
+            nextAvailableDate: currentDate, // Set nextAvailableDate as the current date for cars without bookings
+          },
         },
       ]);
 
@@ -350,6 +357,7 @@ export const carsOnYard = catchAsyncErrors(
     }
   }
 );
+
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
