@@ -307,6 +307,7 @@ export const carsOnYard = catchAsyncErrors(
     try {
       const currentDate = formatDate(new Date());
 
+      // Fetch running cars
       const runningCars = await CarModel.aggregate([
         {
           $match: {
@@ -330,17 +331,16 @@ export const carsOnYard = catchAsyncErrors(
         },
       ]);
 
+      // Filter out cars that are not running
       const notRunningCars = runningCars
         .filter((car) => {
           const fromDateTime = new Date(car.bookings.fromDate);
           const toDateTime = new Date(car.bookings.toDate);
 
-          // Check if current time is after the booking end time
           if (new Date() > toDateTime) {
             return true; // Car is not running
           }
 
-          // Check if current time is within the booking time range
           if (new Date() >= fromDateTime && new Date() <= toDateTime) {
             return false; // Car is running
           }
@@ -355,12 +355,30 @@ export const carsOnYard = catchAsyncErrors(
               : car.bookings.fromDate,
         }));
 
-      res.status(200).json({ success: true, notRunningCars: notRunningCars });
+      // Fetch cars with no bookings using aggregation
+      const carsWithNoBookings = await CarModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            bookings: { $exists: false }
+          }
+        }
+      ]);
+
+      // Combine both sets of cars
+      const allCars = [...notRunningCars, ...carsWithNoBookings];
+
+      res.status(200).json({ success: true, carsOnYard: allCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
+
+
+
+
 
 
  

@@ -527,54 +527,35 @@ export const getActiveBookings = catchAsyncErrors(
           },
         },
         {
-          $sort: {
-            parsedFromDate: 1,
-            fromDate: 1,
-          },
-        },
-        {
           $project: {
             parsedFromDate: 0,
           },
         },
       ]);
 
-      activeBookings.forEach((booking) => {
-        const bookingTime: any = parseDate(booking.fromDate);
-
-        const timeDifference = Math.abs(bookingTime - currentTime.getTime());
-
-        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        const minutes = Math.floor(
-          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
-        );
-
-        let timeLeft = "";
-        if (days > 0) {
-          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-        }
-        if (hours > 0) {
-          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-        }
-        if (minutes > 0) {
-          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-        }
-
-        booking.timeLeft = timeLeft;
+      // Filter active bookings based on current time
+      const filteredActiveBookings = activeBookings.filter((booking) => {
+        const fromDate = new Date(booking.fromDate);
+        const toDate = new Date(booking.toDate);
+        return currentTime >= fromDate && currentTime <= toDate;
       });
 
       res.status(200).json({
         success: true,
-        activeBookings,
+        activeBookings: filteredActiveBookings.map((booking) => ({
+          ...booking,
+          activePeriod: {
+            fromDate: booking.fromDate,
+            toDate: booking.toDate,
+          },
+        })),
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
 
 
 export const getCancelledBookings = catchAsyncErrors(
