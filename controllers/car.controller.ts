@@ -344,7 +344,13 @@ export const carsOnYard = catchAsyncErrors(
           $project: {
             _id: 0,
             car: "$$ROOT", // Create an array with a similar structure to carsWithBookings
-            nextAvailableDate: currentDate, // Set nextAvailableDate as the current date for cars without bookings
+            nextAvailableDate: {
+              $cond: {
+                if: { $eq: ["$bookings", []] },
+                then: null,
+                else: currentDate,
+              },
+            }, // Conditionally include nextAvailableDate based on whether there are bookings or not
           },
         },
       ]);
@@ -358,6 +364,7 @@ export const carsOnYard = catchAsyncErrors(
   }
 );
 
+ 
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
