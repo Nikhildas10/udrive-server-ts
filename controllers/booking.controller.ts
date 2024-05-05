@@ -48,6 +48,10 @@ export const createBooking = catchAsyncErrors(
       customer.bookings.push(booking);
       employee.bookings.push(booking);
       car.bookings.push(booking);
+      car.bookings.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+
       await customer.save();
       await employee.save();
       await car.save();
@@ -416,12 +420,11 @@ export const getUpcomingBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentTime = new Date();
-  
+
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: {
             isDeleted: false,
-           
           },
         },
         {
@@ -445,12 +448,14 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
-      const filteredUpcomingBookings=upcomingBookings.filter((booking)=>{
-        const fromDate=new Date(booking.fromDate)
-        if(new Date()<fromDate){
-          return true
+      const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
+        const fromDate = new Date(booking.fromDate);
+        console.log(fromDate);
+
+        if (new Date() < fromDate) {
+          return true;
         }
-      }) 
+      });
 
       upcomingBookings.forEach((booking) => {
         const bookingTime: any = parseDate(booking.fromDate);
@@ -481,7 +486,7 @@ export const getUpcomingBookings = catchAsyncErrors(
 
       res.status(200).json({
         success: true,
-       upcomingBookings: filteredUpcomingBookings,
+        upcomingBookings: filteredUpcomingBookings,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -551,8 +556,6 @@ export const getActiveBookings = catchAsyncErrors(
   }
 );
 
-
-
 export const getCancelledBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -607,7 +610,6 @@ function formatDateUpcoming(date: Date): string {
 
   return `${day}-${month}-${year} ${hoursStr}:${minutes} ${period}`;
 }
-
 
 export const getUpcomingBookingsCount = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {

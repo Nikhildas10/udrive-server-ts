@@ -281,18 +281,29 @@ console.log(currentDate);
      const filteredRunningCars = runningCars.filter((car) => {
        const fromDateTime = new Date(car.bookings.fromDate);
        const toDateTime = new Date(car.bookings.toDate);
+       const getCurrentDateTime = () => {
+         const now = new Date();
+         const year = now.getFullYear();
+         const month = now.getMonth();
+         const day = now.getDate();
+         const hours = now.getHours();
+         const minutes = now.getMinutes();
+         const seconds = now.getSeconds();
+         return new Date(year, month, day, hours, minutes, seconds);
+       };
 
+       const currentDateTime = getCurrentDateTime();
        // Check if current time is after the booking end time
-       if (new Date() > toDateTime) {
+       if (currentDateTime > toDateTime) {
          return false;
        }
 
        // Check if current time is within the booking time range
-       if (new Date() >= fromDateTime && new Date() <= toDateTime) {
+       if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
          return true;
        }
 
-       return false;
+       return false; 
      });
 
       res.status(200).json({ success: true, runningCars: filteredRunningCars });
@@ -341,14 +352,25 @@ export const carsOnYard = catchAsyncErrors(
         const filteredRunningCars = runningCars.filter((car) => {
           const fromDateTime = new Date(car.bookings.fromDate);
           const toDateTime = new Date(car.bookings.toDate);
+ const getCurrentDateTime = () => {
+   const now = new Date();
+   const year = now.getFullYear();
+   const month = now.getMonth();
+   const day = now.getDate();
+   const hours = now.getHours();
+   const minutes = now.getMinutes();
+   const seconds = now.getSeconds();
+   return new Date(year, month, day, hours, minutes, seconds);
+ };
 
+ const currentDateTime = getCurrentDateTime();
           // Check if current time is after the booking end time
-          if (new Date() > toDateTime) {
+          if (currentDateTime > toDateTime) {
             return false;
           }
 
           // Check if current time is within the booking time range
-          if (new Date() >= fromDateTime && new Date() <= toDateTime) {
+          if (currentDateTime >= fromDateTime && currentDateTime <= toDateTime) {
             return true;
           }
 
@@ -362,7 +384,7 @@ export const carsOnYard = catchAsyncErrors(
         isDeleted: false,
         _id: { $nin: runningCarsIds }, 
       });
-      // const hlo=notRunningCars.map((car)=>car.name)
+
 
       res.status(200).json({ success: true, carsOnYard: notRunningCars });
     } catch (err: any) {
@@ -370,7 +392,6 @@ export const carsOnYard = catchAsyncErrors(
     }
   }
 );
-
 
 
 
