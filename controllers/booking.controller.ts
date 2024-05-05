@@ -421,12 +421,7 @@ export const getUpcomingBookings = catchAsyncErrors(
         {
           $match: {
             isDeleted: false,
-            $expr: {
-              $and: [
-                { $gte: ["$fromDate", formatDateUpcoming(currentTime)] }, // Booking starts after current time
-                { $gt: ["$toDate", formatDateUpcoming(currentTime)] }, // Booking ends after current time
-              ],
-            },
+            
           },
         },
         {
@@ -450,9 +445,13 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
+
+      const bookings=await BookingModel.find({isDeleted:false})
       const filteredUpcomingBookings=upcomingBookings.filter((booking)=>{
         const fromDate=new Date(booking.fromDate)
-        if(new Date()<fromDate){
+        console.log(fromDate);
+        
+        if(fromDate>new Date()){
           return true
         }
       }) 

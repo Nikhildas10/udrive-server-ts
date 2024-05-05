@@ -27,7 +27,11 @@ app.use((req, res, next) => {
   app.use(cookieParser());
 app.use(
   cors({
-    origin: ["https://u-drive-three.vercel.app","http://localhost:3030"],
+    origin: [
+      "https://u-drive-three.vercel.app",
+      "http://localhost:3030",
+      "http://localhost:3031",
+    ],
     credentials: true,
   })
 );
