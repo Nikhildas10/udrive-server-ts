@@ -67,9 +67,9 @@ export const getDashboardData = catchAsyncErrors(
        const addedIds = new Set();
 
        allCarsOnYard.forEach((carObj) => {
-         if (!addedIds.has(carObj.car._id.toString())) {
+         if (!addedIds.has(carObj.car?._id.toString())) {
            uniqueCarsOnYard.push(carObj);
-           addedIds.add(carObj.car._id.toString());
+           addedIds.add(carObj.car?._id.toString());
          }
        });
 

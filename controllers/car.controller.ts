@@ -110,7 +110,7 @@ export const getAllCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cars = await CarModel.find({ isDeleted: false });
-      res.status(200).json({ succes: true, cars });
+      res.status(200).json({ success: true, cars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
@@ -246,7 +246,7 @@ export const runningCars = catchAsyncErrors(
     try {
       const currentDate = formatDate(new Date());
       const currentTime = new Date().getHours();
-console.log(currentDate);
+      console.log(currentDate);
 
       const runningCars = await CarModel.aggregate([
         {
@@ -278,33 +278,33 @@ console.log(currentDate);
         },
       ]);
 
-     const filteredRunningCars = runningCars.filter((car) => {
-       const fromDateTime = new Date(car.bookings.fromDate);
-       const toDateTime = new Date(car.bookings.toDate);
-       const getCurrentDateTime = () => {
-         const now = new Date();
-         const year = now.getFullYear();
-         const month = now.getMonth();
-         const day = now.getDate();
-         const hours = now.getHours();
-         const minutes = now.getMinutes();
-         const seconds = now.getSeconds();
-         return new Date(year, month, day, hours, minutes, seconds);
-       };
+      const filteredRunningCars = runningCars.filter((car) => {
+        const fromDateTime = new Date(car.bookings.fromDate);
+        const toDateTime = new Date(car.bookings.toDate);
+        const getCurrentDateTime = () => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const day = now.getDate();
+          const hours = now.getHours();
+          const minutes = now.getMinutes();
+          const seconds = now.getSeconds();
+          return new Date(year, month, day, hours, minutes, seconds);
+        };
 
-       const currentDateTime = getCurrentDateTime();
-       // Check if current time is after the booking end time
-       if (currentDateTime > toDateTime) {
-         return false;
-       }
+        const currentDateTime = getCurrentDateTime();
+        // Check if current time is after the booking end time
+        if (currentDateTime > toDateTime) {
+          return false;
+        }
 
-       // Check if current time is within the booking time range
-       if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
-         return true;
-       }
+        // Check if current time is within the booking time range
+        if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
+          return true;
+        }
 
-       return false; 
-     });
+        return false;
+      });
 
       res.status(200).json({ success: true, runningCars: filteredRunningCars });
     } catch (err: any) {
@@ -312,95 +312,249 @@ console.log(currentDate);
     }
   }
 );
-  
+
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const currentDate = formatDate(new Date());
 
       // Fetch running cars
-        const runningCars = await CarModel.aggregate([
-          {
-            $match: {
-              isDeleted: false,
-              "bookings.fromDate": { $lte: currentDate },
-              "bookings.toDate": { $gte: currentDate },
-            },
+      const runningCars = await CarModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            "bookings.fromDate": { $lte: currentDate },
+            "bookings.toDate": { $gte: currentDate },
           },
-          {
-            $unwind: "$bookings",
+        },
+        {
+          $unwind: "$bookings",
+        },
+        {
+          $match: {
+            "bookings.fromDate": { $lte: currentDate },
           },
-          {
-            $match: {
-              "bookings.fromDate": { $lte: currentDate },
-            },
+        },
+        {
+          $addFields: {
+            nextAvailableDate: "$bookings.fromDate", // Use fromDate as nextAvailableDate
           },
-          {
-            $addFields: {
-              runningDate: {
-                $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
-              },
-            },
+        },
+        {
+          $sort: {
+            "bookings.fromDate": 1,
           },
-          {
-            $sort: {
-              "bookings.fromDate": 1,
-            },
-          },
-        ]);
+        },
+      ]);
 
-        const filteredRunningCars = runningCars.filter((car) => {
-          const fromDateTime = new Date(car.bookings.fromDate);
-          const toDateTime = new Date(car.bookings.toDate);
- const getCurrentDateTime = () => {
-   const now = new Date();
-   const year = now.getFullYear();
-   const month = now.getMonth();
-   const day = now.getDate();
-   const hours = now.getHours();
-   const minutes = now.getMinutes();
-   const seconds = now.getSeconds();
-   return new Date(year, month, day, hours, minutes, seconds);
- };
+      const filteredRunningCars = runningCars.filter((car) => {
+        const fromDateTime = new Date(car.bookings.fromDate);
+        const toDateTime = new Date(car.bookings.toDate);
+        const getCurrentDateTime = () => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const day = now.getDate();
+          const hours = now.getHours();
+          const minutes = now.getMinutes();
+          const seconds = now.getSeconds();
+          return new Date(year, month, day, hours, minutes, seconds);
+        };
 
- const currentDateTime = getCurrentDateTime();
-          // Check if current time is after the booking end time
-          if (currentDateTime > toDateTime) {
-            return false;
-          }
-
-          // Check if current time is within the booking time range
-          if (currentDateTime >= fromDateTime && currentDateTime <= toDateTime) {
-            return true;
-          }
-
+        const currentDateTime = getCurrentDateTime();
+        // Check if current time is after the booking end time
+        if (currentDateTime > toDateTime) {
           return false;
-        });
+        }
 
-      const runningCarsIds = filteredRunningCars.map((car) => car._id);
+        // Check if current time is within the booking time range
+        if (currentDateTime >= fromDateTime && currentDateTime <= toDateTime) {
+          return true;
+        }
+
+        return false;
+      });
+
+      const runningCarsIds = filteredRunningCars.map((car) => car?._id);
 
       // Fetch all cars except running cars
       const notRunningCars = await CarModel.find({
         isDeleted: false,
-        _id: { $nin: runningCarsIds }, 
+        _id: { $nin: runningCarsIds }
       });
 
+      const sortedNotRunningCars = notRunningCars.map((car) => {
+        return {
+          ...car.toObject(),
+          bookings: car.bookings.sort(
+            (a, b) => new Date(a.fromDate) - new Date(b.fromDate)
+          ),
+        };
+      });
 
-      res.status(200).json({ success: true, carsOnYard: notRunningCars });
+      res.status(200).json({ success: true, carsOnYard: sortedNotRunningCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
 
+// export const carsOnYard = catchAsyncErrors(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const currentDate = formatDate(new Date());
+//       const currentTime = new Date().getHours();
 
+//       const notRunningCars = await CarModel.aggregate([
+//         {
+//           $match: {
+//             isDeleted: false,
+//           },
+//         },
+//         {
+//           $unwind: "$bookings",
+//         },
 
+//         {
+//           $addFields: {
+//             nextAvailableDate: "$bookings.fromDate", // Use fromDate as nextAvailableDate
+//           },
+//         },
+//         {
+//           $sort: { nextAvailableDate: 1 },
+//         },
+//       ]);
+//       const cars = await CarModel.find({
+//         isDeleted: false,
+//         $or: [
+//           { bookings: { $exists: false } }, // Find cars where the bookings array does not exist
+//           { bookings: { $elemMatch: { $exists: false } } }, // Find cars where the bookings array exists but is empty
+//         ],
+//       });
 
+//       const filteredNonRunningCars = notRunningCars.filter((car) => {
+//         const fromDateTime = new Date(car.bookings.fromDate);
+//         const toDateTime = new Date(car.bookings.toDate);
+//         const getCurrentDateTime = () => {
+//           const now = new Date();
+//           const year = now.getFullYear();
+//           const month = now.getMonth();
+//           const day = now.getDate();
+//           const hours = now.getHours();
+//           const minutes = now.getMinutes();
+//           const seconds = now.getSeconds();
+//           return new Date(year, month, day, hours, minutes, seconds);
+//         };
 
+//         const currentDateTime = getCurrentDateTime();
+//         // Check if current time is after the booking end time
+//         if (currentDateTime < fromDateTime) {
+//           return true;
+//         }
+//         if (!fromDateTime) {
+//           return true;
+//         }
 
- 
+//         // Check if the current time is after the booking end time
+//         if (currentDateTime > toDateTime) {
+//           return true;
+//         }
 
+//         // If the current time is within the booking time range, the car is considered running
+//         return false;
+//       });
+//       const final = Object.values(
+//         filteredNonRunningCars.reduce((uniqueCars, car) => {
+//           // Assuming each car has a unique identifier field named 'carId'
+//           const carId = car?._id;
 
+//           // Add the car to the uniqueCars object if it's not already present
+//           if (!uniqueCars[carId]) {
+//             uniqueCars[carId] = car;
+//           }
+
+//           return uniqueCars;
+//         }, {})
+//       );
+
+//       const runningCars = await CarModel.aggregate([
+//         {
+//           $match: {
+//             isDeleted: false,
+//             "bookings.fromDate": { $lte: currentDate },
+//             "bookings.toDate": { $gte: currentDate },
+//           },
+//         },
+//         {
+//           $unwind: "$bookings",
+//         },
+//         {
+//           $match: {
+//             "bookings.fromDate": { $lte: currentDate },
+//           },
+//         },
+//         {
+//           $addFields: {
+//             runningDate: {
+//               $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
+//             },
+//           },
+//         },
+//         {
+//           $sort: {
+//             "bookings.fromDate": 1,
+//           },
+//         },
+//       ]);
+
+//       const filteredRunningCars = runningCars.filter((car) => {
+//         const fromDateTime = new Date(car.bookings.fromDate);
+//         const toDateTime = new Date(car.bookings.toDate);
+//         const getCurrentDateTime = () => {
+//           const now = new Date();
+//           const year = now.getFullYear();
+//           const month = now.getMonth();
+//           const day = now.getDate();
+//           const hours = now.getHours();
+//           const minutes = now.getMinutes();
+//           const seconds = now.getSeconds();
+//           return new Date(year, month, day, hours, minutes, seconds);
+//         };
+
+//         const currentDateTime = getCurrentDateTime();
+//         // Check if current time is after the booking end time
+//         if (currentDateTime > toDateTime) {
+//           return false;
+//         }
+
+//         // Check if current time is within the booking time range
+//         if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
+//           return true;
+//         }
+
+//         return false;
+//       });
+//       // Extract _id values from filteredRunningCars array and convert them to strings
+//       const runningCarIds = filteredRunningCars.map((car) =>
+//         car?._id.toString()
+//       );
+
+//       // Filter out cars from final array that have corresponding entries in runningCarIds array
+//       const result = cars.filter(
+//         (car) => !runningCarIds.includes(car?._id.toString())
+//       );
+
+//       // Now 'result' array contains cars from 'final' array excluding those present in 'filteredRunningCars' array
+
+//       res.status(200).json({
+//         success: true,
+//         carsOnYard: [res],
+//       });
+//     } catch (err: any) {
+//       return next(new ErrorHandler(err.message, 400));
+//     }
+//   }
+// );
 
 export const getMostBookedCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -458,7 +612,7 @@ export const getMostBookedCars = catchAsyncErrors(
 
       const series = await Promise.all(
         bookingAggregation.map(async (booking: any) => {
-          const car = await CarModel.findById(booking._id);
+          const car = await CarModel.findById(booking?._id);
           return {
             label: car?.name,
             value: booking.count,
@@ -472,31 +626,31 @@ export const getMostBookedCars = catchAsyncErrors(
     }
   }
 );
- const parseDate = (dateString) => {
-   // Split the date string into parts
-   const parts = dateString.split(" ");
-   const datePart = parts[0];
-   const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+const parseDate = (dateString) => {
+  // Split the date string into parts
+  const parts = dateString.split(" ");
+  const datePart = parts[0];
+  const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
-   // Split the date part into day, month, and year
-   const dateParts = datePart.split("-");
-   const day = parseInt(dateParts[0]);
-   const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-   const year = parseInt(dateParts[2]);
+  // Split the date part into day, month, and year
+  const dateParts = datePart.split("-");
+  const day = parseInt(dateParts[0]);
+  const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+  const year = parseInt(dateParts[2]);
 
-   // Split the time part into hours and minutes
-   const timeParts = timePart.split(":");
-   let hours = parseInt(timeParts[0]);
-   const minutes = parseInt(timeParts[1]);
+  // Split the time part into hours and minutes
+  const timeParts = timePart.split(":");
+  let hours = parseInt(timeParts[0]);
+  const minutes = parseInt(timeParts[1]);
 
-   // Adjust hours for PM if necessary
-   if (parts[2] === "PM" && hours !== 12) {
-     hours += 12;
-   }
+  // Adjust hours for PM if necessary
+  if (parts[2] === "PM" && hours !== 12) {
+    hours += 12;
+  }
 
-   // Create a new Date object with the parsed values
-   return new Date(year, month, day, hours, minutes);
- };
+  // Create a new Date object with the parsed values
+  return new Date(year, month, day, hours, minutes);
+};
 // Function to format date to dd-mm-yyyy format
 function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");
@@ -520,7 +674,6 @@ function formatDate(date: Date): string {
 
   return `${day}-${month}-${year} ${hoursStr}:${minutes} ${period}`;
 }
-
 
 function formattDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, "0");

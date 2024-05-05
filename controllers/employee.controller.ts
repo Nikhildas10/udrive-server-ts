@@ -357,8 +357,8 @@ export const updateAcessToken = catchAsyncErrors(
       ) as JwtPayload;
       const message = "could not refresh token";
       if (!decoded) {
-        return next(new ErrorHandler(message, 400)); 
-      }  
+        return next(new ErrorHandler(message, 400));
+      }
       const session = await redis.get(decoded.id as string);
       if (!session) {
         return next(new ErrorHandler(message, 400));
