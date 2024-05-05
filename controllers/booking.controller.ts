@@ -455,7 +455,7 @@ export const getUpcomingBookings = catchAsyncErrors(
         if(new Date()<fromDate){
           return true
         }
-      })
+      }) 
 
       upcomingBookings.forEach((booking) => {
         const bookingTime: any = parseDate(booking.fromDate);
