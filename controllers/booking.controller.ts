@@ -433,21 +433,11 @@ export const getUpcomingBookings = catchAsyncErrors(
             },
           },
         },
-        {
-          $sort: {
-            parsedFromDate: 1,
-            fromDate: 1,
-          },
-        },
-        {
-          $project: {
-            parsedFromDate: 0,
-          },
-        },
+       
       ]);
 
       const bookings=await BookingModel.find({isDeleted:false})
-      const filteredUpcomingBookings=upcomingBookings.filter((booking)=>{
+      const filteredUpcomingBookings=bookings.filter((booking)=>{
         const fromDate=new Date(booking.fromDate)
         console.log(fromDate);
         
