@@ -14,6 +14,7 @@ export const createBooking = catchAsyncErrors(
     try {
       const { customerSelected, carSelected, ...bookingData } = req.body;
 
+
       // Pass reference data to customer
       const customerId = customerSelected?._id;
       const customer = await customerModel.findById(customerId);
@@ -28,6 +29,8 @@ export const createBooking = catchAsyncErrors(
         return next(new ErrorHandler("Employee not found", 404));
       }
 
+      console.log("im employeeeeeeeeeeeeeeeee", employee);
+
       // Pass reference data to cars
       const carId = carSelected?._id;
       const car = await CarModel.findById(carId);
@@ -37,9 +40,54 @@ export const createBooking = catchAsyncErrors(
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
-        carSelected,
-        customerSelected,
-        employee: employee.toObject(),
+        carSelected: {
+          rcBook: carSelected.rcBook,
+          insurancePolicy: carSelected.insurancePolicy,
+          pollutionCertificate: carSelected.pollutionCertificate,
+          carImage: carSelected.carImage,
+          _id: carSelected._id,
+          name: carSelected.name,
+          manufacturingCompany: carSelected.manufacturingCompany,
+          yearOfManufacturing: carSelected.yearOfManufacturing,
+          fuelType: carSelected.fuelType,
+          transmission: carSelected.transmission,
+          insurance: carSelected.insurance,
+          lastService: carSelected.lastService,
+          serviceInterval: carSelected.serviceInterval,
+          isDeleted: carSelected.isDeleted,
+          vehicleNumber: carSelected.vehicleNumber,
+        },
+        customerSelected: {
+          customerImage: customerSelected.customerImage,
+          passportImage: customerSelected.passportImage,
+          _id: customerSelected._id,
+          name: customerSelected.name,
+          contactNumber: customerSelected.contactNumber,
+          abroadNumber: customerSelected.abroadNumber,
+          nativeNumber: customerSelected.nativeNumber,
+          email: customerSelected.email,
+          passportNumber: customerSelected.passportNumber,
+          pincode: customerSelected.pincode,
+          state: customerSelected.state,
+          address: customerSelected.address,
+          locality: customerSelected.locality,
+          cityOrDistrict: customerSelected.cityOrDistrict,
+          isDeleted: customerSelected.isDeleted,
+        },
+        // employee: employee.toObject(),
+        employee:{
+          employeeImage: employee.employeeImage,
+          _id: employee._id,
+          name: employee.name,
+          userName: employee.userName,
+          email: employee.email,
+          isBlocked: employee.isBlocked,
+          role: employee.role,
+          isVerified: employee.isVerified,
+          access: employee.access,
+          isDeleted: employee.isDeleted
+        },
+
       };
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
@@ -62,7 +110,6 @@ export const createBooking = catchAsyncErrors(
     }
   }
 );
-
 export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -261,7 +308,7 @@ export const editBooking = catchAsyncErrors(
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({ isDeleted: false });
+      const bookings = await BookingModel.find({ isDeleted: false })
       res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));

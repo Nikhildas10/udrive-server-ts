@@ -15,18 +15,13 @@ export const getDashboardData = catchAsyncErrors(
          {
            $match: {
              isDeleted: false,
-             "bookings.fromDate": { $lte: currentDate },
-             "bookings.toDate": { $gte: currentDate },
+             
            },
          },
          {
            $unwind: "$bookings",
          },
-         {
-           $match: {
-             "bookings.fromDate": { $lte: currentDate },
-           },
-         },
+        
          {
            $addFields: {
              nextAvailableDate: {
