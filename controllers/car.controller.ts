@@ -256,18 +256,13 @@ export const runningCars = catchAsyncErrors(
         {
           $match: {
             isDeleted: false,
-            "bookings.fromDate": { $lte: currentDate },
-            "bookings.toDate": { $gte: currentDate },
+           
           },
         },
         {
           $unwind: "$bookings",
         },
-        {
-          $match: {
-            "bookings.fromDate": { $lte: currentDate },
-          },
-        },
+        
         {
           $addFields: {
             nextAvailableDate: {
@@ -322,9 +317,8 @@ export const runningCars = catchAsyncErrors(
 
         const currentDateTime = getCurrentDateTime();
         // Check if current time is after the booking end time
-        if (currentDateTime > toDateTime) {
-          return false;
-        }
+       console.log(currentDateTime);
+       
 
         // Check if current time is within the booking time range
         if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
