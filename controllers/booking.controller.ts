@@ -219,6 +219,7 @@ export const editBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
+      
       if (!id) {
         return next(new ErrorHandler("Invalid booking ID", 400));
       }
@@ -228,10 +229,66 @@ export const editBooking = catchAsyncErrors(
         return next(new ErrorHandler("Booking not found", 404));
       }
 
-      const { customerSelected: newCustomer, carSelected: newCar } = req.body;
+      // const { customerSelected: newCustomer, carSelected: newCar } = req.body;
+            const { customerSelected:newCustomer, carSelected:newCar, ...bookingData } = req.body;
+             const employeeId = req.user?._id || "";
+             const employee = await employeeModel.findById(employeeId);
+             if (!employee) {
+               return next(new ErrorHandler("Employee not found", 404));
+             }
+  const bookingDataWithoutCircularRefs = {
+    ...bookingData,
+    carSelected: {
+      rcBook: newCar.rcBook,
+      insurancePolicy: newCar.insurancePolicy,
+      pollutionCertificate: newCar.pollutionCertificate,
+      carImage: newCar.carImage,
+      _id: newCar._id,
+      name: newCar.name,
+      manufacturingCompany: newCar.manufacturingCompany,
+      yearOfManufacturing: newCar.yearOfManufacturing,
+      fuelType: newCar.fuelType,
+      transmission: newCar.transmission,
+      insurance: newCar.insurance,
+      lastService: newCar.lastService,
+      serviceInterval: newCar.serviceInterval,
+      isDeleted: newCar.isDeleted,
+      vehicleNumber: newCar.vehicleNumber,
+    },
+    customerSelected: {
+      customerImage: newCustomer.customerImage,
+      passportImage: newCustomer.passportImage,
+      _id: newCustomer._id,
+      name: newCustomer.name,
+      contactNumber: newCustomer.contactNumber,
+      abroadNumber: newCustomer.abroadNumber,
+      nativeNumber: newCustomer.nativeNumber,
+      email: newCustomer.email,
+      passportNumber: newCustomer.passportNumber,
+      pincode: newCustomer.pincode,
+      state: newCustomer.state,
+      address: newCustomer.address,
+      locality: newCustomer.locality,
+      cityOrDistrict: newCustomer.cityOrDistrict,
+      isDeleted: newCustomer.isDeleted,
+    },
+    // employee: employee.toObject(),
+    employee: {
+      employeeImage: employee.employeeImage,
+      _id: employee._id,
+      name: employee.name,
+      userName: employee.userName,
+      email: employee.email,
+      isBlocked: employee.isBlocked,
+      role: employee.role,
+      isVerified: employee.isVerified,
+      access: employee.access,
+      isDeleted: employee.isDeleted,
+    },
+  };
       const updatedBooking = await BookingModel.findByIdAndUpdate(
         id,
-        req.body,
+        bookingDataWithoutCircularRefs,
         {
           new: true,
         }
