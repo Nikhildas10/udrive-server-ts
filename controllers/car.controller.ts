@@ -17,6 +17,7 @@ export const addCars = catchAsyncErrors(
       fuelType,
       transmission,
       insurance,
+      vehicleNumber,
       lastService,
       serviceInterval,
     } = req.body;
@@ -63,6 +64,7 @@ export const addCars = catchAsyncErrors(
         fuelType,
         transmission,
         insurance,
+        vehicleNumber,
         lastService,
         serviceInterval,
         rcBook: rcBookResult
@@ -779,7 +781,7 @@ export const getCarTotalRevenue = async (
 export const addKilometre=catchAsyncErrors(
   async(req:Request,res:Response,next:NextFunction)=>{
     try {
-      
+
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
