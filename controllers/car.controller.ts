@@ -317,6 +317,9 @@ export const runningCars = catchAsyncErrors(
 
         const currentDateTime = getCurrentDateTime();
         // Check if current time is after the booking end time
+        if (currentDateTime > toDateTime) {
+          return false;
+        }
        console.log(currentDateTime);
        
 
