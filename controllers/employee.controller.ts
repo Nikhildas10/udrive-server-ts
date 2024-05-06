@@ -100,8 +100,8 @@ export const createEmployee = catchAsyncErrors(
         access,
         userName,
         employeeImage: {
-          public_id: employeeImage.public_id,
-          url: employeeImage.secure_url,
+          public_id: employeeImage?.public_id,
+          url: employeeImage?.secure_url,
         },
       });
       res.status(201).json({ success: true, data });

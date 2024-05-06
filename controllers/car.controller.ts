@@ -775,3 +775,13 @@ export const getCarTotalRevenue = async (
     next(new ErrorHandler(err.message, 400));
   }
 };
+
+export const addKilometre=catchAsyncErrors(
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+)
