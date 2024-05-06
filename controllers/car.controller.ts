@@ -266,7 +266,7 @@ export const runningCars = catchAsyncErrors(
         },
         {
           $addFields: {
-            runningDate: {
+            nextAvailableDate: {
               $concat: ["$bookings.fromDate", " to ", "$bookings.toDate"],
             },
           },
