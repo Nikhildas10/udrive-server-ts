@@ -14,7 +14,6 @@ export const createBooking = catchAsyncErrors(
     try {
       const { customerSelected, carSelected, ...bookingData } = req.body;
 
-
       // Pass reference data to customer
       const customerId = customerSelected?._id;
       const customer = await customerModel.findById(customerId);
@@ -75,7 +74,7 @@ export const createBooking = catchAsyncErrors(
           isDeleted: customerSelected.isDeleted,
         },
         // employee: employee.toObject(),
-        employee:{
+        employee: {
           employeeImage: employee.employeeImage,
           _id: employee._id,
           name: employee.name,
@@ -85,9 +84,8 @@ export const createBooking = catchAsyncErrors(
           role: employee.role,
           isVerified: employee.isVerified,
           access: employee.access,
-          isDeleted: employee.isDeleted
+          isDeleted: employee.isDeleted,
         },
-
       };
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
@@ -219,7 +217,7 @@ export const editBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      
+
       if (!id) {
         return next(new ErrorHandler("Invalid booking ID", 400));
       }
@@ -230,62 +228,66 @@ export const editBooking = catchAsyncErrors(
       }
 
       // const { customerSelected: newCustomer, carSelected: newCar } = req.body;
-            const { customerSelected:newCustomer, carSelected:newCar, ...bookingData } = req.body;
-             const employeeId = req.user?._id || "";
-             const employee = await employeeModel.findById(employeeId);
-             if (!employee) {
-               return next(new ErrorHandler("Employee not found", 404));
-             }
-  const bookingDataWithoutCircularRefs = {
-    ...bookingData,
-    carSelected: {
-      rcBook: newCar.rcBook,
-      insurancePolicy: newCar.insurancePolicy,
-      pollutionCertificate: newCar.pollutionCertificate,
-      carImage: newCar.carImage,
-      _id: newCar._id,
-      name: newCar.name,
-      manufacturingCompany: newCar.manufacturingCompany,
-      yearOfManufacturing: newCar.yearOfManufacturing,
-      fuelType: newCar.fuelType,
-      transmission: newCar.transmission,
-      insurance: newCar.insurance,
-      lastService: newCar.lastService,
-      serviceInterval: newCar.serviceInterval,
-      isDeleted: newCar.isDeleted,
-      vehicleNumber: newCar.vehicleNumber,
-    },
-    customerSelected: {
-      customerImage: newCustomer.customerImage,
-      passportImage: newCustomer.passportImage,
-      _id: newCustomer._id,
-      name: newCustomer.name,
-      contactNumber: newCustomer.contactNumber,
-      abroadNumber: newCustomer.abroadNumber,
-      nativeNumber: newCustomer.nativeNumber,
-      email: newCustomer.email,
-      passportNumber: newCustomer.passportNumber,
-      pincode: newCustomer.pincode,
-      state: newCustomer.state,
-      address: newCustomer.address,
-      locality: newCustomer.locality,
-      cityOrDistrict: newCustomer.cityOrDistrict,
-      isDeleted: newCustomer.isDeleted,
-    },
-    // employee: employee.toObject(),
-    employee: {
-      employeeImage: employee.employeeImage,
-      _id: employee._id,
-      name: employee.name,
-      userName: employee.userName,
-      email: employee.email,
-      isBlocked: employee.isBlocked,
-      role: employee.role,
-      isVerified: employee.isVerified,
-      access: employee.access,
-      isDeleted: employee.isDeleted,
-    },
-  };
+      const {
+        customerSelected: newCustomer,
+        carSelected: newCar,
+        ...bookingData
+      } = req.body;
+      const employeeId = req.user?._id || "";
+      const employee = await employeeModel.findById(employeeId);
+      if (!employee) {
+        return next(new ErrorHandler("Employee not found", 404));
+      }
+      const bookingDataWithoutCircularRefs = {
+        ...bookingData,
+        carSelected: {
+          rcBook: newCar.rcBook,
+          insurancePolicy: newCar.insurancePolicy,
+          pollutionCertificate: newCar.pollutionCertificate,
+          carImage: newCar.carImage,
+          _id: newCar._id,
+          name: newCar.name,
+          manufacturingCompany: newCar.manufacturingCompany,
+          yearOfManufacturing: newCar.yearOfManufacturing,
+          fuelType: newCar.fuelType,
+          transmission: newCar.transmission,
+          insurance: newCar.insurance,
+          lastService: newCar.lastService,
+          serviceInterval: newCar.serviceInterval,
+          isDeleted: newCar.isDeleted,
+          vehicleNumber: newCar.vehicleNumber,
+        },
+        customerSelected: {
+          customerImage: newCustomer.customerImage,
+          passportImage: newCustomer.passportImage,
+          _id: newCustomer._id,
+          name: newCustomer.name,
+          contactNumber: newCustomer.contactNumber,
+          abroadNumber: newCustomer.abroadNumber,
+          nativeNumber: newCustomer.nativeNumber,
+          email: newCustomer.email,
+          passportNumber: newCustomer.passportNumber,
+          pincode: newCustomer.pincode,
+          state: newCustomer.state,
+          address: newCustomer.address,
+          locality: newCustomer.locality,
+          cityOrDistrict: newCustomer.cityOrDistrict,
+          isDeleted: newCustomer.isDeleted,
+        },
+        // employee: employee.toObject(),
+        employee: {
+          employeeImage: employee.employeeImage,
+          _id: employee._id,
+          name: employee.name,
+          userName: employee.userName,
+          email: employee.email,
+          isBlocked: employee.isBlocked,
+          role: employee.role,
+          isVerified: employee.isVerified,
+          access: employee.access,
+          isDeleted: employee.isDeleted,
+        },
+      };
       const updatedBooking = await BookingModel.findByIdAndUpdate(
         id,
         bookingDataWithoutCircularRefs,
@@ -365,7 +367,7 @@ export const editBooking = catchAsyncErrors(
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({ isDeleted: false })
+      const bookings = await BookingModel.find({ isDeleted: false });
       res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
@@ -579,16 +581,16 @@ export const getUpcomingBookings = catchAsyncErrors(
       };
 
       const getCurrentDateTime = () => {
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = now.getMonth();
-          const day = now.getDate();
-          const hours = now.getHours();
-          const minutes = now.getMinutes();
-          const seconds = now.getSeconds();
-          return new Date(year, month, day, hours, minutes, seconds);
-        };
-        const currentDateTime = getCurrentDateTime();
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        return new Date(year, month, day, hours, minutes, seconds);
+      };
+      const currentDateTime = getCurrentDateTime();
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDatee(booking.fromDate);
@@ -709,44 +711,44 @@ export const getCancelledBookings = catchAsyncErrors(
   }
 );
 
-  function parseDateTime (dateString:string)  {
-    // Split the date string into parts
-    const parts = dateString.split(" ");
-    const datePart = parts[0];
-    const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+function parseDateTime(dateString: string) {
+  // Split the date string into parts
+  const parts = dateString.split(" ");
+  const datePart = parts[0];
+  const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
-    // Split the date part into day, month, and year
-    const dateParts = datePart.split("-");
-    const day = parseInt(dateParts[0]);
-    const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-    const year = parseInt(dateParts[2]);
+  // Split the date part into day, month, and year
+  const dateParts = datePart.split("-");
+  const day = parseInt(dateParts[0]);
+  const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+  const year = parseInt(dateParts[2]);
 
-    // Split the time part into hours and minutes
-    const timeParts = timePart.split(":");
-    let hours = parseInt(timeParts[0]);
-    const minutes = parseInt(timeParts[1]);
+  // Split the time part into hours and minutes
+  const timeParts = timePart.split(":");
+  let hours = parseInt(timeParts[0]);
+  const minutes = parseInt(timeParts[1]);
 
-    // Adjust hours for PM if necessary
-    if (parts[2] === "PM" && hours !== 12) {
-      hours += 12;
-    }
+  // Adjust hours for PM if necessary
+  if (parts[2] === "PM" && hours !== 12) {
+    hours += 12;
+  }
 
-    // Create a new Date object with the parsed values
-    return new Date(year, month, day, hours, minutes);
-  };
+  // Create a new Date object with the parsed values
+  return new Date(year, month, day, hours, minutes);
+}
 
-    function getCurrentDateTime(){
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const day = now.getDate();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-      return new Date(year, month, day, hours, minutes, seconds);
-    };
+function getCurrentDateTime() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  return new Date(year, month, day, hours, minutes, seconds);
+}
 
-    const currentDateTime = getCurrentDateTime();
+const currentDateTime = getCurrentDateTime();
 
 export const getUpcomingBookingsCount = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -790,48 +792,48 @@ export const getUpcomingBookingsCount = catchAsyncErrors(
   }
 );
 
-
-
 export const addKilometre = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { kilometreCovered } = req.body;
 
-      const booking=await BookingModel.findById(id)
-      const carSelected=booking?.carSelected     
-       
+      const booking = await BookingModel.findById(id);
+      const carSelected = booking?.carSelected;
+
       const car = await CarModel.findById(carSelected?._id);
       if (!car) {
         return next(new ErrorHandler("Car not found", 404));
       }
       car.totalKmCovered -= kilometreCovered;
       await car.save();
-      booking.isKilometreUpdated=true
-      await booking.save()
-      res.status(200).json({ success: true, message:"kilometre successfully added" });
+      booking.isKilometreUpdated = true;
+      await booking.save();
+      res
+        .status(200)
+        .json({ success: true, message: "kilometre successfully added" });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
   }
 );
 
-export const notUpdatedKilometre=catchAsyncErrors(
-  async(req:Request,res:Response,next:NextFunction)=>{
+export const notUpdatedKilometre = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings=await BookingModel.find({isDeleted:false,isKilometreUpdated:false})
+      const bookings = await BookingModel.find({
+        isDeleted: false,
+        isKilometreUpdated: false,
+      });
 
-      const filteredBookings=bookings.filter((booking)=>{
-        const toDate=parseDateTime(booking.toDate)
-        if(currentDateTime>toDate)
-          return true
-      }
-      
-      )
+      const filteredBookings = bookings.filter((booking) => {
+        const toDate = parseDateTime(booking.toDate);
 
-
+        if (currentDateTime > toDate) return true;
+      });
+      res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
   }
-)
+);
