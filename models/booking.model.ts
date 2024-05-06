@@ -15,6 +15,7 @@ export interface IBooking extends Document {
   invoiceDetails: Array;
   invoiceId: number;
   isDeleted: boolean;
+  isKilometreUpdated: boolean;
 }
 
 const bookingSchema: Schema = new Schema(
@@ -68,10 +69,13 @@ const bookingSchema: Schema = new Schema(
       type: Boolean,
       default: false,
     },
+    isKilometreUpdated: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
-
 const BookingModel = mongoose.model<IBooking>("Booking", bookingSchema);
 
 export default BookingModel;

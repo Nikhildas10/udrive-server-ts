@@ -1,6 +1,7 @@
 import express from "express";
 import { isAuthenticated } from "../middleware/auth";
 import {
+  addKilometre,
   bookingStatus,
   createBooking,
   deleteBooking,
@@ -32,6 +33,7 @@ bookingRouter.get("/get-upcoming-bookings", isAuthenticated, getUpcomingBookings
 bookingRouter.get("/get-upcoming-bookings-count", isAuthenticated, getUpcomingBookingsCount);
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
 bookingRouter.get("/get-active-bookings", isAuthenticated, getActiveBookings);
+bookingRouter.put("/add-kilometre/:id", isAuthenticated, addKilometre);
 
 export default bookingRouter;
  

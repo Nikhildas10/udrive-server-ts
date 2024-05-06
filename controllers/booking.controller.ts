@@ -708,50 +708,45 @@ export const getCancelledBookings = catchAsyncErrors(
     }
   }
 );
-//format date for upcoming bookings
-function formatDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const period = date.getHours() >= 12 ? "PM" : "AM";
-  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
-}
 
-//format date for active bookings
-function formatDateActive(date: Date): string {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = "00";
-  const minutes = "01";
+  function parseDateTime (dateString:string)  {
+    // Split the date string into parts
+    const parts = dateString.split(" ");
+    const datePart = parts[0];
+    const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
-  return `${day}-${month}-${year} ${hours}:${minutes}`;
-}
+    // Split the date part into day, month, and year
+    const dateParts = datePart.split("-");
+    const day = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+    const year = parseInt(dateParts[2]);
 
-function formatDateUpcoming(date: Date): string {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear();
-  let hours = date.getHours();
-  let period = "AM";
+    // Split the time part into hours and minutes
+    const timeParts = timePart.split(":");
+    let hours = parseInt(timeParts[0]);
+    const minutes = parseInt(timeParts[1]);
 
-  // Convert hours to 12-hour format and determine period
-  if (hours === 0) {
-    hours = 12;
-  } else if (hours === 12) {
-    period = "PM";
-  } else if (hours > 12) {
-    hours -= 12;
-    period = "PM";
-  }
+    // Adjust hours for PM if necessary
+    if (parts[2] === "PM" && hours !== 12) {
+      hours += 12;
+    }
 
-  const hoursStr = hours.toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
+    // Create a new Date object with the parsed values
+    return new Date(year, month, day, hours, minutes);
+  };
 
-  return `${day}-${month}-${year} ${hoursStr}:${minutes} ${period}`;
-}
+    function getCurrentDateTime(){
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const day = now.getDate();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      return new Date(year, month, day, hours, minutes, seconds);
+    };
+
+    const currentDateTime = getCurrentDateTime();
 
 export const getUpcomingBookingsCount = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -794,3 +789,42 @@ export const getUpcomingBookingsCount = catchAsyncErrors(
     }
   }
 );
+
+
+
+export const addKilometre = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { kilometreCovered } = req.body;
+
+      const booking=await BookingModel.findById(id)
+      const carSelected=booking?.carSelected     
+       
+      const car = await CarModel.findById(carSelected?._id);
+      if (!car) {
+        return next(new ErrorHandler("Car not found", 404));
+      }
+      car.totalKmCovered += kilometreCovered;
+      await car.save();
+      booking.isKilometreUpdated=true
+      await booking.save()
+      res.status(200).json({ success: true, message:"kilometre successfully added" });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+const notUpdatedKilometre=catchAsyncErrors(
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      const bookings=await BookingModel.find({isDeleted:false,isKilometreUpdated:false})
+
+
+
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+)
