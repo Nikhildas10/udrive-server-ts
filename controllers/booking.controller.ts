@@ -805,7 +805,7 @@ export const addKilometre = catchAsyncErrors(
       if (!car) {
         return next(new ErrorHandler("Car not found", 404));
       }
-      car.totalKmCovered += kilometreCovered;
+      car.totalKmCovered -= kilometreCovered;
       await car.save();
       booking.isKilometreUpdated=true
       await booking.save()
@@ -816,11 +816,18 @@ export const addKilometre = catchAsyncErrors(
   }
 );
 
-const notUpdatedKilometre=catchAsyncErrors(
+export const notUpdatedKilometre=catchAsyncErrors(
   async(req:Request,res:Response,next:NextFunction)=>{
     try {
       const bookings=await BookingModel.find({isDeleted:false,isKilometreUpdated:false})
 
+      const filteredBookings=bookings.filter((booking)=>{
+        const toDate=parseDateTime(booking.toDate)
+        if(currentDateTime>toDate)
+          return true
+      }
+      
+      )
 
 
     } catch (err: any) {

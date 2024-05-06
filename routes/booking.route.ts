@@ -16,6 +16,7 @@ import {
   getTotalRevenue,
   getUpcomingBookings,
   getUpcomingBookingsCount,
+  notUpdatedKilometre,
 } from "../controllers/booking.controller";
 
 const bookingRouter = express.Router();
@@ -34,6 +35,7 @@ bookingRouter.get("/get-upcoming-bookings-count", isAuthenticated, getUpcomingBo
 bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookings);
 bookingRouter.get("/get-active-bookings", isAuthenticated, getActiveBookings);
 bookingRouter.put("/add-kilometre/:id", isAuthenticated, addKilometre);
+bookingRouter.put("/not-updated-kilometre", isAuthenticated, notUpdatedKilometre);
 
 export default bookingRouter;
  

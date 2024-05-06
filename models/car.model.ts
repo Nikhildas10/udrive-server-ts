@@ -48,7 +48,6 @@ const carSchema = new Schema<ICar>({
   },
   totalKmCovered: {
     type: Number,
-    default:0
   },
   vehicleNumber: {
     type: String,
