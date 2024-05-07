@@ -852,7 +852,8 @@ export const notUpdatedKilometre = catchAsyncErrors(
       const filteredBookings = bookings.filter((booking) => {
         const toDate = parseDateTime(booking.toDate);
 
-        if (currentDateTime > toDate) return true;
+        if (currentDateTime > toDate) 
+          return true;
       });
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
