@@ -822,7 +822,8 @@ export const addKilometre = catchAsyncErrors(
         car.totalKmCovered += kmPerBooking;
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
-
+        
+        booking.carSelected=[car]
         car.bookings = [booking];
         customer.bookings = [booking];
         employee.bookings = [booking];
