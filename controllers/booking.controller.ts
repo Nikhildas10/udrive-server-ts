@@ -55,6 +55,7 @@ export const createBooking = catchAsyncErrors(
           serviceInterval: carSelected.serviceInterval,
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
+          totalKmCovered:carSelected.totalKmCovered
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
