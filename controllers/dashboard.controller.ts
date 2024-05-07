@@ -175,7 +175,7 @@ export const getDashboardData = catchAsyncErrors(
                const filteredUpcomingBookings = upcomingBookings.filter(
                  (booking) => {
                    const fromDate = parseDatee(booking.fromDate);
-                   console.log(fromDate);
+                  //  console.log(fromDate);
 
                    if (currentDateTime < fromDate) {
                      return true;

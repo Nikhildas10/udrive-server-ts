@@ -28,7 +28,7 @@ export const createBooking = catchAsyncErrors(
         return next(new ErrorHandler("Employee not found", 404));
       }
 
-      console.log("im employeeeeeeeeeeeeeeeee", employee);
+      // console.log("im employeeeeeeeeeeeeeeeee", employee);
 
       // Pass reference data to cars
       const carId = carSelected?._id;
@@ -594,7 +594,7 @@ export const getUpcomingBookings = catchAsyncErrors(
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDatee(booking.fromDate);
-        console.log(fromDate);
+        // console.log(fromDate);
 
         if (currentDateTime < fromDate) {
           return true;
@@ -805,10 +805,16 @@ export const addKilometre = catchAsyncErrors(
       if (!car) {
         return next(new ErrorHandler("Car not found", 404));
       }
-      car.totalKmCovered -= kilometreCovered;
-      await car.save();
-      booking.isKilometreUpdated = true;
-      await booking.save();
+      const kmPerBooking = kilometreCovered - car.totalKmCovered;
+      try {
+        car.totalKmCovered += kmPerBooking;
+        booking.isKilometreUpdated = true;
+        booking.kilometreCovered = kmPerBooking;
+        await car.save();
+        await booking.save();
+      } catch (err: any) {
+        next(new ErrorHandler(err.message, 400));
+      }
       res
         .status(200)
         .json({ success: true, message: "kilometre successfully added" });

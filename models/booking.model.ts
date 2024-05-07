@@ -10,6 +10,7 @@ export interface IBooking extends Document {
   subTotals: number;
   total: number;
   discount: number;
+  kilometreCovered: number;
   tax: number;
   status: string;
   invoiceDetails: Array;
@@ -58,6 +59,9 @@ const bookingSchema: Schema = new Schema(
       type: Number,
     },
     invoiceId: {
+      type: Number,
+    },
+    kilometreCovered: {
       type: Number,
     },
     invoiceDetails: [

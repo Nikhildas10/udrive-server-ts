@@ -99,7 +99,7 @@ export const addCars = catchAsyncErrors(
             }
           : undefined,
       };
-      console.log(newCarData);
+      // console.log(newCarData);
 
       const newCar: ICar = new CarModel(newCarData);
       const savedCar = await newCar.save();
@@ -142,14 +142,14 @@ export const getSingleCar = catchAsyncErrors(
 
 export const editCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
+    // console.log(req.body);
     try {
       const { id } = req.params;
       if (!id) {
         return next(new ErrorHandler("Invalid car ID", 400));
       }
 
-      console.log("editCar", req.body);
+      // console.log("editCar", req.body);
       const updatedCarData: any = { ...req.body };
 
       const uploadImageIfNotExists = async (imageField: string) => {
@@ -250,7 +250,7 @@ export const runningCars = catchAsyncErrors(
     try {
       const currentDate = formatDate(new Date());
       const currentTime = new Date().getHours();
-      console.log(currentDate);
+      // console.log(currentDate);
 
       const runningCars = await CarModel.aggregate([
         {
@@ -320,7 +320,7 @@ export const runningCars = catchAsyncErrors(
         if (currentDateTime > toDateTime) {
           return false;
         }
-       console.log(currentDateTime);
+      //  console.log(currentDateTime);
        
 
         // Check if current time is within the booking time range
