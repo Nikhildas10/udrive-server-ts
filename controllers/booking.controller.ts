@@ -799,18 +799,35 @@ export const addKilometre = catchAsyncErrors(
       const { kilometreCovered } = req.body;
 
       const booking = await BookingModel.findById(id);
-      const carSelected = booking?.carSelected;
+      const carSelected: any = booking?.carSelected;
+      const customerSelected: any = booking?.customerSelected;
 
       const car = await CarModel.findById(carSelected?._id);
       if (!car) {
         return next(new ErrorHandler("Car not found", 404));
       }
+      const customer = await customerModel.findById(customerSelected?._id);
+      if (!customer) {
+        return next(new ErrorHandler("Customer not found", 404));
+      }
+      const employee = await employeeModel.findById(req?.user?._id);
+      if (!employee) {
+        return next(new ErrorHandler("Employee not found", 404));
+      }
+
       const kmPerBooking = kilometreCovered - car.totalKmCovered;
       try {
         car.totalKmCovered += kmPerBooking;
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
+
+        car.bookings = [booking];
+        customer.bookings = [booking];
+        employee.bookings = [booking];
+
         await car.save();
+        await customer.save();
+        await employee.save();
         await booking.save();
       } catch (err: any) {
         next(new ErrorHandler(err.message, 400));
