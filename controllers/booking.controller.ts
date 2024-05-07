@@ -256,6 +256,7 @@ export const editBooking = catchAsyncErrors(
           lastService: newCar.lastService,
           serviceInterval: newCar.serviceInterval,
           isDeleted: newCar.isDeleted,
+          totalKmCovered:newCar.totalKmCovered,
           vehicleNumber: newCar.vehicleNumber,
         },
         customerSelected: {
