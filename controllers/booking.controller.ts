@@ -55,7 +55,7 @@ export const createBooking = catchAsyncErrors(
           serviceInterval: carSelected.serviceInterval,
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
-          totalKmCovered:carSelected.totalKmCovered
+          totalKmCovered: carSelected.totalKmCovered,
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
@@ -256,7 +256,7 @@ export const editBooking = catchAsyncErrors(
           lastService: newCar.lastService,
           serviceInterval: newCar.serviceInterval,
           isDeleted: newCar.isDeleted,
-          totalKmCovered:newCar.totalKmCovered,
+          totalKmCovered: newCar.totalKmCovered,
           vehicleNumber: newCar.vehicleNumber,
         },
         customerSelected: {
@@ -822,16 +822,25 @@ export const addKilometre = catchAsyncErrors(
         car.totalKmCovered += kmPerBooking;
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
-        
-        booking.carSelected=[car]
-        car.bookings = [booking];
-        customer.bookings = [booking];
-        employee.bookings = [booking];
+
+        // Store full data of car, customer in the booking object
+        booking.carSelected = car.toObject();
+        booking.customerSelected = customer.toObject();
 
         await car.save();
         await customer.save();
-        await employee.save();
-        await booking.save();
+
+        // Now, update the bookings array of car, customer, and employee with the booking object
+        car.bookings.push(booking.toObject());
+        customer.bookings.push(booking.toObject());
+        employee.bookings.push(booking.toObject());
+
+        await Promise.all([
+          car.save(),
+          customer.save(),
+          employee.save(),
+          booking.save(),
+        ]);
       } catch (err: any) {
         next(new ErrorHandler(err.message, 400));
       }
@@ -855,8 +864,7 @@ export const notUpdatedKilometre = catchAsyncErrors(
       const filteredBookings = bookings.filter((booking) => {
         const toDate = parseDateTime(booking.toDate);
 
-        if (currentDateTime > toDate) 
-          return true;
+        if (currentDateTime > toDate) return true;
       });
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
