@@ -55,7 +55,7 @@ export const createBooking = catchAsyncErrors(
           serviceInterval: carSelected.serviceInterval,
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
-          totalKmCovered: carSelected.totalKmCovered,
+          totalKmCovered:carSelected.totalKmCovered
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
@@ -256,7 +256,7 @@ export const editBooking = catchAsyncErrors(
           lastService: newCar.lastService,
           serviceInterval: newCar.serviceInterval,
           isDeleted: newCar.isDeleted,
-          totalKmCovered: newCar.totalKmCovered,
+          totalKmCovered:newCar.totalKmCovered,
           vehicleNumber: newCar.vehicleNumber,
         },
         customerSelected: {
@@ -801,8 +801,13 @@ export const addKilometre = catchAsyncErrors(
       const { kilometreCovered } = req.body;
 
       const booking = await BookingModel.findById(id);
-      const carSelected: any = booking?.carSelected;
-      const customerSelected: any = booking?.customerSelected;
+      if (!booking) {
+        return next(new ErrorHandler("Booking not found", 404));
+      }
+
+      // Accessing carSelected from the booking
+      const carSelected: any = booking.carSelected;
+      const customerSelected: any = booking.customerSelected;
 
       const car = await CarModel.findById(carSelected?._id);
       if (!car) {
@@ -823,24 +828,25 @@ export const addKilometre = catchAsyncErrors(
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
 
-        // Store full data of car, customer in the booking object
-        booking.carSelected = car.toObject();
-        booking.customerSelected = customer.toObject();
+        // Update carSelected's totalKmCovered
+        carSelected.totalKmCovered = kilometreCovered;
+        booking.carSelected.totalKmCovered=kilometreCovered
+
+        // Update kilometreCovered for all bookings associated with the car, customer, and employee
+        car.bookings.forEach((booking) => {
+          booking.kilometreCovered = kmPerBooking;
+        });
+        customer.bookings.forEach((booking) => {
+          booking.kilometreCovered = kmPerBooking;
+        });
+        employee.bookings.forEach((booking) => {
+          booking.kilometreCovered = kmPerBooking;
+        });
 
         await car.save();
         await customer.save();
-
-        // Now, update the bookings array of car, customer, and employee with the booking object
-        car.bookings.push(booking.toObject());
-        customer.bookings.push(booking.toObject());
-        employee.bookings.push(booking.toObject());
-
-        await Promise.all([
-          car.save(),
-          customer.save(),
-          employee.save(),
-          booking.save(),
-        ]);
+        await employee.save();
+        await booking.save();
       } catch (err: any) {
         next(new ErrorHandler(err.message, 400));
       }
@@ -864,7 +870,8 @@ export const notUpdatedKilometre = catchAsyncErrors(
       const filteredBookings = bookings.filter((booking) => {
         const toDate = parseDateTime(booking.toDate);
 
-        if (currentDateTime > toDate) return true;
+        if (currentDateTime > toDate) 
+          return true;
       });
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
