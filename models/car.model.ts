@@ -11,13 +11,14 @@ export interface ICar extends Document {
   lastService: Date;
   serviceInterval: number;
   totalKmCovered: number;
+  kmBeforeTrip: number;
   vehicleNumber: string;
   rcBook?: object;
   insurancePolicy?: object;
   pollutionCertificate?: object;
-  bookings:IBooking[];
-  isDeleted:boolean;
-  carImage:object;
+  bookings: IBooking[];
+  isDeleted: boolean;
+  carImage: object;
 }
 
 const carSchema = new Schema<ICar>({
@@ -48,7 +49,11 @@ const carSchema = new Schema<ICar>({
   },
   totalKmCovered: {
     type: Number,
-    default:0
+    default: 0,
+  },
+  kmBeforeTrip: {
+    type: Number,
+    default: 0,
   },
   vehicleNumber: {
     type: String,
@@ -56,21 +61,20 @@ const carSchema = new Schema<ICar>({
   rcBook: {
     public_id: String,
     url: String,
-    filetype:String
-
+    filetype: String,
   },
   insurancePolicy: {
     public_id: String,
     url: String,
-    filetype:String
+    filetype: String,
   },
   pollutionCertificate: {
     public_id: String,
     url: String,
-    filetype:String
+    filetype: String,
   },
-  carImage:{
-     public_id: String,
+  carImage: {
+    public_id: String,
     url: String,
   },
   bookings: [

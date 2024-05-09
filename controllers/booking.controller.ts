@@ -57,6 +57,7 @@ export const createBooking = catchAsyncErrors(
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
           totalKmCovered: carSelected.totalKmCovered,
+          kmBeforeTrip:carSelected?.totalKmCovered
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
