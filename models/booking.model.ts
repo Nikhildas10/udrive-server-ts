@@ -63,6 +63,7 @@ const bookingSchema: Schema = new Schema(
     },
     kilometreCovered: {
       type: Number,
+      default: 0,
     },
     invoiceDetails: [
       {

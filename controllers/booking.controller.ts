@@ -55,7 +55,7 @@ export const createBooking = catchAsyncErrors(
           serviceInterval: carSelected.serviceInterval,
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
-          totalKmCovered:carSelected.totalKmCovered
+          totalKmCovered: carSelected.totalKmCovered,
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
@@ -129,7 +129,7 @@ export const deleteBooking = catchAsyncErrors(
 
       if (customer) {
         customer.bookings = customer?.bookings?.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await customer.save();
       }
@@ -137,7 +137,7 @@ export const deleteBooking = catchAsyncErrors(
       const employee = await employeeModel.findById(req?.user?._id);
       if (employee) {
         employee.bookings = employee.bookings.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await employee.save();
       }
@@ -145,7 +145,7 @@ export const deleteBooking = catchAsyncErrors(
       const car = await CarModel.findById(booking?.carSelected?._id);
       if (car) {
         car.bookings = car.bookings.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await car.save();
       }
@@ -242,52 +242,52 @@ export const editBooking = catchAsyncErrors(
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
         carSelected: {
-          rcBook: newCar.rcBook,
-          insurancePolicy: newCar.insurancePolicy,
-          pollutionCertificate: newCar.pollutionCertificate,
-          carImage: newCar.carImage,
-          _id: newCar._id,
-          name: newCar.name,
-          manufacturingCompany: newCar.manufacturingCompany,
-          yearOfManufacturing: newCar.yearOfManufacturing,
-          fuelType: newCar.fuelType,
-          transmission: newCar.transmission,
-          insurance: newCar.insurance,
-          lastService: newCar.lastService,
-          serviceInterval: newCar.serviceInterval,
-          isDeleted: newCar.isDeleted,
-          totalKmCovered:newCar.totalKmCovered,
-          vehicleNumber: newCar.vehicleNumber,
+          rcBook: newCar?.rcBook,
+          insurancePolicy: newCar?.insurancePolicy,
+          pollutionCertificate: newCar?.pollutionCertificate,
+          carImage: newCar?.carImage,
+          _id: newCar?._id,
+          name: newCar?.name,
+          manufacturingCompany: newCar?.manufacturingCompany,
+          yearOfManufacturing: newCar?.yearOfManufacturing,
+          fuelType: newCar?.fuelType,
+          transmission: newCar?.transmission,
+          insurance: newCar?.insurance,
+          lastService: newCar?.lastService,
+          serviceInterval: newCar?.serviceInterval,
+          isDeleted: newCar?.isDeleted,
+          totalKmCovered: newCar?.totalKmCovered,
+          vehicleNumber: newCar?.vehicleNumber,
         },
         customerSelected: {
-          customerImage: newCustomer.customerImage,
-          passportImage: newCustomer.passportImage,
-          _id: newCustomer._id,
-          name: newCustomer.name,
-          contactNumber: newCustomer.contactNumber,
-          abroadNumber: newCustomer.abroadNumber,
-          nativeNumber: newCustomer.nativeNumber,
-          email: newCustomer.email,
-          passportNumber: newCustomer.passportNumber,
-          pincode: newCustomer.pincode,
-          state: newCustomer.state,
-          address: newCustomer.address,
-          locality: newCustomer.locality,
-          cityOrDistrict: newCustomer.cityOrDistrict,
-          isDeleted: newCustomer.isDeleted,
+          customerImage: newCustomer?.customerImage,
+          passportImage: newCustomer?.passportImage,
+          _id: newCustomer?._id,
+          name: newCustomer?.name,
+          contactNumber: newCustomer?.contactNumber,
+          abroadNumber: newCustomer?.abroadNumber,
+          nativeNumber: newCustomer?.nativeNumber,
+          email: newCustomer?.email,
+          passportNumber: newCustomer?.passportNumber,
+          pincode: newCustomer?.pincode,
+          state: newCustomer?.state,
+          address: newCustomer?.address,
+          locality: newCustomer?.locality,
+          cityOrDistrict: newCustomer?.cityOrDistrict,
+          isDeleted: newCustomer?.isDeleted,
         },
         // employee: employee.toObject(),
         employee: {
-          employeeImage: employee.employeeImage,
-          _id: employee._id,
-          name: employee.name,
-          userName: employee.userName,
-          email: employee.email,
-          isBlocked: employee.isBlocked,
-          role: employee.role,
-          isVerified: employee.isVerified,
-          access: employee.access,
-          isDeleted: employee.isDeleted,
+          employeeImage: employee?.employeeImage,
+          _id: employee?._id,
+          name: employee?.name,
+          userName: employee?.userName,
+          email: employee?.email,
+          isBlocked: employee?.isBlocked,
+          role: employee?.role,
+          isVerified: employee?.isVerified,
+          access: employee?.access,
+          isDeleted: employee?.isDeleted,
         },
       };
       const updatedBooking = await BookingModel.findByIdAndUpdate(
@@ -305,7 +305,7 @@ export const editBooking = catchAsyncErrors(
       const prevCustomer = await customerModel.findById(prevCustomerId);
       if (prevCustomer) {
         prevCustomer.bookings = prevCustomer.bookings.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await prevCustomer.save();
       }
@@ -314,7 +314,7 @@ export const editBooking = catchAsyncErrors(
       const prevCar = await CarModel.findById(prevCarId);
       if (prevCar) {
         prevCar.bookings = prevCar.bookings.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await prevCar.save();
       }
@@ -322,7 +322,7 @@ export const editBooking = catchAsyncErrors(
       const prevEmployee = await employeeModel.findById(req.user._id);
       if (prevEmployee) {
         prevEmployee.bookings = prevEmployee.bookings.filter(
-          (bookingId) => bookingId._id.toString() !== id
+          (bookingId) => bookingId?._id?.toString() !== id
         );
         await prevEmployee.save();
       }
@@ -604,7 +604,7 @@ export const getUpcomingBookings = catchAsyncErrors(
       });
 
       upcomingBookings.forEach((booking) => {
-        const bookingTime: any = parseDate(booking.fromDate);
+        const bookingTime: any = parseDatee(booking.fromDate);
 
         const timeDifference = Math.abs(bookingTime - currentTime.getTime());
 
@@ -713,45 +713,6 @@ export const getCancelledBookings = catchAsyncErrors(
   }
 );
 
-function parseDateTime(dateString: string) {
-  // Split the date string into parts
-  const parts = dateString.split(" ");
-  const datePart = parts[0];
-  const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
-
-  // Split the date part into day, month, and year
-  const dateParts = datePart.split("-");
-  const day = parseInt(dateParts[0]);
-  const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-  const year = parseInt(dateParts[2]);
-
-  // Split the time part into hours and minutes
-  const timeParts = timePart.split(":");
-  let hours = parseInt(timeParts[0]);
-  const minutes = parseInt(timeParts[1]);
-
-  // Adjust hours for PM if necessary
-  if (parts[2] === "PM" && hours !== 12) {
-    hours += 12;
-  }
-
-  // Create a new Date object with the parsed values
-  return new Date(year, month, day, hours, minutes);
-}
-
-function getCurrentDateTime() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const day = now.getDate();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-  return new Date(year, month, day, hours, minutes, seconds);
-}
-
-const currentDateTime = getCurrentDateTime();
-
 export const getUpcomingBookingsCount = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -794,6 +755,78 @@ export const getUpcomingBookingsCount = catchAsyncErrors(
   }
 );
 
+// export const addKilometre = catchAsyncErrors(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const { id } = req.params;
+//       const { kilometreCovered } = req.body;
+
+//       const booking = await BookingModel.findById(id);
+//       const carSelected: any = booking?.carSelected;
+//       const customerSelected: any = booking?.customerSelected;
+
+//       const car = await CarModel.findById(carSelected?._id);
+//       if (!car) {
+//         return next(new ErrorHandler("Car not found", 404));
+//       }
+//       const customer = await customerModel.findById(customerSelected?._id);
+//       if (!customer) {
+//         return next(new ErrorHandler("Customer not found", 404));
+//       }
+//       const employee = await employeeModel.findById(req?.user?._id);
+//       if (!employee) {
+//         return next(new ErrorHandler("Employee not found", 404));
+//       }
+
+//       const kmPerBooking = kilometreCovered - car.totalKmCovered;
+
+//       try {
+//         if (kmPerBooking) {
+//           car.totalKmCovered += kmPerBooking;
+//           await car.save();
+
+//           // Mark booking as updated and update kilometreCovered
+//           booking.isKilometreUpdated = true;
+//           booking.kilometreCovered = kmPerBooking;
+//           await booking.save();
+
+//           // Remove existing booking from car, customer, and employee bookings arrays
+//           car.bookings = car.bookings.filter(
+//             (b) => b._id.toString() !== booking._id.toString()
+//           );
+//           customer.bookings = customer.bookings.filter(
+//             (b) => b._id.toString() !== booking._id.toString()
+//           );
+//           employee.bookings = employee.bookings.filter(
+//             (b) => b._id.toString() !== booking._id.toString()
+//           );
+
+//           // Push the updated booking to car, customer, and employee bookings arrays
+//           car.bookings.push(booking);
+//           customer.bookings.push(booking);
+//           employee.bookings.push(booking);
+//           await Promise.all([car.save(), customer.save(), employee.save()]);
+
+//           // Set car selected for the booking with full details
+//          await BookingModel.findByIdAndUpdate(booking._id, {
+//            $set: { "carSelected.totalKmCovered": kilometreCovered },
+//          });
+//           await booking.save();
+//         }
+//       } catch (err: any) {
+//         next(new ErrorHandler(err.message, 400));
+//       }
+//       res.status(200).json({
+//         success: true,
+//         message: "Kilometre successfully added",
+//         booking,
+//       });
+//     } catch (err: any) {
+//       next(new ErrorHandler(err.message, 400));
+//     }
+//   }
+// );
+
 export const addKilometre = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -801,13 +834,8 @@ export const addKilometre = catchAsyncErrors(
       const { kilometreCovered } = req.body;
 
       const booking = await BookingModel.findById(id);
-      if (!booking) {
-        return next(new ErrorHandler("Booking not found", 404));
-      }
-
-      // Accessing carSelected from the booking
-      const carSelected: any = booking.carSelected;
-      const customerSelected: any = booking.customerSelected;
+      const carSelected: any = booking?.carSelected;
+      const customerSelected: any = booking?.customerSelected;
 
       const car = await CarModel.findById(carSelected?._id);
       if (!car) {
@@ -827,26 +855,38 @@ export const addKilometre = catchAsyncErrors(
         car.totalKmCovered += kmPerBooking;
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
-
-        // Update carSelected's totalKmCovered
-        carSelected.totalKmCovered = kilometreCovered;
-        booking.carSelected.totalKmCovered=kilometreCovered
-
-        // Update kilometreCovered for all bookings associated with the car, customer, and employee
-        car.bookings.forEach((booking) => {
-          booking.kilometreCovered = kmPerBooking;
-        });
-        customer.bookings.forEach((booking) => {
-          booking.kilometreCovered = kmPerBooking;
-        });
-        employee.bookings.forEach((booking) => {
-          booking.kilometreCovered = kmPerBooking;
-        });
-
-        await car.save();
-        await customer.save();
-        await employee.save();
         await booking.save();
+
+       
+        await CarModel.findByIdAndUpdate(carSelected._id, {
+          $set: { "bookings.0.kilometreCovered": kmPerBooking },
+        });
+        await CarModel.findByIdAndUpdate(carSelected._id, {
+          $set: { "bookings.0.isKilometreUpdated": true },
+        });
+        await CarModel.findByIdAndUpdate(carSelected._id, {
+          $set: { "bookings.0.carSelected.totalKmCovered": kilometreCovered },
+        });
+        await car.save();
+
+        await BookingModel.findByIdAndUpdate(id, {
+          $set: { "carSelected.totalKmCovered": kilometreCovered },
+        },{new:true});
+        await booking.save()
+        await customerModel.findByIdAndUpdate(customerSelected._id, {
+          $set: { "bookings.0.kilometreCovered": kmPerBooking },
+        });
+        await customerModel.findByIdAndUpdate(customerSelected._id, {
+          $set: { "bookings.0.isKilometreUpdated": true },
+        });
+        await customer.save()
+        await employeeModel.findByIdAndUpdate(employee._id, {
+          $set: { "bookings.0.kilometreCovered": kmPerBooking },
+        });
+        await employeeModel.findByIdAndUpdate(employee._id, {
+          $set: { "bookings.0.isKilometreUpdated": true },
+        });
+        await employee.save()
       } catch (err: any) {
         next(new ErrorHandler(err.message, 400));
       }
@@ -862,16 +902,55 @@ export const addKilometre = catchAsyncErrors(
 export const notUpdatedKilometre = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({
-        isDeleted: false,
-        isKilometreUpdated: false,
-      });
+      const getCurrentDateTime = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        return new Date(year, month, day, hours, minutes, seconds);
+      };
+      const currentDateTime = getCurrentDateTime();
+      const bookings = await BookingModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+            isKilometreUpdated: false,
+          },
+        },
+      ]);
+
+      const parseDatee = (dateString) => {
+        // Split the date string into parts
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+
+        // Split the date part into day, month, and year
+        const dateParts = datePart.split("-");
+        const day = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+        const year = parseInt(dateParts[2]);
+
+        // Split the time part into hours and minutes
+        const timeParts = timePart.split(":");
+        let hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
+
+        // Adjust hours for PM if necessary
+        if (parts[2] === "PM" && hours !== 12) {
+          hours += 12;
+        }
+
+        // Create a new Date object with the parsed values
+        return new Date(year, month, day, hours, minutes);
+      };
 
       const filteredBookings = bookings.filter((booking) => {
-        const toDate = parseDateTime(booking.toDate);
-
-        if (currentDateTime > toDate) 
-          return true;
+        const toDate = parseDatee(booking.toDate);
+        return currentDateTime > toDate;
       });
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
