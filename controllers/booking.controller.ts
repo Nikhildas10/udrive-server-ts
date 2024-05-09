@@ -857,7 +857,7 @@ export const addKilometre = catchAsyncErrors(
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
         await booking.save();
-        car.totalKmCovered += kmPerBooking;
+        car.totalKmCovered =kilometreCovered;
         await car.save()
 
         if (car) {
