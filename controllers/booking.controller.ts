@@ -8,6 +8,7 @@ import customerModel from "../models/customer.model";
 import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
+import { Socket } from "socket.io"; 
 
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -102,6 +103,7 @@ export const createBooking = catchAsyncErrors(
       await customer.save();
       await employee.save();
       await car.save();
+
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
@@ -858,41 +860,73 @@ export const addKilometre = catchAsyncErrors(
         await booking.save();
 
        
-        await CarModel.findByIdAndUpdate(carSelected._id, {
-          $set: { "bookings.0.kilometreCovered": kmPerBooking },
-        });
-        await CarModel.findByIdAndUpdate(carSelected._id, {
-          $set: { "bookings.0.isKilometreUpdated": true },
-        });
-        await CarModel.findByIdAndUpdate(carSelected._id, {
-          $set: { "bookings.0.carSelected.totalKmCovered": kilometreCovered },
-        });
+
+    if (car) {
+      const bookingIndex = car.bookings.findIndex(
+        (booking) => booking._id.toString() === id.toString()
+      );
+
+      if (bookingIndex !== -1) {
+        car.bookings[bookingIndex].kilometreCovered = kmPerBooking;
+        car.bookings[bookingIndex].isKilometreUpdated = true;
+
+        await car.save();
+      }
+    }
+
+
         await car.save();
 
-        await BookingModel.findByIdAndUpdate(id, {
-          $set: { "carSelected.totalKmCovered": kilometreCovered },
-        },{new:true});
-        await booking.save()
-        await customerModel.findByIdAndUpdate(customerSelected._id, {
-          $set: { "bookings.0.kilometreCovered": kmPerBooking },
-        });
-        await customerModel.findByIdAndUpdate(customerSelected._id, {
-          $set: { "bookings.0.isKilometreUpdated": true },
-        });
-        await customer.save()
-        await employeeModel.findByIdAndUpdate(employee._id, {
-          $set: { "bookings.0.kilometreCovered": kmPerBooking },
-        });
-        await employeeModel.findByIdAndUpdate(employee._id, {
-          $set: { "bookings.0.isKilometreUpdated": true },
-        });
+// await CarModel.findByIdAndUpdate(
+//   carSelected._id,
+//   {
+//     $set: {
+//       "bookings.$[booking].kilometreCovered": kmPerBooking,
+//       "bookings.$[booking].isKilometreUpdated": true,
+//       "bookings.$[booking].carSelected.totalKmCovered": kilometreCovered,
+//     },
+//   },
+//   {
+//     arrayFilters: [{ "booking._id": id }], // Replace 'id' with the actual booking ID
+//   }
+// );
+
+await BookingModel.findByIdAndUpdate(id, {
+  $set: { "carSelected.totalKmCovered": kilometreCovered },
+},{new:true});
+
+ if (customer) {
+   const bookingIndex = customer.bookings.findIndex(
+     (booking) => booking._id.toString() === id.toString()
+   );
+
+   if (bookingIndex !== -1) {
+     customer.bookings[bookingIndex].kilometreCovered = kmPerBooking;
+     customer.bookings[bookingIndex].isKilometreUpdated = true;
+
+     await customer.save();
+   }
+ }
+
+ if (employee) {
+   const bookingIndex = employee.bookings.findIndex(
+     (booking) => booking._id.toString() === id.toString()
+   );
+
+   if (bookingIndex !== -1) {
+     employee.bookings[bookingIndex].kilometreCovered = kmPerBooking;
+     employee.bookings[bookingIndex].isKilometreUpdated = true;
+
+     await employee.save();
+   }
+ }
         await employee.save()
       } catch (err: any) {
         next(new ErrorHandler(err.message, 400));
       }
       res
         .status(200)
-        .json({ success: true, message: "kilometre successfully added" });
+        .json({ success: true, message: "kilometre successfully added",car });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }

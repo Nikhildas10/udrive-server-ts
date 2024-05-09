@@ -33,6 +33,7 @@
     "nodemailer": "^6.9.8",
     "pdf-poppler": "^0.2.1",
     "pdf2pic": "^3.1.1",
+    "socket.io": "^4.7.5",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   },
