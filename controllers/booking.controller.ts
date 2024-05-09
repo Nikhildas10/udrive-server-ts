@@ -854,7 +854,6 @@ export const addKilometre = catchAsyncErrors(
 
       const kmPerBooking = kilometreCovered - car.totalKmCovered;
       try {
-        car.totalKmCovered += kmPerBooking;
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
         await booking.save();
@@ -862,6 +861,8 @@ export const addKilometre = catchAsyncErrors(
        
 
     if (car) {
+              car.totalKmCovered += kmPerBooking;
+
       const bookingIndex = car.bookings.findIndex(
         (booking) => booking._id.toString() === id.toString()
       );
@@ -869,13 +870,12 @@ export const addKilometre = catchAsyncErrors(
       if (bookingIndex !== -1) {
         car.bookings[bookingIndex].kilometreCovered = kmPerBooking;
         car.bookings[bookingIndex].isKilometreUpdated = true;
+console.log(car.bookings);
 
-        await car.save();
-      }
-    }
+}
+}
+await car.save();
 
-
-        await car.save();
 
 // await CarModel.findByIdAndUpdate(
 //   carSelected._id,
