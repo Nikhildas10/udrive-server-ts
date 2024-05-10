@@ -9,6 +9,7 @@ import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
 import { Server } from "socket.io";
+import { emitSocketEvent } from "../server";
 const io = new Server({
   cors: {
     origin: [
@@ -19,16 +20,6 @@ const io = new Server({
     credentials: true,
   },
 });
-
-io.on("connection", (socket) => {
-  console.log("socket connnected");
-
-  socket.on("disconnect", () => {
-    console.log("socket disconnected");
-  });
-});
-
-io.listen(5000);
 
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -124,7 +115,7 @@ export const createBooking = catchAsyncErrors(
       await customer.save();
       await employee.save();
       await car.save();
-      io.emit("newBooking", booking);
+      emitSocketEvent("newBooking",booking)
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
