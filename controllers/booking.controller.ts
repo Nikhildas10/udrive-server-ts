@@ -18,7 +18,19 @@ const io = new Server({
     ],
     credentials: true,
   },
-});export const createBooking = catchAsyncErrors(
+});
+
+io.on("connection", (socket) => {
+  console.log("socket connnected");
+
+  socket.on("disconnect", () => {
+    console.log("socket disconnected");
+  });
+});
+
+io.listen(5000);
+
+export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { customerSelected, carSelected, ...bookingData } = req.body;
@@ -689,12 +701,47 @@ export const getActiveBookings = catchAsyncErrors(
           },
         },
       ]);
+  const parseDatee = (dateString) => {
+    // Split the date string into parts
+    const parts = dateString.split(" ");
+    const datePart = parts[0];
+    const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
+    // Split the date part into day, month, and year
+    const dateParts = datePart.split("-");
+    const day = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+    const year = parseInt(dateParts[2]);
+
+    // Split the time part into hours and minutes
+    const timeParts = timePart.split(":");
+    let hours = parseInt(timeParts[0]);
+    const minutes = parseInt(timeParts[1]);
+
+    // Adjust hours for PM if necessary
+    if (parts[2] === "PM" && hours !== 12) {
+      hours += 12;
+    }
+
+    // Create a new Date object with the parsed values
+    return new Date(year, month, day, hours, minutes);
+  };
+   const getCurrentDateTime = () => {
+     const now = new Date();
+     const year = now.getFullYear();
+     const month = now.getMonth();
+     const day = now.getDate();
+     const hours = now.getHours();
+     const minutes = now.getMinutes();
+     const seconds = now.getSeconds();
+     return new Date(year, month, day, hours, minutes, seconds);
+   };
+   const currentDateTime = getCurrentDateTime();
       // Filter active bookings based on current time
       const filteredActiveBookings = activeBookings.filter((booking) => {
-        const fromDate = new Date(booking.fromDate);
-        const toDate = new Date(booking.toDate);
-        return currentTime >= fromDate && currentTime <= toDate;
+        const fromDate = parseDatee(booking.fromDate);
+        const toDate = parseDatee(booking.toDate);
+        return currentDateTime >= fromDate && currentDateTime <= toDate;
       });
 
       res.status(200).json({
@@ -1005,3 +1052,4 @@ export const notUpdatedKilometre = catchAsyncErrors(
     }
   }
 );
+
