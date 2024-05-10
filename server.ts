@@ -1,5 +1,5 @@
 require("dotenv").config();
-import { Server } from "socket.io";
+const { Server } = require("socket.io");
 import { app } from "./app";
 import { connectDb } from "./utils/db";
 import { v2 as cloudinary } from "cloudinary";

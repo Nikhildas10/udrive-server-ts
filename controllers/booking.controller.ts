@@ -8,9 +8,17 @@ import customerModel from "../models/customer.model";
 import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
-import { Socket } from "socket.io";
-
-export const createBooking = catchAsyncErrors(
+import { Server } from "socket.io";
+const io = new Server({
+  cors: {
+    origin: [
+      "https://u-drive-three.vercel.app",
+      "http://localhost:3031",
+      "http://localhost:3030",
+    ],
+    credentials: true,
+  },
+});export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { customerSelected, carSelected, ...bookingData } = req.body;
@@ -57,7 +65,7 @@ export const createBooking = catchAsyncErrors(
           isDeleted: carSelected.isDeleted,
           vehicleNumber: carSelected.vehicleNumber,
           totalKmCovered: carSelected.totalKmCovered,
-          kmBeforeTrip:carSelected?.totalKmCovered
+          kmBeforeTrip: carSelected?.totalKmCovered,
         },
         customerSelected: {
           customerImage: customerSelected.customerImage,
@@ -104,6 +112,7 @@ export const createBooking = catchAsyncErrors(
       await customer.save();
       await employee.save();
       await car.save();
+      io.emit("newBooking", booking);
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
@@ -857,11 +866,10 @@ export const addKilometre = catchAsyncErrors(
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
         await booking.save();
-        car.totalKmCovered =kilometreCovered;
-        await car.save()
+        car.totalKmCovered = kilometreCovered;
+        await car.save();
 
         if (car) {
-
           const bookingIndex = car.bookings.findIndex(
             (booking) => booking._id.toString() === id.toString()
           );
@@ -870,11 +878,10 @@ export const addKilometre = catchAsyncErrors(
             car.bookings[bookingIndex].kilometreCovered = kmPerBooking;
             car.bookings[bookingIndex].isKilometreUpdated = true;
             console.log(car.bookings);
- 
-         }
-           car.markModified("bookings");
+          }
+          car.markModified("bookings");
 
-           await car.save();
+          await car.save();
         }
 
         // await CarModel.findByIdAndUpdate(
@@ -907,7 +914,7 @@ export const addKilometre = catchAsyncErrors(
           if (bookingIndex !== -1) {
             customer.bookings[bookingIndex].kilometreCovered = kmPerBooking;
             customer.bookings[bookingIndex].isKilometreUpdated = true;
-           customer.markModified("bookings");
+            customer.markModified("bookings");
 
             await customer.save();
           }
@@ -921,7 +928,7 @@ export const addKilometre = catchAsyncErrors(
           if (bookingIndex !== -1) {
             employee.bookings[bookingIndex].kilometreCovered = kmPerBooking;
             employee.bookings[bookingIndex].isKilometreUpdated = true;
-           employee.markModified("bookings");
+            employee.markModified("bookings");
 
             await employee.save();
           }
