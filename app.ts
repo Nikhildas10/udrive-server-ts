@@ -11,6 +11,7 @@ import calendarRouter from "./routes/calendar.route";
 import dashboardRouter from "./routes/dashboard.route";
 import { Server } from "socket.io";
 import { disconnect } from "process";
+import notificationRouter from "./routes/notification.router";
 require("dotenv").config();
 export const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/car", carRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/customer", customerRouter);
 app.use("/api/calendar", calendarRouter);
+app.use("/api/notification", notificationRouter);
 
 app.get("/test", (req, res) => {
   res.status(200).json({ success: true, message: "Api is working fine" });

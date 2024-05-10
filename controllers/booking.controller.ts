@@ -10,6 +10,7 @@ import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
+import { notificationModel } from "../models/notification.model";
 const io = new Server({
   cors: {
     origin: [
@@ -101,6 +102,33 @@ export const createBooking = catchAsyncErrors(
           isDeleted: employee.isDeleted,
         },
       };
+
+      const notificationData = {
+        currentDate: new Date(),
+        employee: {
+          employeeImage: employee?.employeeImage,
+          _id: employee?._id,
+          name: employee?.name,
+        },
+        car: {
+          carImage: carSelected?.carImage,
+          _id: carSelected?._id,
+          name: carSelected?.name,
+        },
+        customer: {
+          _id: customerSelected._id,
+          name: customerSelected.name,
+          customerImage: customerSelected.customerImage,
+        },
+        booking:{
+          fromDate:bookingData.fromDate,
+          toDate:bookingData.toDate
+        }
+      };
+      const notification=await notificationModel.create(notificationData)
+      await notification.save()
+      console.log(notification);
+      
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
       await booking.save();
