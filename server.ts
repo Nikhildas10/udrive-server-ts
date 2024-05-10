@@ -1,5 +1,4 @@
 require("dotenv").config();
-const { Server } = require("socket.io");
 import { app } from "./app";
 import { connectDb } from "./utils/db";
 import { v2 as cloudinary } from "cloudinary";
@@ -15,24 +14,3 @@ app.listen(process.env.PORT, () => {
   connectDb();
 });
 
-const io = new Server({
-  cors: {
-    origin: [
-      "https://u-drive-three.vercel.app",
-      "http://localhost:3031",
-      "http://localhost:3030",
-    ],
-    credentials: true,
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("socket connnected");
-  
-  socket.on("disconnect", () => {
-    console.log("socket disconnected");
-    
-  });
-});
-
-io.listen(5000);
