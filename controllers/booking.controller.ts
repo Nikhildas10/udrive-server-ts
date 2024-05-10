@@ -127,7 +127,6 @@ export const createBooking = catchAsyncErrors(
       };
       const notification=await notificationModel.create(notificationData)
       await notification.save()
-      console.log(notification);
       
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
@@ -145,7 +144,7 @@ export const createBooking = catchAsyncErrors(
       await car.save();
       emitSocketEvent("newBooking",booking)
 
-      res.status(201).json({ success: true, booking });
+      res.status(201).json({ success: true, notification });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
