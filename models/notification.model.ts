@@ -5,6 +5,7 @@ export interface INotification extends Document {
   employee:object;
   customer:object;
   car:Object;
+  type:string;
   currentDate:Date
   seen: boolean;
 }
@@ -24,6 +25,9 @@ const notificationSchema = new Schema<INotification>({
   },
   currentDate: {
     type: Date,
+  },
+  type: {
+    type: String,
   },
   seen: {
     type: Boolean,
