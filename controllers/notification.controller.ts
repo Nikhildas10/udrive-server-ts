@@ -1,34 +1,61 @@
 import { Request, Response, NextFunction } from "express";
 import { catchAsyncErrors } from "../middleware/catchAsyncErrors";
 import { notificationModel } from "../models/notification.model";
+import ErrorHandler from "../utils/ErrorHandler";
 
 export const seenNotification = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    await notificationModel.findByIdAndUpdate(
-      id,
-      { seen: true },
-      { new: true }
-    );
-    res
-      .status(200)
-      .json({ success: true, message: "notification has been seen" });
+    try {
+      const { id } = req.params;
+      const employeeId = req?.user?._id;      
+      const updatedNotification = await notificationModel.findByIdAndUpdate(
+        id,
+        { $push: { seen: employeeId } },
+        { new: true }
+      );
+
+      if (!updatedNotification) {
+        return next(new ErrorHandler("Notification not found", 404));
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Notification has been seen",
+        updatedNotification,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
   }
 );
 
 export const getNotification = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    const notification = await notificationModel.find({ seen: false });
-    res.status(200).json({ success: true, notification });
+    try {
+      const employeeId = req?.user?._id;
+      const notifications = await notificationModel.find({
+        seen: { $nin: [employeeId] },
+      });
+      res.status(200).json({ success: true, notifications });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
   }
 );
 
+
 export const seenNotificationAll = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    await notificationModel.updateMany({}, { seen: true });
-    res.status(200).json({
-      success: true,
-      message: "All notifications have been marked as seen",
-    });
+    try {
+      const employeeId = req?.user?._id;
+      await notificationModel.updateMany({}, { $push: { seen: employeeId } });
+      res.status(200).json({
+        success: true,
+        message: "All notifications have been marked as seen",
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
   }
 );
+

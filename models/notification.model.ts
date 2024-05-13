@@ -6,8 +6,9 @@ export interface INotification extends Document {
   customer:object;
   car:Object;
   type:string;
+  title:string;
   currentDate:Date
-  seen: boolean;
+  seen: Array;
 }
 
 const notificationSchema = new Schema<INotification>({
@@ -29,9 +30,11 @@ const notificationSchema = new Schema<INotification>({
   type: {
     type: String,
   },
+  title: {
+    type: String,
+  },
   seen: {
-    type: Boolean,
-    default: false,
+    type: Array,
   },
 });
 
