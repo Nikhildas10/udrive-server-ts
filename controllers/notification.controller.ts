@@ -37,7 +37,7 @@ export const getNotification = catchAsyncErrors(
         .find({
           seen: { $nin: [employeeId] },
         })
-        .sort({ currentDate: -1 });
+        .sort({ currentDate: 1 });
       res.status(200).json({ success: true, notifications });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
