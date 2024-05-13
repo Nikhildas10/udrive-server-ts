@@ -102,11 +102,12 @@ export const createBooking = catchAsyncErrors(
           isDeleted: employee.isDeleted,
         },
       };
-
+      const date = new Date();
+      const formattedDate = formatDate(date);
       const notificationData = {
         currentDate: new Date(),
-        type:"newBooking",
-        title:`new booking has been made`,
+        type: "newBooking",
+        title: `new booking has been made by ${employee.name} on ${formattedDate}`,
         employee: {
           employeeImage: employee?.employeeImage,
           _id: employee?._id,
@@ -122,14 +123,13 @@ export const createBooking = catchAsyncErrors(
           name: customerSelected.name,
           customerImage: customerSelected.customerImage,
         },
-        booking:{
-          fromDate:bookingData.fromDate,
-          toDate:bookingData.toDate
-        }
+        booking: {
+          fromDate: bookingData.fromDate,
+          toDate: bookingData.toDate,
+        },
       };
-      const notification=await notificationModel.create(notificationData)
-      await notification.save()
-      
+      const notification = await notificationModel.create(notificationData);
+      await notification.save();
 
       const booking = await BookingModel.create(bookingDataWithoutCircularRefs);
       await booking.save();
@@ -144,7 +144,7 @@ export const createBooking = catchAsyncErrors(
       await customer.save();
       await employee.save();
       await car.save();
-      emitSocketEvent("newBooking",notification)
+      emitSocketEvent("newBooking", notification);
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
@@ -721,42 +721,42 @@ export const getActiveBookings = catchAsyncErrors(
           },
         },
       ]);
-  const parseDatee = (dateString) => {
-    // Split the date string into parts
-    const parts = dateString.split(" ");
-    const datePart = parts[0];
-    const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+      const parseDatee = (dateString) => {
+        // Split the date string into parts
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
-    // Split the date part into day, month, and year
-    const dateParts = datePart.split("-");
-    const day = parseInt(dateParts[0]);
-    const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-    const year = parseInt(dateParts[2]);
+        // Split the date part into day, month, and year
+        const dateParts = datePart.split("-");
+        const day = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+        const year = parseInt(dateParts[2]);
 
-    // Split the time part into hours and minutes
-    const timeParts = timePart.split(":");
-    let hours = parseInt(timeParts[0]);
-    const minutes = parseInt(timeParts[1]);
+        // Split the time part into hours and minutes
+        const timeParts = timePart.split(":");
+        let hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
 
-    // Adjust hours for PM if necessary
-    if (parts[2] === "PM" && hours !== 12) {
-      hours += 12;
-    }
+        // Adjust hours for PM if necessary
+        if (parts[2] === "PM" && hours !== 12) {
+          hours += 12;
+        }
 
-    // Create a new Date object with the parsed values
-    return new Date(year, month, day, hours, minutes);
-  };
-   const getCurrentDateTime = () => {
-     const now = new Date();
-     const year = now.getFullYear();
-     const month = now.getMonth();
-     const day = now.getDate();
-     const hours = now.getHours();
-     const minutes = now.getMinutes();
-     const seconds = now.getSeconds();
-     return new Date(year, month, day, hours, minutes, seconds);
-   };
-   const currentDateTime = getCurrentDateTime();
+        // Create a new Date object with the parsed values
+        return new Date(year, month, day, hours, minutes);
+      };
+      const getCurrentDateTime = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        return new Date(year, month, day, hours, minutes, seconds);
+      };
+      const currentDateTime = getCurrentDateTime();
       // Filter active bookings based on current time
       const filteredActiveBookings = activeBookings.filter((booking) => {
         const fromDate = parseDatee(booking.fromDate);
@@ -779,6 +779,39 @@ export const getActiveBookings = catchAsyncErrors(
     }
   }
 );
+function getDayWithSuffix(day) {
+  if (day >= 11 && day <= 13) {
+    return day + "th";
+  }
+  switch (day % 10) {
+    case 1:
+      return day + "st";
+    case 2:
+      return day + "nd";
+    case 3:
+      return day + "rd";
+    default:
+      return day + "th";
+  }
+}
+
+function formatDate(date) {
+  const day = date.getDate();
+  const month = date.toLocaleString("default", { month: "long" });
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const formattedTime =
+    (hours % 12 || 12) + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
+
+  return (
+    month + " " + getDayWithSuffix(day) + ", " + year + " " + formattedTime
+  );
+}
+
+const date = new Date("2024-05-01T17:00:00");
+const formattedDate = formatDate(date);
 
 export const getCancelledBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -1072,4 +1105,3 @@ export const notUpdatedKilometre = catchAsyncErrors(
     }
   }
 );
-

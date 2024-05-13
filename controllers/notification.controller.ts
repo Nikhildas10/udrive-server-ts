@@ -34,10 +34,21 @@ export const getNotification = catchAsyncErrors(
     try {
       const employeeId = req?.user?._id;
       const notifications = await notificationModel
-        .find({
-          seen: { $nin: [employeeId] },
-        })
-        .sort({ currentDate: 1 });
+        .find({})
+        .sort({ currentDate: -1 });
+      res.status(200).json({ success: true, notifications });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+export const getUnseenNotification = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const employeeId = req?.user?._id;
+      const notifications = await notificationModel
+        .find({})
+        .sort({ currentDate: -1 });
       res.status(200).json({ success: true, notifications });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
