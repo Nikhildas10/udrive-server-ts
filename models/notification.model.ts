@@ -5,6 +5,7 @@ export interface INotification extends Document {
   employee:object;
   customer:object;
   car:Object;
+  image:Object;
   type:string;
   title:string;
   currentDate:Date
@@ -22,6 +23,9 @@ const notificationSchema = new Schema<INotification>({
     type: Object,
   },
   car: {
+    type: Object,
+  },
+  image: {
     type: Object,
   },
   currentDate: {

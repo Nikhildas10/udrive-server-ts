@@ -7,6 +7,8 @@ import ErrorHandler from "../utils/ErrorHandler";
 import BookingModel from "../models/booking.model";
 import mongoose from "mongoose";
 import { format, parse } from "date-fns";
+import { notificationModel } from "../models/notification.model";
+import { emitSocketEvent } from "../server";
 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -783,14 +785,104 @@ export const lastInsuranceKm = catchAsyncErrors(
       const { id } = req.params;
       const km = req.body.lastServiceKm;
       if (km) {
-        const updatedkm = await CarModel.findByIdAndUpdate(id, {
-          lastServiceKilometre: km,
-        },{new:true});
-        res.status(200).json({success:true,updatedkm})
+        const updatedkm = await CarModel.findByIdAndUpdate(
+          id,
+          {
+            lastServiceKilometre: km,
+          },
+          { new: true }
+        );
+        res.status(200).json({ success: true, updatedkm });
       }
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
   }
 );
+export const resetServiceKm = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const updatedkm = await CarModel.findByIdAndUpdate(
+        id,
+        {
+          serviceKilometre: 0,
+        },
+        { new: true }
+      );
+      res.status(200).json({ success: true, updatedkm });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
 
+export const getServiceDueCars = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cars = await CarModel.find({ isDeleted: false });
+      const dueCars8: any = cars.filter((car) => {
+        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 8000;
+      });
+
+      const dueCars9: any = cars.filter((car) => {
+        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 9000;
+      });
+      const dueCars9and5: any = cars.filter((car) => {
+        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 9500;
+      });
+      const dueCarsFull: any = cars.filter((car) => {
+        return car.serviceKilometre > 10000;
+      });
+
+      if (dueCars8) {
+        const notificationData = {
+          currentDate: new Date(),
+          type: "serviceBefore2000",
+          title: `Next service for ${dueCars8.name} car is in less than 2000 kilometre.Schedule service immediately to prevent potential issues`,
+          image: dueCars8.carImage,
+        };
+        const notification = await notificationModel.create(notificationData);
+        await notification.save();
+        emitSocketEvent("serviceBefore2000",notificationData);
+      }
+      if (dueCars9) {
+         const notificationData = {
+           currentDate: new Date(),
+           type: "serviceBefore1000",
+           title: `Next service for ${dueCars9.name} car is in less than 1000 kilometre.Schedule service immediately to prevent potential issues`,
+           image: dueCars9.carImage,
+         };
+         const notification = await notificationModel.create(notificationData);
+         await notification.save();
+         emitSocketEvent("serviceBefore1000", notificationData);
+      }
+      if (dueCars9and5) {
+         const notificationData = {
+           currentDate: new Date(),
+           type: "serviceBefore500",
+           title: `Next service for ${dueCars9and5.name} car is in less than 500 kilometre.Schedule service immediately to prevent potential issues`,
+           image: dueCars9and5.carImage,
+         };
+         const notification = await notificationModel.create(notificationData);
+         await notification.save();
+         emitSocketEvent("serviceBefore500", notificationData);
+      }
+      if (dueCarsFull) {
+         const notificationData = {
+           currentDate: new Date(),
+           type: "serviceDueReached",
+           title: `${dueCarsFull.name} cars service is now overdue.Schedule service immediately to prevent potential issues`,
+           image: dueCarsFull.carImage,
+         };
+         const notification = await notificationModel.create(notificationData);
+         await notification.save();
+         emitSocketEvent("serviceDueReached", notificationData);
+      }
+
+      res.status(200).json({ success: true });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);

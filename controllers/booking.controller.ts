@@ -107,7 +107,7 @@ export const createBooking = catchAsyncErrors(
       const notificationData = {
         currentDate: new Date(),
         type: "newBooking",
-        title: `new booking has been made by ${employee.name} on ${formattedDate}`,
+        title: `New booking has been made by ${employee.name} on ${formattedDate}`,
         employee: {
           employeeImage: employee?.employeeImage,
           _id: employee?._id,
@@ -806,7 +806,14 @@ function formatDate(date) {
     (hours % 12 || 12) + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
 
   return (
-    month + " " + getDayWithSuffix(day) + ", " + year + " " + formattedTime
+    month +
+    " " +
+    getDayWithSuffix(day) +
+    ", " +
+    year +
+    " " +
+    "at" +
+    formattedTime
   );
 }
 
@@ -963,10 +970,14 @@ export const addKilometre = catchAsyncErrors(
 
       const kmPerBooking = kilometreCovered - car.totalKmCovered;
       try {
+        if (kilometreCovered == 0) {
+          return;
+        }
         booking.isKilometreUpdated = true;
         booking.kilometreCovered = kmPerBooking;
         await booking.save();
         car.totalKmCovered = kilometreCovered;
+        car.serviceKilometre += kmPerBooking;
         await car.save();
 
         if (car) {
