@@ -258,13 +258,12 @@ export const runningCars = catchAsyncErrors(
         {
           $match: {
             isDeleted: false,
-           
           },
         },
         {
           $unwind: "$bookings",
         },
-        
+
         {
           $addFields: {
             nextAvailableDate: {
@@ -322,8 +321,7 @@ export const runningCars = catchAsyncErrors(
         if (currentDateTime > toDateTime) {
           return false;
         }
-      //  console.log(currentDateTime);
-       
+        //  console.log(currentDateTime);
 
         // Check if current time is within the booking time range
         if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
@@ -779,4 +777,19 @@ export const getCarTotalRevenue = async (
   }
 };
 
-
+export const lastInsuranceKm = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const km = req.body.lastServiceKm;
+      if (km) {
+        const updatedkm = await CarModel.findByIdAndUpdate(id, {
+          lastServiceKilometre: km,
+        },{new:true});
+        res.status(200).json({success:true,updatedkm})
+      }
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);

@@ -3,7 +3,7 @@ import { isAuthenticated } from "../middleware/auth";
 
 import upload from "../middleware/multer";
 import multipleUpload from "../middleware/multer";
-import { addCars, carsOnYard, deleteCar, deleteMultipleCars, editCar, getAllCar, getCarTotalRevenue, getMostBookedCars, getSingleCar, runningCars } from "../controllers/car.controller";
+import { addCars, carsOnYard, deleteCar, deleteMultipleCars, editCar, getAllCar, getCarTotalRevenue, getMostBookedCars, getSingleCar, lastInsuranceKm, runningCars } from "../controllers/car.controller";
 import { getDashboardData } from "../controllers/dashboard.controller";
 
 const carRouter = express.Router();
@@ -19,5 +19,6 @@ carRouter.get("/get-running-cars", isAuthenticated, runningCars);
 carRouter.get("/get-cars-on-yard", isAuthenticated, carsOnYard);
 carRouter.get("/get/:id", isAuthenticated, getSingleCar);
 carRouter.get("/get-total-revenue/:id", isAuthenticated, getCarTotalRevenue);
+carRouter.put("/last-service-kilometre/:id", isAuthenticated,lastInsuranceKm);
 
 export default carRouter; 
