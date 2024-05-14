@@ -19,6 +19,7 @@ export const addCars = catchAsyncErrors(
       insurance,
       vehicleNumber,
       lastService,
+      lastServiceKilometre,
       serviceInterval,
       totalKmCovered,
     } = req.body;
@@ -67,6 +68,7 @@ export const addCars = catchAsyncErrors(
         insurance,
         vehicleNumber,
         lastService,
+        lastServiceKilometre,
         serviceInterval,
         totalKmCovered,
         rcBook: rcBookResult

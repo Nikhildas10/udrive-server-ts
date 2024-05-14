@@ -9,6 +9,7 @@ export interface ICar extends Document {
   transmission: string;
   insurance: Date;
   lastService: Date;
+  lastServiceKilometre: number;
   serviceInterval: number;
   totalKmCovered: number;
   vehicleNumber: string;
@@ -29,6 +30,9 @@ const carSchema = new Schema<ICar>({
     type: String,
   },
   yearOfManufacturing: {
+    type: Number,
+  },
+  lastServiceKilometre: {
     type: Number,
   },
   fuelType: {

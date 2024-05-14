@@ -144,7 +144,7 @@ export const createBooking = catchAsyncErrors(
       await customer.save();
       await employee.save();
       await car.save();
-      emitSocketEvent("newBooking", notification);
+      emitSocketEvent("newBooking", notificationData);
 
       res.status(201).json({ success: true, booking });
     } catch (err: any) {
