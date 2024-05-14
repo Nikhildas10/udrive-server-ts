@@ -822,17 +822,17 @@ export const getServiceDueCars = catchAsyncErrors(
     try {
       const cars = await CarModel.find({ isDeleted: false });
       const dueCars8: any = cars.filter((car) => {
-        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 8000;
+        return car.serviceKilometre < 9000 && car.serviceKilometre >= 8000;
       });
 
       const dueCars9: any = cars.filter((car) => {
-        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 9000;
+        return car.serviceKilometre < 9500 && car.serviceKilometre >= 9000;
       });
       const dueCars9and5: any = cars.filter((car) => {
-        return car.serviceKilometre <= 10000 && car.serviceKilometre >= 9500;
+        return car.serviceKilometre < 10000 && car.serviceKilometre >= 9500;
       });
       const dueCarsFull: any = cars.filter((car) => {
-        return car.serviceKilometre > 10000;
+        return car.serviceKilometre >= 10000;
       });
 
       if (dueCars8) {
