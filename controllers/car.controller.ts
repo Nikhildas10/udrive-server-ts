@@ -822,17 +822,17 @@ export const getServiceDueCars = catchAsyncErrors(
     try {
       const cars = await CarModel.find({ isDeleted: false });
       const dueCars8: any = cars.filter((car) => {
-        return car.serviceKilometre < 9000 && car.serviceKilometre >= 8000;
-      });
+        return car.serviceKilometre < car.serviceInterval-1000 && car.serviceKilometre >= car.serviceInterval-2000;
+      }); 
 
       const dueCars9: any = cars.filter((car) => {
-        return car.serviceKilometre < 9500 && car.serviceKilometre >= 9000;
+        return car.serviceKilometre < car.serviceInterval-500 && car.serviceKilometre >= car.serviceInterval-1000;
       });
       const dueCars9and5: any = cars.filter((car) => {
-        return car.serviceKilometre < 10000 && car.serviceKilometre >= 9500;
+        return car.serviceKilometre < car.serviceInterval && car.serviceKilometre >= car.serviceInterval-500;
       });
       const dueCarsFull: any = cars.filter((car) => {
-        return car.serviceKilometre >= 10000;
+        return car.serviceKilometre >= car.serviceInterval;
       });
 
       if (dueCars8) {
@@ -886,3 +886,14 @@ export const getServiceDueCars = catchAsyncErrors(
     }
   }
 );
+
+export const getInsuaranceDue=catchAsyncErrors(
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      const cars=await CarModel.find({isDeleted:false})
+
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+)
