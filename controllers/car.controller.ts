@@ -932,7 +932,7 @@ export const getInsuaranceDue = catchAsyncErrors(
         });
 
         const dueCarsOver = cars.filter((car) => {
-          return car.insurance > currentDate;
+          return car.insurance < currentDate;
         });
         if (dueCars10) {
           dueCars10.forEach(async (car) => {
@@ -1013,7 +1013,7 @@ export const getInsuaranceOverDue = catchAsyncErrors(
         return next(new ErrorHandler("no cars found", 400));
       }
       const dueCarsOver = cars.filter((car) => {
-        return car.insurance > currentDate;
+        return car.insurance < currentDate;
       });
       res.status(200).json({ success: true, dueCarsOver });
     } catch (err: any) {
