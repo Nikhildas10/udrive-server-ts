@@ -995,7 +995,10 @@ export const getServiceOverDueCars = catchAsyncErrors(
         return next(new ErrorHandler("no cars found", 400));
       }
       const dueCarsOver: any = cars.filter((car) => {
-        return car.serviceKilometre >= car.serviceInterval;
+        return (
+          car.serviceKilometre < car.serviceInterval &&
+          car.serviceKilometre >= car.serviceInterval - 500
+        );
       });
       res.status(200).json({ success: true, dueCarsOver });
     } catch (err: any) {
@@ -1013,7 +1016,10 @@ export const getInsuaranceOverDue = catchAsyncErrors(
         return next(new ErrorHandler("no cars found", 400));
       }
       const dueCarsOver = cars.filter((car) => {
-        return car.insurance < currentDate;
+        const dueDate = new Date(car.insurance);
+        const timeDiff = dueDate.getTime() - currentDate.getTime();
+        const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        return daysUntilDue === 10;
       });
       res.status(200).json({ success: true, dueCarsOver });
     } catch (err: any) {
