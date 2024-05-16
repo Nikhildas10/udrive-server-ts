@@ -1,15 +1,17 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface INotification extends Document {
-  booking:object;
-  employee:object;
-  customer:object;
-  car:Object;
-  image:Object;
-  type:string;
-  title:string;
-  currentDate:Date
+  booking: object;
+  employee: object;
+  customer: object;
+  car: object;
+  image: object;
+  type: string;
+  title: string;
+  currentDate: Date;
   seen: Array;
+  carId: mongoose.Schema.Types.ObjectId;
+  notificationType: string;
 }
 
 const notificationSchema = new Schema<INotification>({
@@ -40,9 +42,13 @@ const notificationSchema = new Schema<INotification>({
   seen: {
     type: Array,
   },
+  carId: {
+    type: mongoose.Schema.Types.ObjectId
+  },
+  notificationType: {
+    type: String,
+  },
 });
 
-export const notificationModel: Model<INotification> = mongoose.model<INotification>(
-  "notifications",
-  notificationSchema
-);
+export const notificationModel: Model<INotification> =
+  mongoose.model<INotification>("notifications", notificationSchema);

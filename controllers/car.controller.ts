@@ -821,85 +821,134 @@ export const getServiceDueCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cars = await CarModel.find({ isDeleted: false });
-      const dueCars8: any = cars.filter((car) => {
+
+      const dueCars8 = cars.filter((car) => {
         return (
           car.serviceKilometre < car.serviceInterval - 1000 &&
           car.serviceKilometre >= car.serviceInterval - 2000
         );
       });
 
-      const dueCars9: any = cars.filter((car) => {
+      const dueCars9 = cars.filter((car) => {
         return (
           car.serviceKilometre < car.serviceInterval - 500 &&
           car.serviceKilometre >= car.serviceInterval - 1000
         );
       });
-      const dueCars9and5: any = cars.filter((car) => {
+
+      const dueCars9and5 = cars.filter((car) => {
         return (
           car.serviceKilometre < car.serviceInterval &&
           car.serviceKilometre >= car.serviceInterval - 500
         );
       });
-      const dueCarsFull: any = cars.filter((car) => {
+
+      const dueCarsFull = cars.filter((car) => {
         return car.serviceKilometre >= car.serviceInterval;
       });
 
       if (dueCars8.length > 0) {
-        dueCars8.forEach(async (car) => {
-          const notificationData = {
-            currentDate: new Date(),
-            type: "serviceBefore2000",
-            title: `Next service for ${car.name} car is in less than 2000 kilometre. Schedule service immediately to prevent potential issues`,
-            image: car.carImage,
-          };
-          const notification = await notificationModel.create(notificationData);
-          await notification.save();
-          emitSocketEvent("serviceBefore2000", notificationData);
-        });
+        for (const car of dueCars8) {
+          const notificationExists = await notificationModel.findOne({
+            carId: car._id,
+            notificationType: "serviceBefore2000",
+          });
+
+          if (!notificationExists) {
+            const notificationData = {
+              currentDate: new Date(),
+              type: "serviceBefore2000",
+              title: `Next service for ${car.name} car is in less than 2000 kilometre. Schedule service immediately to prevent potential issues`,
+              image: car.carImage,
+              car: car,
+              carId: car._id,
+              notificationType: "serviceBefore2000",
+            };
+            const notification = await notificationModel.create(
+              notificationData
+            );
+            await notification.save();
+            emitSocketEvent("serviceBefore2000", notificationData);
+          }
+        }
       }
 
       if (dueCars9.length > 0) {
-        dueCars9.forEach(async (car) => {
-          const notificationData = {
-            currentDate: new Date(),
-            type: "serviceBefore1000",
-            title: `Next service for ${car.name} car is in less than 1000 kilometre. Schedule service immediately to prevent potential issues`,
-            image: car.carImage,
-          };
-          const notification = await notificationModel.create(notificationData);
-          await notification.save();
-          emitSocketEvent("serviceBefore1000", notificationData);
-        });
+        for (const car of dueCars9) {
+          const notificationExists = await notificationModel.findOne({
+            carId: car._id,
+            notificationType: "serviceBefore1000",
+          });
+
+          if (!notificationExists) {
+            const notificationData = {
+              currentDate: new Date(),
+              type: "serviceBefore1000",
+              title: `Next service for ${car.name} car is in less than 1000 kilometre. Schedule service immediately to prevent potential issues`,
+              image: car.carImage,
+              car: car,
+              carId: car._id,
+              notificationType: "serviceBefore1000",
+            };
+            const notification = await notificationModel.create(
+              notificationData
+            );
+            await notification.save();
+            emitSocketEvent("serviceBefore1000", notificationData);
+          }
+        }
       }
 
       if (dueCars9and5.length > 0) {
-        dueCars9and5.forEach(async (car) => {
-          const notificationData = {
-            currentDate: new Date(),
-            type: "serviceBefore500",
-            title: `Next service for ${car.name} car is in less than 500 kilometre. Schedule service immediately to prevent potential issues`,
-            image: car.carImage,
-          };
-          const notification = await notificationModel.create(notificationData);
-          await notification.save();
-          emitSocketEvent("serviceBefore500", notificationData);
-        });
+        for (const car of dueCars9and5) {
+          const notificationExists = await notificationModel.findOne({
+            carId: car._id,
+            notificationType: "serviceBefore500",
+          });
+
+          if (!notificationExists) {
+            const notificationData = {
+              currentDate: new Date(),
+              type: "serviceBefore500",
+              title: `Next service for ${car.name} car is in less than 500 kilometre. Schedule service immediately to prevent potential issues`,
+              image: car.carImage,
+              car: car,
+              carId: car._id,
+              notificationType: "serviceBefore500",
+            };
+            const notification = await notificationModel.create(
+              notificationData
+            );
+            await notification.save();
+            emitSocketEvent("serviceBefore500", notificationData);
+          }
+        }
       }
 
       if (dueCarsFull.length > 0) {
-        dueCarsFull.forEach(async (car) => {
-          const notificationData = {
-            currentDate: new Date(),
-            type: "serviceDueReached",
-            title: `${car.name} car's service is now overdue. Schedule service immediately to prevent potential issues`,
-            image: car.carImage,
-          };
-          const notification = await notificationModel.create(notificationData);
-          console.log(notification);
+        for (const car of dueCarsFull) {
+          const notificationExists = await notificationModel.findOne({
+            carId: car._id,
+            notificationType: "serviceDueReached",
+          });
 
-          await notification.save();
-          emitSocketEvent("serviceDueReached", notificationData);
-        });
+          if (!notificationExists) {
+            const notificationData = {
+              currentDate: new Date(),
+              type: "serviceDueReached",
+              title: `${car.name} car's service is now overdue. Schedule service immediately to prevent potential issues`,
+              image: car.carImage,
+              car: car,
+              carId: car._id,
+              notificationType: "serviceDueReached",
+            };
+            const notification = await notificationModel.create(
+              notificationData
+            );
+            await notification.save();
+            emitSocketEvent("serviceDueReached", notificationData);
+          }
+        }
       }
 
       res.status(200).json({ success: true });
@@ -909,11 +958,13 @@ export const getServiceDueCars = catchAsyncErrors(
   }
 );
 
-export const getInsuaranceDue = catchAsyncErrors(
+
+export const getInsuranceDue = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cars = await CarModel.find({ isDeleted: false });
       const currentDate = new Date();
+
       if (cars) {
         const dueCars10 = cars.filter((car) => {
           const dueDate = new Date(car.insurance);
@@ -934,52 +985,86 @@ export const getInsuaranceDue = catchAsyncErrors(
         const dueCarsOver = cars.filter((car) => {
           return car.insurance < currentDate;
         });
-        if (dueCars10) {
-          dueCars10.forEach(async (car) => {
-            const notificationData = {
-              currentDate: new Date(),
-              type: "insuranceBefore10",
-              title: `Insurance for the car ${car.name} is due in 10 days`,
-              image: car.carImage,
-            };
-            const notification = await notificationModel.create(
-              notificationData
-            );
-            await notification.save();
-            emitSocketEvent("insuranceBefore10", notificationData);
-          });
+
+        if (dueCars10.length > 0) {
+          for (const car of dueCars10) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "insuranceBefore10",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "insuranceBefore10",
+                title: `Insurance for the car ${car.name} is due in 10 days`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "insuranceBefore10",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("insuranceBefore10", notificationData);
+            }
+          }
         }
-        if (dueCars5) {
-          dueCars5.forEach(async (car) => {
-            const notificationData = {
-              currentDate: new Date(),
-              type: "insuranceBefore5",
-              title: `Insurance for the car ${car.name} is due in 5 days`,
-              image: car.carImage,
-            };
-            const notification = await notificationModel.create(
-              notificationData
-            );
-            await notification.save();
-            emitSocketEvent("insuranceBefore5", notificationData);
-          });
+
+        if (dueCars5.length > 0) {
+          for (const car of dueCars5) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "insuranceBefore5",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "insuranceBefore5",
+                title: `Insurance for the car ${car.name} is due in 5 days`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "insuranceBefore5",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("insuranceBefore5", notificationData);
+            }
+          }
         }
-        if (dueCarsOver) {
-          dueCarsOver.forEach(async (car) => {
-            const notificationData = {
-              currentDate: new Date(),
-              type: "insuranceOver",
-              title: `Insurance for the car ${car.name} is currently over due`,
-              image: car.carImage,
-            };
-            const notification = await notificationModel.create(
-              notificationData
-            );
-            await notification.save();
-            emitSocketEvent("insuranceOver", notificationData);
-          });
+
+        if (dueCarsOver.length > 0) {
+          for (const car of dueCarsOver) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "insuranceOver",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "insuranceOver",
+                title: `Insurance for the car ${car.name} is currently overdue`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "insuranceOver",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("insuranceOver", notificationData);
+            }
+          }
         }
       }
+
       res.status(200).json({ success: true });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
@@ -994,11 +1079,9 @@ export const getServiceOverDueCars = catchAsyncErrors(
       if (!cars) {
         return next(new ErrorHandler("no cars found", 400));
       }
-      const dueCarsOver: any = cars.filter((car) => {
-        return (
-          car.serviceKilometre < car.serviceInterval &&
-          car.serviceKilometre >= car.serviceInterval - 500
-        );
+      const dueCarsOver = cars.filter((car) => {
+        const distanceToService = car.serviceInterval - car.serviceKilometre;
+        return distanceToService <= 500;
       });
       res.status(200).json({ success: true, dueCarsOver });
     } catch (err: any) {
@@ -1015,11 +1098,12 @@ export const getInsuaranceOverDue = catchAsyncErrors(
       if (!cars) {
         return next(new ErrorHandler("no cars found", 400));
       }
+      const fiveDaysInMilliseconds = 5 * 24 * 60 * 60 * 1000;
       const dueCarsOver = cars.filter((car) => {
-        const dueDate = new Date(car.insurance);
-        const timeDiff = dueDate.getTime() - currentDate.getTime();
-        const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
-        return daysUntilDue === 10;
+        const insuranceDate = new Date(car.insurance);
+        const differenceInMilliseconds =
+          insuranceDate.getTime() - currentDate.getTime();
+        return differenceInMilliseconds <= fiveDaysInMilliseconds;
       });
       res.status(200).json({ success: true, dueCarsOver });
     } catch (err: any) {
