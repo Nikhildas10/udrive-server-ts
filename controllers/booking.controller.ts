@@ -8,7 +8,6 @@ import customerModel from "../models/customer.model";
 import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
-const { DateTime } = require("luxon");
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
@@ -593,96 +592,112 @@ export const getTotalRevenue = catchAsyncErrors(
     }
   }
 );
- 
-export const getUpcomingBookings = catchAsyncErrors(async (req, res, next) => {
-  try {
-    // Get the current time in IST
-    const currentTime = DateTime.now().setZone("Asia/Kolkata");
 
-    const upcomingBookings = await BookingModel.aggregate([
-      {
-        $match: {
-          isDeleted: false,
+export const getUpcomingBookings = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const currentTimeUTC = new Date();
+
+      const upcomingBookings = await BookingModel.aggregate([
+        {
+          $match: {
+            isDeleted: false,
+          },
         },
-      },
-      {
-        $addFields: {
-          parsedFromDate: {
-            $dateFromString: {
-              dateString: "$fromDate",
+        {
+          $addFields: {
+            parsedFromDate: {
+              $dateFromString: {
+                dateString: "$fromDate",
+                timezone: "Asia/Kolkata", // Use India time zone for parsing
+              },
             },
           },
         },
-      },
-      {
-        $sort: {
-          parsedFromDate: 1,
-          fromDate: 1,
+        {
+          $sort: {
+            parsedFromDate: 1,
+            fromDate: 1,
+          },
         },
-      },
-      {
-        $project: {
-          parsedFromDate: 0,
+        {
+          $project: {
+            parsedFromDate: 0,
+          },
         },
-      },
-    ]);
+      ]);
 
-    // Helper function to parse the date string into a DateTime object in IST
-    const parseDateToIST = (dateString) => {
-      const parts = dateString.split(" ");
-      const datePart = parts[0];
-      const timePart = parts[1] + " " + parts[2];
+      const parseDate = (dateString: string): Date => {
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2];
 
-      const [day, month, year] = datePart.split("-").map(Number);
-      const [time, period] = timePart.split(" ");
-      let [hours, minutes] = time.split(":").map(Number);
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [time, period] = timePart.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
 
-      if (period === "PM" && hours !== 12) hours += 12;
-      if (period === "AM" && hours === 12) hours = 0;
+        if (period === "PM" && hours !== 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
 
-      const date = new Date(year, month - 1, day, hours, minutes);
-      return DateTime.fromJSDate(date).setZone("Asia/Kolkata");
-    };
-    console.log(parseDateToIST);
-    
+        // Create a Date object in UTC and adjust for IST offset
+        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
+      };
 
-    // Filter bookings to include only upcoming bookings
-    const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
-      const fromDate = parseDateToIST(booking.fromDate);
-      return currentTime < fromDate;
-    });
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
+      };
 
-    // Calculate time left for each booking
-    filteredUpcomingBookings.forEach((booking) => {
-      const bookingTime = parseDateToIST(booking.fromDate);
-      const timeDifference = bookingTime.diff(currentTime);
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+      console.log(currentDateTimeUTC);
+      
 
-      const days = Math.floor(timeDifference.as("days"));
-      const hours = Math.floor(timeDifference.as("hours") % 24);
-      const minutes = Math.floor(timeDifference.as("minutes") % 60);
+      const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
+        const fromDate = parseDate(booking.fromDate);
+        console.log(fromDate);
+        
+        return currentDateTimeUTC < fromDate;
+      });
 
-      let timeLeft = "";
-      if (days > 0) {
-        timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-      }
-      if (hours > 0) {
-        timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-      }
-      if (minutes > 0) {
-        timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-      }
+      upcomingBookings.forEach((booking) => {
+        const bookingTime = parseDate(booking.fromDate).getTime();
 
-      booking.timeLeft = timeLeft.trim();
-    });
+        const timeDifference = Math.abs(
+          bookingTime - currentDateTimeUTC.getTime()
+        );
 
-    res.status(200).json({
-      success: true,
-      upcomingBookings: filteredUpcomingBookings,
-    });
-  } catch (err) {
-    return next(new ErrorHandler(err.message, 400));
+        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        let timeLeft = "";
+        if (days > 0) {
+          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+        }
+        if (hours > 0) {
+          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
+          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+        }
+
+        booking.timeLeft = timeLeft;
+      });
+
+      res.status(200).json({
+        success: true,
+        upcomingBookings: filteredUpcomingBookings,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
   }
-});
+);
+
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
