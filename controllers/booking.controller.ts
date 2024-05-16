@@ -650,13 +650,20 @@ export const getUpcomingBookings = catchAsyncErrors(
         const seconds = now.getSeconds();
         return new Date(year, month, day, hours, minutes, seconds);
       };
+
+      
       const currentDateTime = new Date();
+      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+      const upcomingDateTime = new Date(
+        currentDateTime.getTime() + timeZoneDifference
+      );
+
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
         // console.log(fromDate);
 
-        if (currentDateTime < fromDate) {
+        if (upcomingDateTime < fromDate) {
           return true;
         }
       });
