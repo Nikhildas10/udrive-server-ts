@@ -319,15 +319,15 @@ export const runningCars = catchAsyncErrors(
           const seconds = now.getSeconds();
           return new Date(year, month, day, hours, minutes, seconds);
         };
-const oregonTimeZone = "America/Los_Angeles"; // Pacific Daylight Time (PDT)
+const indiaTimeZone = "Asia/Kolkata"; // India Standard Time (IST)
 
-const now = moment.tz().tz(oregonTimeZone); // Get current time in PDT
-const utcTime = now.utc();
-const formattedDate=utcTime.format()
-const finalDate=new Date(formattedDate)
+// Get current time in IST
+const indiaTime = moment.tz().tz(indiaTimeZone);
 
- 
-        const currentDateTime = finalDate;
+// Convert IST time to UTC
+const utcTime = indiaTime.utc().format();
+const finalDate=new Date(utcTime)
+        const currentDateTime = finalDate;  
         
         // Check if current time is after the booking end time
         if (currentDateTime > toDateTime) {
