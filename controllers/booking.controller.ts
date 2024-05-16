@@ -838,7 +838,7 @@ function formatDate(date) {
     "," +
     year +
     " " +
-    "at" +" "+
+    "at" +" "+ 
     formattedTime
   );
 }

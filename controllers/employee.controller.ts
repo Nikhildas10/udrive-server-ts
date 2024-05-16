@@ -186,7 +186,7 @@ export const blockEmployee = catchAsyncErrors(
       const { isBlocked } = req.body;
       req.body as IblockEmployee;
       const userId = req.params?.id;
-      console.log(userId);
+      // console.log(userId);
       const user = await employeeModel.findById(userId);
       console.log("user", user);
       if (!user) {

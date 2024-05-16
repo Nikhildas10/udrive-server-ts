@@ -90,7 +90,7 @@ export const activateUser = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { activation_code, activation_token } = req.body;
-      console.log(activation_code, activation_token);
+      // console.log(activation_code, activation_token);
       const newUser: { user: IUser; activationCode: string } = jwt.verify(
         activation_token,
         process.env.ACTIVATION_SECRET
