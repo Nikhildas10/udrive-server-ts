@@ -252,15 +252,13 @@ export const deleteMultipleCars = catchAsyncErrors(
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getCurrentDateTimeUTC = () => {
-        return new Date();
+      const getCurrentDateTimeUTC = (): Date => {
+        const now = new Date();
+        const utcTimestamp = now.getTime() + now.getTimezoneOffset() * 60000;
+        return new Date(utcTimestamp);
       };
 
       const currentDateTimeUTC = getCurrentDateTimeUTC();
-      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
-      const upcomingDateTimeUTC = new Date(
-        currentDateTimeUTC.getTime() - timeZoneDifference
-      );
 
       const runningCars = await CarModel.aggregate([
         {
@@ -316,14 +314,14 @@ export const runningCars = catchAsyncErrors(
         const toDateTimeUTC = parseDate(car.bookings.toDate);
 
         // Check if current time is after the booking end time (in UTC)
-        if (upcomingDateTimeUTC > toDateTimeUTC) {
+        if (currentDateTimeUTC > toDateTimeUTC) {
           return false;
         }
 
         // Check if current time is within the booking time range (in UTC)
         if (
-          upcomingDateTimeUTC > fromDateTimeUTC &&
-          upcomingDateTimeUTC < toDateTimeUTC
+          currentDateTimeUTC >= fromDateTimeUTC &&
+          currentDateTimeUTC < toDateTimeUTC
         ) {
           return true;
         }
