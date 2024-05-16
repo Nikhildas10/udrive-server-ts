@@ -252,11 +252,15 @@ export const deleteMultipleCars = catchAsyncErrors(
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getCurrentDateTimeUTC = (): Date => {
-        return new Date(); // No need for manual UTC conversion
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
       };
 
       const currentDateTimeUTC = getCurrentDateTimeUTC();
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
+      );
 
       const runningCars = await CarModel.aggregate([
         {
@@ -303,8 +307,8 @@ export const runningCars = catchAsyncErrors(
           hours += 12;
         }
 
-        // Create a new Date object with the parsed values in local time
-        return new Date(year, month, day, hours, minutes);
+        // Create a new Date object with the parsed values in UTC
+        return new Date(Date.UTC(year, month, day, hours, minutes));
       };
 
       const filteredRunningCars = runningCars.filter((car) => {
@@ -312,14 +316,14 @@ export const runningCars = catchAsyncErrors(
         const toDateTimeUTC = parseDate(car.bookings.toDate);
 
         // Check if current time is after the booking end time (in UTC)
-        if (currentDateTimeUTC > toDateTimeUTC) {
+        if (upcomingDateTimeUTC > toDateTimeUTC) {
           return false;
         }
 
         // Check if current time is within the booking time range (in UTC)
         if (
-          currentDateTimeUTC > fromDateTimeUTC &&
-          currentDateTimeUTC < toDateTimeUTC
+          upcomingDateTimeUTC > fromDateTimeUTC &&
+          upcomingDateTimeUTC < toDateTimeUTC
         ) {
           return true;
         }
@@ -337,13 +341,15 @@ export const runningCars = catchAsyncErrors(
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getCurrentDateTimeUTC = (): Date => {
+      const getCurrentDateTimeUTC = () => {
         return new Date();
       };
 
       const currentDateTimeUTC = getCurrentDateTimeUTC();
-
-      // No need to adjust for time zone difference since it's already in UTC
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
+      );
 
       // Fetch running cars
       const runningCars = await CarModel.aggregate([
@@ -405,14 +411,14 @@ export const carsOnYard = catchAsyncErrors(
         const toDateTimeUTC = parseDate(car.bookings.toDate);
 
         // Check if current time is after the booking end time (in UTC)
-        if (currentDateTimeUTC > toDateTimeUTC) {
+        if (upcomingDateTimeUTC > toDateTimeUTC) {
           return false;
         }
 
         // Check if current time is within the booking time range (in UTC)
         if (
-          currentDateTimeUTC >= fromDateTimeUTC &&
-          currentDateTimeUTC <= toDateTimeUTC
+          upcomingDateTimeUTC >= fromDateTimeUTC &&
+          upcomingDateTimeUTC <= toDateTimeUTC
         ) {
           return true;
         }
