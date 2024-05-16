@@ -8,7 +8,7 @@ import customerModel from "../models/customer.model";
 import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
-const moment = require("moment-timezone");
+const { DateTime } = require("luxon");
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
@@ -626,20 +626,20 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
-     const parseDate = (dateString: string): Date => {
-       const parts = dateString.split(" ");
-       const datePart = parts[0];
-       const timePart = parts[1] + " " + parts[2];
+      const parseDate = (dateString: string): Date => {
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2];
 
-       const [day, month, year] = datePart.split("-").map(Number);
-       const [time, period] = timePart.split(" ");
-       let [hours, minutes] = time.split(":").map(Number);
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [time, period] = timePart.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
 
-       if (period === "PM" && hours !== 12) hours += 12;
-       if (period === "AM" && hours === 12) hours = 0;
+        if (period === "PM" && hours !== 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
 
-       return new Date(year, month - 1, day, hours, minutes);
-     };
+        return new Date(year, month - 1, day, hours, minutes);
+      };
 
       const getCurrentDateTime = () => {
         const now = new Date();
@@ -652,31 +652,33 @@ export const getUpcomingBookings = catchAsyncErrors(
         return new Date(year, month, day, hours, minutes, seconds);
       };
 
-      
       const currentDateTime = getCurrentDateTime();
       const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
       const upcomingDateTime = new Date(
         currentDateTime.getTime() + timeZoneDifference
       );
-      const usWestTime = moment.tz("America/Los_Angeles");
+      const indiaDateTime = DateTime.local().setZone("Asia/Kolkata"); // Set to India time zone
 
-      // Convert this time to India time zone
-      const indiaTime = usWestTime.clone().tz("Asia/Kolkata");
+      const formattedTime = indiaDateTime.toUTC();
 
+      console.log(formattedTime);
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
         // console.log(fromDate);
 
-        if (indiaTime < fromDate) {
+        if (formattedTime < fromDate) {
           return true;
         }
       });
 
-      upcomingBookings.forEach((booking) => {
-        const bookingTime: any = parseDate(booking.fromDate);
-
-        const timeDifference = Math.abs(bookingTime - currentDateTime.getTime());
+      filteredUpcomingBookings.forEach((booking) => {
+        const bookingTime = DateTime.fromJSDate(
+          parseDate(booking.fromDate)
+        ).setZone("Asia/Kolkata");
+        const timeDifference = Math.abs(
+          bookingTime.toMillis() - formattedTime.toMillis()
+        );
 
         const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
         const hours = Math.floor(
@@ -697,14 +699,14 @@ export const getUpcomingBookings = catchAsyncErrors(
           timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
         }
 
-        booking.timeLeft = timeLeft;
+        booking.timeLeft = timeLeft.trim();
       });
 
       res.status(200).json({
         success: true,
         upcomingBookings: filteredUpcomingBookings,
       });
-    } catch (err: any) {
+    } catch (err) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
