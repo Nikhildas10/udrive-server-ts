@@ -625,31 +625,20 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
-      const parseDatee = (dateString) => {
-        // Split the date string into parts
-        const parts = dateString.split(" ");
-        const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+     const parseDate = (dateString: string): Date => {
+       const parts = dateString.split(" ");
+       const datePart = parts[0];
+       const timePart = parts[1] + " " + parts[2];
 
-        // Split the date part into day, month, and year
-        const dateParts = datePart.split("-");
-        const day = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-        const year = parseInt(dateParts[2]);
+       const [day, month, year] = datePart.split("-").map(Number);
+       const [time, period] = timePart.split(" ");
+       let [hours, minutes] = time.split(":").map(Number);
 
-        // Split the time part into hours and minutes
-        const timeParts = timePart.split(":");
-        let hours = parseInt(timeParts[0]);
-        const minutes = parseInt(timeParts[1]);
+       if (period === "PM" && hours !== 12) hours += 12;
+       if (period === "AM" && hours === 12) hours = 0;
 
-        // Adjust hours for PM if necessary
-        if (parts[2] === "PM" && hours !== 12) {
-          hours += 12;
-        }
-
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
-      };
+       return new Date(year, month - 1, day, hours, minutes);
+     };
 
       const getCurrentDateTime = () => {
         const now = new Date();
@@ -664,7 +653,7 @@ export const getUpcomingBookings = catchAsyncErrors(
       const currentDateTime = getCurrentDateTime();
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
-        const fromDate = parseDatee(booking.fromDate);
+        const fromDate = parseDate(booking.fromDate);
         // console.log(fromDate);
 
         if (currentDateTime < fromDate) {
@@ -673,7 +662,7 @@ export const getUpcomingBookings = catchAsyncErrors(
       });
 
       upcomingBookings.forEach((booking) => {
-        const bookingTime: any = parseDatee(booking.fromDate);
+        const bookingTime: any = parseDate(booking.fromDate);
 
         const timeDifference = Math.abs(bookingTime - currentTime.getTime());
 
