@@ -593,125 +593,96 @@ export const getTotalRevenue = catchAsyncErrors(
     }
   }
 );
+ 
+export const getUpcomingBookings = catchAsyncErrors(async (req, res, next) => {
+  try {
+    // Get the current time in IST
+    const currentTime = DateTime.now().setZone("Asia/Kolkata");
 
-export const getUpcomingBookings = catchAsyncErrors(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const currentTime = new Date();
-
-      const upcomingBookings = await BookingModel.aggregate([
-        {
-          $match: {
-            isDeleted: false,
-          },
+    const upcomingBookings = await BookingModel.aggregate([
+      {
+        $match: {
+          isDeleted: false,
         },
-        {
-          $addFields: {
-            parsedFromDate: {
-              $dateFromString: {
-                dateString: "$fromDate",
-              },
+      },
+      {
+        $addFields: {
+          parsedFromDate: {
+            $dateFromString: {
+              dateString: "$fromDate",
             },
           },
         },
-        {
-          $sort: {
-            parsedFromDate: 1,
-            fromDate: 1,
-          },
+      },
+      {
+        $sort: {
+          parsedFromDate: 1,
+          fromDate: 1,
         },
-        {
-          $project: {
-            parsedFromDate: 0,
-          },
+      },
+      {
+        $project: {
+          parsedFromDate: 0,
         },
-      ]);
-      const parseDate = (dateString: string): Date => {
-        const parts = dateString.split(" ");
-        const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2];
+      },
+    ]);
 
-        const [day, month, year] = datePart.split("-").map(Number);
-        const [time, period] = timePart.split(" ");
-        let [hours, minutes] = time.split(":").map(Number);
+    // Helper function to parse the date string into a DateTime object in IST
+    const parseDateToIST = (dateString) => {
+      const parts = dateString.split(" ");
+      const datePart = parts[0];
+      const timePart = parts[1] + " " + parts[2];
 
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours === 12) hours = 0;
+      const [day, month, year] = datePart.split("-").map(Number);
+      const [time, period] = timePart.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
 
-        return new Date(year, month - 1, day, hours, minutes);
-      };
+      if (period === "PM" && hours !== 12) hours += 12;
+      if (period === "AM" && hours === 12) hours = 0;
 
-      const getCurrentDateTime = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const day = now.getDate();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const seconds = now.getSeconds();
-        return new Date(year, month, day, hours, minutes, seconds);
-      };
+      const date = new Date(year, month - 1, day, hours, minutes);
+      return DateTime.fromJSDate(date).setZone("Asia/Kolkata");
+    };
+    console.log(parseDateToIST);
+    
 
-      const currentDateTime = getCurrentDateTime();
-      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-      const upcomingDateTime = new Date(
-        currentDateTime.getTime() + timeZoneDifference
-      );
-      const indiaDateTime = DateTime.local().setZone("Asia/Kolkata"); // Set to India time zone
+    // Filter bookings to include only upcoming bookings
+    const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
+      const fromDate = parseDateToIST(booking.fromDate);
+      return currentTime < fromDate;
+    });
 
-      const formattedTime = indiaDateTime.toUTC();
+    // Calculate time left for each booking
+    filteredUpcomingBookings.forEach((booking) => {
+      const bookingTime = parseDateToIST(booking.fromDate);
+      const timeDifference = bookingTime.diff(currentTime);
 
-      console.log(formattedTime);
+      const days = Math.floor(timeDifference.as("days"));
+      const hours = Math.floor(timeDifference.as("hours") % 24);
+      const minutes = Math.floor(timeDifference.as("minutes") % 60);
 
-      const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
-        const fromDate = parseDate(booking.fromDate);
-        // console.log(fromDate);
+      let timeLeft = "";
+      if (days > 0) {
+        timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+      }
+      if (hours > 0) {
+        timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+      }
+      if (minutes > 0) {
+        timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+      }
 
-        if (formattedTime < fromDate) {
-          return true;
-        }
-      });
+      booking.timeLeft = timeLeft.trim();
+    });
 
-      filteredUpcomingBookings.forEach((booking) => {
-        const bookingTime = DateTime.fromJSDate(
-          parseDate(booking.fromDate)
-        ).setZone("Asia/Kolkata");
-        const timeDifference = Math.abs(
-          bookingTime.toMillis() - formattedTime.toMillis()
-        );
-
-        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        const minutes = Math.floor(
-          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
-        );
-
-        let timeLeft = "";
-        if (days > 0) {
-          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-        }
-        if (hours > 0) {
-          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-        }
-        if (minutes > 0) {
-          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-        }
-
-        booking.timeLeft = timeLeft.trim();
-      });
-
-      res.status(200).json({
-        success: true,
-        upcomingBookings: filteredUpcomingBookings,
-      });
-    } catch (err) {
-      return next(new ErrorHandler(err.message, 400));
-    }
+    res.status(200).json({
+      success: true,
+      upcomingBookings: filteredUpcomingBookings,
+    });
+  } catch (err) {
+    return next(new ErrorHandler(err.message, 400));
   }
-);
-
+});
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
