@@ -252,9 +252,15 @@ export const deleteMultipleCars = catchAsyncErrors(
 export const runningCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentDate = formatDate(new Date());
-      const currentTime = new Date().getHours();
-      // console.log(currentDate);
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
+      };
+
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
+      );
 
       const runningCars = await CarModel.aggregate([
         {
@@ -265,7 +271,6 @@ export const runningCars = catchAsyncErrors(
         {
           $unwind: "$bookings",
         },
-
         {
           $addFields: {
             nextAvailableDate: {
@@ -279,7 +284,8 @@ export const runningCars = catchAsyncErrors(
           },
         },
       ]);
-      const parseDate = (dateString) => {
+
+      const parseDate = (dateString: string) => {
         // Split the date string into parts
         const parts = dateString.split(" ");
         const datePart = parts[0];
@@ -301,36 +307,24 @@ export const runningCars = catchAsyncErrors(
           hours += 12;
         }
 
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
+        // Create a new Date object with the parsed values in UTC
+        return new Date(Date.UTC(year, month, day, hours, minutes));
       };
-      const filteredRunningCars = runningCars.filter((car) => {
-        const fromDateTime = parseDate(car.bookings.fromDate);
-        const toDateTime = parseDate(car.bookings.toDate);
-        const getCurrentDateTime = () => {
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = now.getMonth();
-          const day = now.getDate();
-          const hours = now.getHours();
-          const minutes = now.getMinutes();
-          const seconds = now.getSeconds();
-          return new Date(year, month, day, hours, minutes, seconds);
-        };
 
-   const currentDateTime = getCurrentDateTime();
-   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-   const upcomingDateTime = new Date(
-     currentDateTime.getTime() + timeZoneDifference
-   );
-        // Check if current time is after the booking end time
-        if (upcomingDateTime > toDateTime) {
+      const filteredRunningCars = runningCars.filter((car) => {
+        const fromDateTimeUTC = parseDate(car.bookings.fromDate);
+        const toDateTimeUTC = parseDate(car.bookings.toDate);
+
+        // Check if current time is after the booking end time (in UTC)
+        if (upcomingDateTimeUTC > toDateTimeUTC) {
           return false;
         }
-        //  console.log(upcomingDateTime);
 
-        // Check if current time is within the booking time range
-        if (upcomingDateTime > fromDateTime && upcomingDateTime < toDateTime) {
+        // Check if current time is within the booking time range (in UTC)
+        if (
+          upcomingDateTimeUTC > fromDateTimeUTC &&
+          upcomingDateTimeUTC < toDateTimeUTC
+        ) {
           return true;
         }
 
@@ -347,15 +341,23 @@ export const runningCars = catchAsyncErrors(
 export const carsOnYard = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentDate = formatDate(new Date());
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
+      };
+
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
+      );
 
       // Fetch running cars
       const runningCars = await CarModel.aggregate([
         {
           $match: {
             isDeleted: false,
-            "bookings.fromDate": { $lte: currentDate },
-            "bookings.toDate": { $gte: currentDate },
+            "bookings.fromDate": { $lte: currentDateTimeUTC },
+            "bookings.toDate": { $gte: currentDateTimeUTC },
           },
         },
         {
@@ -363,7 +365,7 @@ export const carsOnYard = catchAsyncErrors(
         },
         {
           $match: {
-            "bookings.fromDate": { $lte: currentDate },
+            "bookings.fromDate": { $lte: currentDateTimeUTC },
           },
         },
         {
@@ -377,7 +379,8 @@ export const carsOnYard = catchAsyncErrors(
           },
         },
       ]);
-      const parseDate = (dateString) => {
+
+      const parseDate = (dateString: string) => {
         // Split the date string into parts
         const parts = dateString.split(" ");
         const datePart = parts[0];
@@ -399,35 +402,24 @@ export const carsOnYard = catchAsyncErrors(
           hours += 12;
         }
 
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
+        // Create a new Date object with the parsed values in UTC
+        return new Date(Date.UTC(year, month, day, hours, minutes));
       };
-      const filteredRunningCars = runningCars.filter((car) => {
-        const fromDateTime = parseDate(car.bookings.fromDate);
-        const toDateTime = parseDate(car.bookings.toDate);
-        const getCurrentDateTime = () => {
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = now.getMonth();
-          const day = now.getDate();
-          const hours = now.getHours();
-          const minutes = now.getMinutes();
-          const seconds = now.getSeconds();
-          return new Date(year, month, day, hours, minutes, seconds);
-        };
 
-   const currentDateTime = getCurrentDateTime();
-   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-   const upcomingDateTime = new Date(
-     currentDateTime.getTime() + timeZoneDifference
-   );
-        // Check if current time is after the booking end time
-        if (upcomingDateTime > toDateTime) {
+      const filteredRunningCars = runningCars.filter((car) => {
+        const fromDateTimeUTC = parseDate(car.bookings.fromDate);
+        const toDateTimeUTC = parseDate(car.bookings.toDate);
+
+        // Check if current time is after the booking end time (in UTC)
+        if (upcomingDateTimeUTC > toDateTimeUTC) {
           return false;
         }
 
-        // Check if current time is within the booking time range
-        if (upcomingDateTime >= fromDateTime && upcomingDateTime <= toDateTime) {
+        // Check if current time is within the booking time range (in UTC)
+        if (
+          upcomingDateTimeUTC >= fromDateTimeUTC &&
+          upcomingDateTimeUTC <= toDateTimeUTC
+        ) {
           return true;
         }
 

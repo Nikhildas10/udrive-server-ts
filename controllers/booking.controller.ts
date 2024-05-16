@@ -706,7 +706,15 @@ function parseDate(dateString: string) {
 export const getActiveBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const currentTime = new Date();
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
+      };
+
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
+      );
 
       const activeBookings = await BookingModel.aggregate([
         {
@@ -714,8 +722,8 @@ export const getActiveBookings = catchAsyncErrors(
             isDeleted: false,
             $expr: {
               $and: [
-                { $lte: [{ $toDate: "$fromDate" }, currentTime] }, // Booking starts before or at the current time
-                { $gt: [{ $toDate: "$toDate" }, currentTime] }, // Booking ends after the current time
+                { $lte: [{ $toDate: "$fromDate" }, currentDateTimeUTC] }, // Booking starts before or at the current time
+                { $gt: [{ $toDate: "$toDate" }, currentDateTimeUTC] }, // Booking ends after the current time
               ],
             },
           },
@@ -736,7 +744,8 @@ export const getActiveBookings = catchAsyncErrors(
           },
         },
       ]);
-      const parseDatee = (dateString) => {
+
+      const parseDate = (dateString: string) => {
         // Split the date string into parts
         const parts = dateString.split(" ");
         const datePart = parts[0];
@@ -758,29 +767,15 @@ export const getActiveBookings = catchAsyncErrors(
           hours += 12;
         }
 
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
+        // Create a new Date object with the parsed values in UTC
+        return new Date(Date.UTC(year, month, day, hours, minutes));
       };
-      const getCurrentDateTime = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const day = now.getDate();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const seconds = now.getSeconds();
-        return new Date(year, month, day, hours, minutes, seconds);
-      };
-   const currentDateTime = getCurrentDateTime();
-   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-   const upcomingDateTime = new Date(
-     currentDateTime.getTime() + timeZoneDifference
-   );
+
       // Filter active bookings based on current time
       const filteredActiveBookings = activeBookings.filter((booking) => {
-        const fromDate = parseDatee(booking.fromDate);
-        const toDate = parseDatee(booking.toDate);
-        return upcomingDateTime >= fromDate && upcomingDateTime <= toDate;
+        const fromDate = parseDate(booking.fromDate);
+        const toDate = parseDate(booking.toDate);
+        return upcomingDateTimeUTC >= fromDate && upcomingDateTimeUTC <= toDate;
       });
 
       res.status(200).json({
@@ -798,46 +793,8 @@ export const getActiveBookings = catchAsyncErrors(
     }
   }
 );
-function getDayWithSuffix(day) {
-  if (day >= 11 && day <= 13) {
-    return day + "th";
-  }
-  switch (day % 10) {
-    case 1:
-      return day + "st";
-    case 2:
-      return day + "nd";
-    case 3:
-      return day + "rd";
-    default:
-      return day + "th";
-  }
-}
 
-function formatDate(date) {
-  const day = date.getDate();
-  const month = date.toLocaleString("default", { month: "long" });
-  const year = date.getFullYear();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const formattedTime =
-    (hours % 12 || 12) + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
 
-  return (
-    month +
-    " " +
-    getDayWithSuffix(day) +
-    "," +
-    year +
-    " " +
-    "at" +" "+ 
-    formattedTime
-  );
-}
-
-const date = new Date("2024-05-01T17:00:00");
-const formattedDate = formatDate(date);
 
 export const getCancelledBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -1079,20 +1036,14 @@ export const addKilometre = catchAsyncErrors(
 export const notUpdatedKilometre = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getCurrentDateTime = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const day = now.getDate();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        const seconds = now.getSeconds();
-        return new Date(year, month, day, hours, minutes, seconds);
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
       };
-      const currentDateTime = getCurrentDateTime();
-      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-      const upcomingDateTime = new Date(
-        currentDateTime.getTime() + timeZoneDifference
+
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+      const timeZoneDifference = 5.5 * 60 * 60 * 1000; // Convert to milliseconds for IST
+      const upcomingDateTimeUTC = new Date(
+        currentDateTimeUTC.getTime() - timeZoneDifference
       );
 
       const bookings = await BookingModel.aggregate([
@@ -1104,7 +1055,7 @@ export const notUpdatedKilometre = catchAsyncErrors(
         },
       ]);
 
-      const parseDatee = (dateString) => {
+      const parseDate = (dateString: string) => {
         // Split the date string into parts
         const parts = dateString.split(" ");
         const datePart = parts[0];
@@ -1126,14 +1077,15 @@ export const notUpdatedKilometre = catchAsyncErrors(
           hours += 12;
         }
 
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
+        // Create a new Date object with the parsed values in UTC
+        return new Date(Date.UTC(year, month, day, hours, minutes));
       };
 
       const filteredBookings = bookings.filter((booking) => {
-        const toDate = parseDatee(booking.toDate);
-        return upcomingDateTime > toDate;
+        const toDateUTC = parseDate(booking.toDate);
+        return upcomingDateTimeUTC > toDateUTC;
       });
+
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
