@@ -9,14 +9,9 @@ import mongoose from "mongoose";
 import { format, parse } from "date-fns";
 import { notificationModel } from "../models/notification.model";
 import { emitSocketEvent } from "../server";
-const moment = require("moment-timezone");
+import moment from "moment-timezone";
+import { hi } from "date-fns/locale";
 
-const oregonTimeZone = "America/Los_Angeles"; // Pacific Daylight Time (PDT)
-
-  const now = moment.tz().tz(oregonTimeZone); // Get current time in PDT
-  const utcTime = now.utc(); // Convert to UTC
-
- 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
@@ -324,17 +319,15 @@ export const runningCars = catchAsyncErrors(
           const seconds = now.getSeconds();
           return new Date(year, month, day, hours, minutes, seconds);
         };
+const oregonTimeZone = "America/Los_Angeles"; // Pacific Daylight Time (PDT)
 
-        const oregonTime = new Date();
-        const utcOffset = oregonTime.getTimezoneOffset() / 60; // Convert minutes to hours
-        const isDaylightSavingTime =
-          oregonTime.getMonth() > 2 && oregonTime.getMonth() < 10; // March to October
-        const oregonTimeZone = "America/Los_Angeles"; // Pacific Daylight Time (PDT)
+const now = moment.tz().tz(oregonTimeZone); // Get current time in PDT
+const utcTime = now.utc();
+const formattedDate=utcTime.format()
+const finalDate=new Date(formattedDate)
 
-        const now = moment.tz().tz(oregonTimeZone); // Get current time in PDT
-        const utcTime = now.utc(); // Convert to UTC
-        const currentDateTime = utcTime;
-        console.log(currentDateTime);
+ 
+        const currentDateTime = finalDate;
         
         // Check if current time is after the booking end time
         if (currentDateTime > toDateTime) {
