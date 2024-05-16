@@ -11,6 +11,7 @@ import CarModel from "../models/car.model";
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
+import { formatDate } from "date-fns";
 const io = new Server({
   cors: {
     origin: [
@@ -178,6 +179,45 @@ export const createBooking = catchAsyncErrors(
     }
   }
 );
+function getDayWithSuffix(day) {
+  if (day >= 11 && day <= 13) {
+    return day + "th";
+  }
+  switch (day % 10) {
+    case 1:
+      return day + "st";
+    case 2:
+      return day + "nd";
+    case 3:
+      return day + "rd";
+    default:
+      return day + "th";
+  }
+}
+
+function formatDate(date) {
+  const day = date.getDate();
+  const month = date.toLocaleString("default", { month: "long" });
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const formattedTime =
+    (hours % 12 || 12) + ":" + (minutes < 10 ? "0" : "") + minutes + " " + ampm;
+
+  return (
+    month +
+    " " +
+    getDayWithSuffix(day) +
+    "," +
+    year +
+    " " +
+    "at" +
+    " " +
+    formattedTime
+  );
+}
+
 export const deleteBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
