@@ -11,7 +11,6 @@ import CarModel from "../models/car.model";
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
-const moment = require("moment-timezone");
 const io = new Server({
   cors: {
     origin: [
@@ -655,7 +654,7 @@ export const getUpcomingBookings = catchAsyncErrors(
       
       const currentDateTime = new Date();
 const istDateTime = moment(currentDateTime).utcOffset(5.5 * 60); // Convert to IST (UTC+5:30)
-const upcomingDateTime = moment().tz("Asia/Kolkata"); 
+const upcomingDateTime = istDateTime.add(12.5, 'hours'); // Add 12.5 hours
 
 
 
@@ -668,38 +667,32 @@ const upcomingDateTime = moment().tz("Asia/Kolkata");
         }
       });
 
-     upcomingBookings.forEach((booking) => {
-       const bookingTime = parseDate(booking.fromDate);
-       const bookingDateTime = moment(bookingTime); // Convert parsed date to Moment object
+      upcomingBookings.forEach((booking) => {
+        const bookingTime: any = parseDate(booking.fromDate);
 
-       // Consider potential DST variations (optional)
-       // bookingDateTime.tz("America/Los_Angeles"); // If server enforces specific time zone
+        const timeDifference = Math.abs(bookingTime - upcomingDateTime.getTime());
 
-       const currentDateTimeIST = moment().tz("Asia/Kolkata"); // User's time in IST
+        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        const minutes = Math.floor(
+          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+        );
 
-       const timeDifference = currentDateTimeIST.diff(bookingDateTime); // Get difference in milliseconds
+        let timeLeft = "";
+        if (days > 0) {
+          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+        }
+        if (hours > 0) {
+          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
+          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+        }
 
-       // Calculate days, hours, and minutes using Moment.js duration
-
-       const duration = moment.duration(timeDifference);
-       const days = Math.floor(Math.abs(duration.asDays()));
-       const hours = Math.floor(Math.abs(duration.asHours()) % 24);
-       const minutes = Math.floor(Math.abs(duration.asMinutes()) % 60);
-
-       let timeLeft = "";
-       if (days > 0) {
-         timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-       }
-       if (hours > 0) {
-         timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-       }
-       if (minutes > 0) {
-         timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-       }
-
-       booking.timeLeft = timeLeft;
-     });
-
+        booking.timeLeft = timeLeft;
+      });
 
       res.status(200).json({
         success: true,
