@@ -133,7 +133,7 @@ export const createBooking = catchAsyncErrors(
       const notificationData = {
         currentDate: new Date(),
         type: "newBooking",
-        title: `New booking has been made for ${carSelected?.name} by ${employee.name} on ${formattedDate}`,
+        title: `${employee.name} booked a ${carSelected.manufacturingCompany}-${carSelected.name} for ${customerSelected.name}, starting ${formattedDate}`,
         employee: {
           employeeImage: employee?.employeeImage,
           _id: employee?._id,
