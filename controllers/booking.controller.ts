@@ -598,7 +598,6 @@ export const getUpcomingBookings = catchAsyncErrors(
     try {
       const currentTime = new Date();
 
-      // Aggregate bookings
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: {
@@ -626,40 +625,57 @@ export const getUpcomingBookings = catchAsyncErrors(
           },
         },
       ]);
-
-      const parseDate = (dateString: string) => {
+      const parseDatee = (dateString) => {
+        // Split the date string into parts
         const parts = dateString.split(" ");
         const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2];
+        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
 
+        // Split the date part into day, month, and year
         const dateParts = datePart.split("-");
-        const day = parseInt(dateParts[0], 10);
-        const month = parseInt(dateParts[1], 10) - 1;
-        const year = parseInt(dateParts[2], 10);
+        const day = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+        const year = parseInt(dateParts[2]);
 
+        // Split the time part into hours and minutes
         const timeParts = timePart.split(":");
-        let hours = parseInt(timeParts[0], 10);
-        const minutes = parseInt(timeParts[1], 10);
+        let hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
 
+        // Adjust hours for PM if necessary
         if (parts[2] === "PM" && hours !== 12) {
           hours += 12;
         }
 
+        // Create a new Date object with the parsed values
         return new Date(year, month, day, hours, minutes);
       };
 
-      const currentDateTime = new Date();
+      const getCurrentDateTime = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        return new Date(year, month, day, hours, minutes, seconds);
+      };
+      const currentDateTime = getCurrentDateTime();
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
-        const fromDate = parseDate(booking.fromDate);
-        return currentDateTime < fromDate;
+        const fromDate = parseDatee(booking.fromDate);
+        // console.log(fromDate);
+
+        if (currentDateTime < fromDate) {
+          return true;
+        }
       });
 
-      filteredUpcomingBookings.forEach((booking) => {
-        const bookingTime = parseDate(booking.fromDate);
-        const timeDifference = Math.abs(
-          bookingTime.getTime() - currentTime.getTime()
-        );
+      upcomingBookings.forEach((booking) => {
+        const bookingTime: any = parseDatee(booking.fromDate);
+
+        const timeDifference = Math.abs(bookingTime - currentTime.getTime());
 
         const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
         const hours = Math.floor(
@@ -670,10 +686,15 @@ export const getUpcomingBookings = catchAsyncErrors(
         );
 
         let timeLeft = "";
-        if (days > 0) timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-        if (hours > 0) timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-        if (minutes > 0)
+        if (days > 0) {
+          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+        }
+        if (hours > 0) {
+          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+        }
+        if (minutes > 0) {
           timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+        }
 
         booking.timeLeft = timeLeft;
       });
@@ -683,11 +704,11 @@ export const getUpcomingBookings = catchAsyncErrors(
         upcomingBookings: filteredUpcomingBookings,
       });
     } catch (err: any) {
-      console.error("Error fetching upcoming bookings:", err);
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
 function parseDate(dateString: string) {
   const parts = dateString.split("-");
   return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
