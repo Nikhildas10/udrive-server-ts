@@ -8,15 +8,10 @@ import { emitSocketEvent } from "../server";
 export const getDashboardData = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getCurrentDateTimeUTC = (): Date => {
-        const now = new Date();
-        const utcTimestamp = now.getTime() + now.getTimezoneOffset() * 60000;
-        return new Date(utcTimestamp);
-      };
+      const date = new Date();
+      const currentDate = formatDate(date);
+      const currentTime = new Date();
 
-      const currentDateTimeUTC = getCurrentDateTimeUTC();
-
-      // Fetch running cars
       const runningCars = await CarModel.aggregate([
         {
           $match: {
@@ -26,6 +21,7 @@ export const getDashboardData = catchAsyncErrors(
         {
           $unwind: "$bookings",
         },
+
         {
           $addFields: {
             nextAvailableDate: {
@@ -39,47 +35,44 @@ export const getDashboardData = catchAsyncErrors(
           },
         },
       ]);
+     const parseDate = (dateString: string): Date => {
+       const parts = dateString.split(" ");
+       const datePart = parts[0];
+       const timePart = parts[1] + " " + parts[2];
 
-      const parseDate = (dateString: string) => {
-        // Split the date string into parts
-        const parts = dateString.split(" ");
-        const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+       const [day, month, year] = datePart.split("-").map(Number);
+       const [time, period] = timePart.split(" ");
+       let [hours, minutes] = time.split(":").map(Number);
 
-        // Split the date part into day, month, and year
-        const dateParts = datePart.split("-");
-        const day = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-        const year = parseInt(dateParts[2]);
+       if (period === "PM" && hours !== 12) hours += 12;
+       if (period === "AM" && hours === 12) hours = 0;
 
-        // Split the time part into hours and minutes
-        const timeParts = timePart.split(":");
-        let hours = parseInt(timeParts[0]);
-        const minutes = parseInt(timeParts[1]);
-
-        // Adjust hours for PM if necessary
-        if (parts[2] === "PM" && hours !== 12) {
-          hours += 12;
-        }
-
-        // Create a new Date object with the parsed values in UTC
-        return new Date(Date.UTC(year, month, day, hours, minutes));
-      };
-
+       // Create a Date object in UTC and adjust for IST offset
+       const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+       return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
+     };
       const filteredRunningCars = runningCars.filter((car) => {
         const fromDateTime = parseDate(car.bookings.fromDate);
         const toDateTime = parseDate(car.bookings.toDate);
+        const getCurrentDateTime = () => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const day = now.getDate();
+          const hours = now.getHours();
+          const minutes = now.getMinutes();
+          const seconds = now.getSeconds();
+          return new Date(year, month, day, hours, minutes, seconds);
+        };
 
-        // Check if current time is after the booking end time (in UTC)
-        if (currentDateTimeUTC > toDateTime) {
+        const currentDateTime = new Date();
+        // Check if current time is after the booking end time
+        if (currentDateTime > toDateTime) {
           return false;
         }
 
-        // Check if current time is within the booking time range (in UTC)
-        if (
-          currentDateTimeUTC >= fromDateTime &&
-          currentDateTimeUTC <= toDateTime
-        ) {
+        // Check if current time is within the booking time range
+        if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
           return true;
         }
 
@@ -103,22 +96,71 @@ export const getDashboardData = catchAsyncErrors(
         };
       });
 
-      // Fetch upcoming bookings
       const upcomingBookings = await BookingModel.aggregate([
         {
           $match: {
             isDeleted: false,
-            $expr: {
-              $gt: [{ $toDate: "$fromDate" }, currentDateTimeUTC], // fromDate is after current time
+          },
+        },
+        {
+          $addFields: {
+            parsedFromDate: {
+              $dateFromString: {
+                dateString: "$fromDate",
+              },
             },
           },
         },
         {
           $sort: {
+            parsedFromDate: 1,
             fromDate: 1,
           },
         },
+        {
+          $project: {
+            parsedFromDate: 0,
+          },
+        },
       ]);
+
+      const getCurrentDateTime = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const day = now.getDate();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        return new Date(year, month, day, hours, minutes, seconds);
+      };
+      const currentDateTime = new Date();
+
+      const parseDatee = (dateString: string): Date => {
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2];
+
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [time, period] = timePart.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
+
+        if (period === "PM" && hours !== 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
+
+        // Create a Date object in UTC and adjust for IST offset
+        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
+      };
+
+      const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
+        const fromDate = parseDatee(booking.fromDate);
+        //  console.log(fromDate);
+
+        if (currentDateTime < fromDate) {
+          return true;
+        }
+      });
 
       const series = [
         {
@@ -131,7 +173,7 @@ export const getDashboardData = catchAsyncErrors(
         },
         {
           label: "upcoming bookings",
-          value: upcomingBookings.length,
+          value: filteredUpcomingBookings.length,
         },
       ];
 
@@ -141,6 +183,15 @@ export const getDashboardData = catchAsyncErrors(
     }
   }
 );
+function formatDate(date: Date): string {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const period = date.getHours() >= 12 ? "PM" : "AM";
+  return `${day}-${month}-${year} ${hours}:${minutes} ${period}`;
+}
 
 export const getMessage = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
