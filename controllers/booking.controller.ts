@@ -650,7 +650,7 @@ export const getUpcomingBookings = catchAsyncErrors(
         const seconds = now.getSeconds();
         return new Date(year, month, day, hours, minutes, seconds);
       };
-      const currentDateTime = getCurrentDateTime();
+      const currentDateTime = new Date();
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
