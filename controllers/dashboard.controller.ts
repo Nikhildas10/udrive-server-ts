@@ -75,11 +75,10 @@ export const getDashboardData = catchAsyncErrors(
         };
 
    const currentDateTime = getCurrentDateTime();
-   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+   const timeZoneDifference = 12.5 * 60 * 60 * 1000; 
    const upcomingDateTime = new Date(
      currentDateTime.getTime() + timeZoneDifference
    );
-        // Check if current time is after the booking end time
         if (upcomingDateTime > toDateTime) {
           return false;
         }
