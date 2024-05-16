@@ -652,7 +652,7 @@ export const getUpcomingBookings = catchAsyncErrors(
       };
 
       
-      const currentDateTime = new Date();
+      const currentDateTime = getCurrentDateTime();
       const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
       const upcomingDateTime = new Date(
         currentDateTime.getTime() + timeZoneDifference
@@ -778,12 +778,16 @@ export const getActiveBookings = catchAsyncErrors(
         const seconds = now.getSeconds();
         return new Date(year, month, day, hours, minutes, seconds);
       };
-      const currentDateTime = getCurrentDateTime();
+   const currentDateTime = getCurrentDateTime();
+   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+   const upcomingDateTime = new Date(
+     currentDateTime.getTime() + timeZoneDifference
+   );
       // Filter active bookings based on current time
       const filteredActiveBookings = activeBookings.filter((booking) => {
         const fromDate = parseDatee(booking.fromDate);
         const toDate = parseDatee(booking.toDate);
-        return currentDateTime >= fromDate && currentDateTime <= toDate;
+        return upcomingDateTime >= fromDate && currentDateTime <= toDate;
       });
 
       res.status(200).json({
@@ -1093,6 +1097,11 @@ export const notUpdatedKilometre = catchAsyncErrors(
         return new Date(year, month, day, hours, minutes, seconds);
       };
       const currentDateTime = getCurrentDateTime();
+      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+      const upcomingDateTime = new Date(
+        currentDateTime.getTime() + timeZoneDifference
+      );
+
       const bookings = await BookingModel.aggregate([
         {
           $match: {
@@ -1130,7 +1139,7 @@ export const notUpdatedKilometre = catchAsyncErrors(
 
       const filteredBookings = bookings.filter((booking) => {
         const toDate = parseDatee(booking.toDate);
-        return currentDateTime > toDate;
+        return upcomingDateTime > toDate;
       });
       res.status(200).json({ success: true, filteredBookings });
     } catch (err: any) {

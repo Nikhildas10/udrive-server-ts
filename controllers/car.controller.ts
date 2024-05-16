@@ -318,15 +318,19 @@ export const runningCars = catchAsyncErrors(
           return new Date(year, month, day, hours, minutes, seconds);
         };
 
-        const currentDateTime = getCurrentDateTime();
+   const currentDateTime = getCurrentDateTime();
+   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+   const upcomingDateTime = new Date(
+     currentDateTime.getTime() + timeZoneDifference
+   );
         // Check if current time is after the booking end time
-        if (currentDateTime > toDateTime) {
+        if (upcomingDateTime > toDateTime) {
           return false;
         }
-        //  console.log(currentDateTime);
+        //  console.log(upcomingDateTime);
 
         // Check if current time is within the booking time range
-        if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
+        if (upcomingDateTime > fromDateTime && upcomingDateTime < toDateTime) {
           return true;
         }
 
@@ -412,14 +416,18 @@ export const carsOnYard = catchAsyncErrors(
           return new Date(year, month, day, hours, minutes, seconds);
         };
 
-        const currentDateTime = getCurrentDateTime();
+   const currentDateTime = getCurrentDateTime();
+   const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+   const upcomingDateTime = new Date(
+     currentDateTime.getTime() + timeZoneDifference
+   );
         // Check if current time is after the booking end time
-        if (currentDateTime > toDateTime) {
+        if (upcomingDateTime > toDateTime) {
           return false;
         }
 
         // Check if current time is within the booking time range
-        if (currentDateTime >= fromDateTime && currentDateTime <= toDateTime) {
+        if (upcomingDateTime >= fromDateTime && upcomingDateTime <= toDateTime) {
           return true;
         }
 
