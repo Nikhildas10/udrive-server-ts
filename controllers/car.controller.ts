@@ -958,7 +958,6 @@ export const getServiceDueCars = catchAsyncErrors(
   }
 );
 
-
 export const getInsuranceDue = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {

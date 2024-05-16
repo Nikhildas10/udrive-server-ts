@@ -102,12 +102,38 @@ export const createBooking = catchAsyncErrors(
           isDeleted: employee.isDeleted,
         },
       };
-      const date = new Date();
+      const parseDatee = (dateString) => {
+        // Split the date string into parts
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+
+        // Split the date part into day, month, and year
+        const dateParts = datePart.split("-");
+        const day = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
+        const year = parseInt(dateParts[2]);
+
+        // Split the time part into hours and minutes
+        const timeParts = timePart.split(":");
+        let hours = parseInt(timeParts[0]);
+        const minutes = parseInt(timeParts[1]);
+
+        // Adjust hours for PM if necessary
+        if (parts[2] === "PM" && hours !== 12) {
+          hours += 12;
+        }
+        // Create a new Date object with the parsed values
+        return new Date(year, month, day, hours, minutes);
+      };
+      const date = parseDatee(bookingData?.fromDate)
       const formattedDate = formatDate(date);
+      console.log(formattedDate);
+      
       const notificationData = {
         currentDate: new Date(),
         type: "newBooking",
-        title: `New booking has been made by ${employee.name} on ${formattedDate}`,
+        title: `New booking has been made for ${carSelected?.name} by ${employee.name} on ${formattedDate}`,
         employee: {
           employeeImage: employee?.employeeImage,
           _id: employee?._id,
@@ -809,10 +835,10 @@ function formatDate(date) {
     month +
     " " +
     getDayWithSuffix(day) +
-    ", " +
+    "," +
     year +
     " " +
-    "at" +
+    "at" +" "+
     formattedTime
   );
 }
