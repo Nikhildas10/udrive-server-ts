@@ -9,8 +9,6 @@ import mongoose from "mongoose";
 import { format, parse } from "date-fns";
 import { notificationModel } from "../models/notification.model";
 import { emitSocketEvent } from "../server";
-import moment from "moment-timezone";
-import { hi } from "date-fns/locale";
 
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -281,31 +279,23 @@ export const runningCars = catchAsyncErrors(
           },
         },
       ]);
-      const parseDate = (dateString) => {
-        // Split the date string into parts
+      const parseDate = (dateString: string): Date => {
         const parts = dateString.split(" ");
         const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2]; // Join time and AM/PM
+        const timePart = parts[1] + " " + parts[2];
 
-        // Split the date part into day, month, and year
-        const dateParts = datePart.split("-");
-        const day = parseInt(dateParts[0]);
-        const month = parseInt(dateParts[1]) - 1; // Month is 0-based in JavaScript
-        const year = parseInt(dateParts[2]);
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [time, period] = timePart.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
 
-        // Split the time part into hours and minutes
-        const timeParts = timePart.split(":");
-        let hours = parseInt(timeParts[0]);
-        const minutes = parseInt(timeParts[1]);
+        if (period === "PM" && hours !== 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
 
-        // Adjust hours for PM if necessary
-        if (parts[2] === "PM" && hours !== 12) {
-          hours += 12;
-        }
-
-        // Create a new Date object with the parsed values
-        return new Date(year, month, day, hours, minutes);
+        // Create a Date object in UTC and adjust for IST offset
+        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
       };
+
       const filteredRunningCars = runningCars.filter((car) => {
         const fromDateTime = parseDate(car.bookings.fromDate);
         const toDateTime = parseDate(car.bookings.toDate);
@@ -319,16 +309,14 @@ export const runningCars = catchAsyncErrors(
           const seconds = now.getSeconds();
           return new Date(year, month, day, hours, minutes, seconds);
         };
-const indiaTimeZone = "Asia/Kolkata"; // India Standard Time (IST)
+ 
 
-// Get current time in IST
-const indiaTime = moment.tz().tz(indiaTimeZone);
-
-// Convert IST time to UTC
-const utcTime = indiaTime.utc().format();
-const finalDate=new Date(utcTime)
-        const currentDateTime = finalDate;  
-        
+  const getCurrentDateTimeUTC = () => {
+    return new Date();
+  };
+  const currentDateTime = getCurrentDateTimeUTC();
+  console.log(currentDateTime); 
+  
         // Check if current time is after the booking end time
         if (currentDateTime > toDateTime) {
           return false;
