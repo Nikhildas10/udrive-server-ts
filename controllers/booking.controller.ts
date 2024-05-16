@@ -8,6 +8,7 @@ import customerModel from "../models/customer.model";
 import BookingModel, { IBooking } from "../models/booking.model";
 import employeeModel from "../models/employee.model ";
 import CarModel from "../models/car.model";
+const moment = require("moment-timezone");
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
@@ -652,17 +653,22 @@ export const getUpcomingBookings = catchAsyncErrors(
       };
 
       
-      const currentDateTime = new Date();
-const istDateTime = moment(currentDateTime).utcOffset(5.5 * 60); // Convert to IST (UTC+5:30)
-const upcomingDateTime = istDateTime.add(12.5, 'hours'); // Add 12.5 hours
+      const currentDateTime = getCurrentDateTime();
+      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+      const upcomingDateTime = new Date(
+        currentDateTime.getTime() + timeZoneDifference
+      );
+      const usWestTime = moment.tz("America/Los_Angeles");
 
+      // Convert this time to India time zone
+      const indiaTime = usWestTime.clone().tz("Asia/Kolkata");
 
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
         // console.log(fromDate);
 
-        if (upcomingDateTime < fromDate) {
+        if (indiaTime < fromDate) {
           return true;
         }
       });
@@ -670,7 +676,7 @@ const upcomingDateTime = istDateTime.add(12.5, 'hours'); // Add 12.5 hours
       upcomingBookings.forEach((booking) => {
         const bookingTime: any = parseDate(booking.fromDate);
 
-        const timeDifference = Math.abs(bookingTime - upcomingDateTime.getTime());
+        const timeDifference = Math.abs(bookingTime - currentDateTime.getTime());
 
         const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
         const hours = Math.floor(
@@ -1095,10 +1101,11 @@ export const notUpdatedKilometre = catchAsyncErrors(
         const seconds = now.getSeconds();
         return new Date(year, month, day, hours, minutes, seconds);
       };
-      const currentDateTime = new Date();
-const istDateTime = moment(currentDateTime).utcOffset(5.5 * 60); // Convert to IST (UTC+5:30)
-const upcomingDateTime = istDateTime.add(12.5, 'hours'); // Add 12.5 hours
-
+      const currentDateTime = getCurrentDateTime();
+      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
+      const upcomingDateTime = new Date(
+        currentDateTime.getTime() + timeZoneDifference
+      );
 
       const bookings = await BookingModel.aggregate([
         {
