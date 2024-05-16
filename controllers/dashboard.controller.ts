@@ -74,17 +74,14 @@ export const getDashboardData = catchAsyncErrors(
           return new Date(year, month, day, hours, minutes, seconds);
         };
 
-   const currentDateTime = getCurrentDateTime();
-   const timeZoneDifference = 12.5 * 60 * 60 * 1000; 
-   const upcomingDateTime = new Date(
-     currentDateTime.getTime() + timeZoneDifference
-   );
-        if (upcomingDateTime > toDateTime) {
+        const currentDateTime = getCurrentDateTime();
+        // Check if current time is after the booking end time
+        if (currentDateTime > toDateTime) {
           return false;
         }
 
         // Check if current time is within the booking time range
-        if (upcomingDateTime > fromDateTime && upcomingDateTime < toDateTime) {
+        if (currentDateTime > fromDateTime && currentDateTime < toDateTime) {
           return true;
         }
 

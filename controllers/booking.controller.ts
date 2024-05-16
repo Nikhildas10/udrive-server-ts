@@ -11,7 +11,6 @@ import CarModel from "../models/car.model";
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
-import { formatDate } from "date-fns";
 const io = new Server({
   cors: {
     origin: [
