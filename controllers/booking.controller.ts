@@ -11,6 +11,7 @@ import CarModel from "../models/car.model";
 import { Server } from "socket.io";
 import { emitSocketEvent } from "../server";
 import { notificationModel } from "../models/notification.model";
+const moment = require("moment-timezone");
 const io = new Server({
   cors: {
     origin: [
@@ -652,11 +653,10 @@ export const getUpcomingBookings = catchAsyncErrors(
       };
 
       
-      const currentDateTime = getCurrentDateTime();
-      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-      const upcomingDateTime = new Date(
-        currentDateTime.getTime() + timeZoneDifference
-      );
+      const currentDateTime = new Date();
+const istDateTime = moment(currentDateTime).utcOffset(5.5 * 60); // Convert to IST (UTC+5:30)
+const upcomingDateTime = moment().tz("Asia/Kolkata"); 
+
 
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
@@ -668,32 +668,38 @@ export const getUpcomingBookings = catchAsyncErrors(
         }
       });
 
-      upcomingBookings.forEach((booking) => {
-        const bookingTime: any = parseDate(booking.fromDate);
+     upcomingBookings.forEach((booking) => {
+       const bookingTime = parseDate(booking.fromDate);
+       const bookingDateTime = moment(bookingTime); // Convert parsed date to Moment object
 
-        const timeDifference = Math.abs(bookingTime - upcomingDateTime.getTime());
+       // Consider potential DST variations (optional)
+       // bookingDateTime.tz("America/Los_Angeles"); // If server enforces specific time zone
 
-        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        const minutes = Math.floor(
-          (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
-        );
+       const currentDateTimeIST = moment().tz("Asia/Kolkata"); // User's time in IST
 
-        let timeLeft = "";
-        if (days > 0) {
-          timeLeft += `${days} day${days > 1 ? "s" : ""} `;
-        }
-        if (hours > 0) {
-          timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
-        }
-        if (minutes > 0) {
-          timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
-        }
+       const timeDifference = currentDateTimeIST.diff(bookingDateTime); // Get difference in milliseconds
 
-        booking.timeLeft = timeLeft;
-      });
+       // Calculate days, hours, and minutes using Moment.js duration
+
+       const duration = moment.duration(timeDifference);
+       const days = Math.floor(Math.abs(duration.asDays()));
+       const hours = Math.floor(Math.abs(duration.asHours()) % 24);
+       const minutes = Math.floor(Math.abs(duration.asMinutes()) % 60);
+
+       let timeLeft = "";
+       if (days > 0) {
+         timeLeft += `${days} day${days > 1 ? "s" : ""} `;
+       }
+       if (hours > 0) {
+         timeLeft += `${hours} hour${hours > 1 ? "s" : ""} `;
+       }
+       if (minutes > 0) {
+         timeLeft += `${minutes} minute${minutes > 1 ? "s" : ""}`;
+       }
+
+       booking.timeLeft = timeLeft;
+     });
+
 
       res.status(200).json({
         success: true,
@@ -1096,11 +1102,10 @@ export const notUpdatedKilometre = catchAsyncErrors(
         const seconds = now.getSeconds();
         return new Date(year, month, day, hours, minutes, seconds);
       };
-      const currentDateTime = getCurrentDateTime();
-      const timeZoneDifference = 12.5 * 60 * 60 * 1000; // Convert to milliseconds
-      const upcomingDateTime = new Date(
-        currentDateTime.getTime() + timeZoneDifference
-      );
+      const currentDateTime = new Date();
+const istDateTime = moment(currentDateTime).utcOffset(5.5 * 60); // Convert to IST (UTC+5:30)
+const upcomingDateTime = istDateTime.add(12.5, 'hours'); // Add 12.5 hours
+
 
       const bookings = await BookingModel.aggregate([
         {
