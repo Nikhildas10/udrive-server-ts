@@ -10,12 +10,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET_KEY,
   timeout: 60000,
 });
-app.listen(process.env.PORT, () => {
-  console.log(`connected to port ${process.env.PORT}`);
-  connectDb();
-});
-
-const io = require("socket.io")(5000, {
+const http = require('http').createServer(app); // Create HTTP server with Express app
+const io = new Server(http, { // Attach socket.io to HTTP server
   cors: {
     origin: [
       "https://u-drive-three.vercel.app",
@@ -26,14 +22,21 @@ const io = require("socket.io")(5000, {
   },
 });
 
+http.listen(process.env.PORT || 5000, () => {
+  console.log(`Listening on port ${process.env.PORT || 5000}`);
+  connectDb();
+});
+
+// ... rest of your socket.io logic using io
+
+
 io.on("connection", (socket) => {
   console.log("socket connnected");
-  
+
   socket.on("disconnect", () => {
     console.log("socket disconnected");
-    
   });
 });
-export const emitSocketEvent=(event,payload)=>{
-  io.emit(event,payload)
-}
+export const emitSocketEvent = (event, payload) => {
+  io.emit(event, payload);
+};
