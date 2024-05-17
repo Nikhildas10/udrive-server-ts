@@ -464,7 +464,7 @@ export const forgotPassword = catchAsyncErrors(
         }
       );
 
-      const resetLink = `http://localhost:3030/reset-password/${resetToken}`;
+      const resetLink = `https://u-drive-three.vercel.app/reset-password/${resetToken}`;
 
       const data = {
         user: { name: user.name },

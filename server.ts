@@ -16,7 +16,7 @@ const io = new Server(http, { // Attach socket.io to HTTP server
     origin: [
       "https://u-drive-three.vercel.app",
       "http://localhost:3031",
-      "http://localhost:3030",
+      "http://localhost:3030", 
     ],
     credentials: true,
   },
@@ -27,7 +27,6 @@ http.listen(process.env.PORT || 5000, () => {
   connectDb();
 });
 
-// ... rest of your socket.io logic using io
 
 
 io.on("connection", (socket) => {
@@ -40,3 +39,4 @@ io.on("connection", (socket) => {
 export const emitSocketEvent = (event, payload) => {
   io.emit(event, payload);
 };
+ 
