@@ -26,15 +26,15 @@ const io = new Server({
   },
 });
 
-io.on("connection", (socket) => {
-  console.log("socket connnected");
-  
+const socketNamespace = io.of("/udrive"); // Create a namespace
+
+socketNamespace.on("connection", (socket) => {
+  console.log("socket connected to namespace");
+
   socket.on("disconnect", () => {
-    console.log("socket disconnected");
-    
+    console.log("socket disconnected from namespace");
   });
 });
-io.listen(5000);
-export const emitSocketEvent=(event,payload)=>{
-  io.emit(event,payload)
-}
+export const emitSocketEvent = (event, payload) => {
+  socketNamespace.emit(event, payload);
+};
