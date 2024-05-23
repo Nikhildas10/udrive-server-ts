@@ -20,6 +20,7 @@ export interface ICar extends Document {
   bookings: IBooking[];
   isDeleted: boolean;
   carImage: object;
+  serviceHistory: Array;
 }
 
 const carSchema = new Schema<ICar>({
@@ -62,6 +63,9 @@ const carSchema = new Schema<ICar>({
 
   vehicleNumber: {
     type: String,
+  },
+  serviceHistory: {
+    type: Array,
   },
   rcBook: {
     public_id: String,
