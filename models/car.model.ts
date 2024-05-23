@@ -9,6 +9,7 @@ export interface ICar extends Document {
   transmission: string;
   insurance: Date;
   lastService: Date;
+  pollution: Date;
   serviceKilometre: number;
   serviceInterval: number;
   totalKmCovered: number;

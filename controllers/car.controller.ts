@@ -24,6 +24,7 @@ export const addCars = catchAsyncErrors(
       lastServiceKilometre,
       serviceInterval,
       totalKmCovered,
+      pollution
     } = req.body;
 
     try {
@@ -72,6 +73,7 @@ export const addCars = catchAsyncErrors(
         lastService,
         lastServiceKilometre,
         serviceInterval,
+        pollution,
         totalKmCovered,
         rcBook: rcBookResult
           ? {
