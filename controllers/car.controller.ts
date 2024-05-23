@@ -1097,3 +1097,26 @@ export const getInsuaranceOverDue = catchAsyncErrors(
     }
   }
 );
+
+export const getPollutionOverDue = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cars = await CarModel.find({ isDeleted: false });
+      const currentDate = new Date();
+      if (!cars) {
+        return next(new ErrorHandler("no cars found", 400));
+      }
+      const fiveDaysInMilliseconds = 5 * 24 * 60 * 60 * 1000;
+      const dueCarsPollution = cars.filter((car) => {
+        const pollutionDate = new Date(car.pollution);
+        const differenceInMilliseconds =
+          pollutionDate.getTime() - currentDate.getTime();
+        return differenceInMilliseconds <= fiveDaysInMilliseconds;
+      });
+      res.status(200).json({ success: true, dueCarsPollution });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+ 
