@@ -1120,3 +1120,116 @@ export const getPollutionOverDue = catchAsyncErrors(
   }
 );
  
+
+export const getPollutionDue = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cars = await CarModel.find({ isDeleted: false });
+      const currentDate = new Date();
+
+      if (cars) {
+        const dueCars10 = cars.filter((car) => {
+          const dueDate = new Date(car.pollution);
+          const timeDiff = dueDate.getTime() - currentDate.getTime();
+          const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+          return daysUntilDue === 10;
+        });
+
+        const dueCars5 = cars.filter((car) => {
+          const dueDate = new Date(car.pollution);
+          const timeDiff = dueDate.getTime() - currentDate.getTime();
+          const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+          return daysUntilDue === 5;
+        });
+
+        const dueCarsOver = cars.filter((car) => {
+          return car.pollution < currentDate;
+        });
+
+        if (dueCars10.length > 0) {
+          for (const car of dueCars10) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "pollutionBefore10",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "pollutionBefore10",
+                title: `pollution for the car ${car.name} is due in 10 days`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "pollutionBefore10",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("pollutionBefore10", notificationData);
+            }
+          }
+        }
+
+        if (dueCars5.length > 0) {
+          for (const car of dueCars5) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "pollutionBefore5",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "pollutionBefore5",
+                title: `pollution for the car ${car.name} is due in 5 days`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "pollutionBefore5",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("pollutionBefore5", notificationData);
+            }
+          }
+        }
+
+        if (dueCarsOver.length > 0) {
+          for (const car of dueCarsOver) {
+            const notificationExists = await notificationModel.findOne({
+              carId: car._id,
+              notificationType: "pollutionOver",
+            });
+
+            if (!notificationExists) {
+              const notificationData = {
+                currentDate: new Date(),
+                type: "pollutionOver",
+                title: `pollution for the car ${car.name} is currently overdue`,
+                image: car.carImage,
+                carId: car._id,
+                notificationType: "pollutionOver",
+              };
+              const notification = await notificationModel.create(
+                notificationData
+              );
+              await notification.save();
+
+              emitSocketEvent("pollutionOver", notificationData);
+            }
+          }
+        }
+      }
+
+      res.status(200).json({ success: true });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
