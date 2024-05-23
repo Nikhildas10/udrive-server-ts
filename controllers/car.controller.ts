@@ -25,7 +25,6 @@ export const addCars = catchAsyncErrors(
       serviceInterval,
       totalKmCovered,
       pollution,
-      serviceHistory
     } = req.body;
 
     try {
@@ -76,7 +75,6 @@ export const addCars = catchAsyncErrors(
         serviceInterval,
         pollution,
         totalKmCovered,
-        serviceHistory,
         rcBook: rcBookResult
           ? {
               public_id: rcBookResult.public_id,
@@ -313,14 +311,13 @@ export const runningCars = catchAsyncErrors(
           const seconds = now.getSeconds();
           return new Date(year, month, day, hours, minutes, seconds);
         };
- 
 
-  const getCurrentDateTimeUTC = () => {
-    return new Date();
-  };
-  const currentDateTime = getCurrentDateTimeUTC();
-  console.log(currentDateTime); 
-  
+        const getCurrentDateTimeUTC = () => {
+          return new Date();
+        };
+        const currentDateTime = getCurrentDateTimeUTC();
+        console.log(currentDateTime);
+
         // Check if current time is after the booking end time
         if (currentDateTime > toDateTime) {
           return false;
@@ -352,13 +349,12 @@ export const carsOnYard = catchAsyncErrors(
         {
           $match: {
             isDeleted: false,
-          
           },
         },
         {
           $unwind: "$bookings",
         },
-      
+
         {
           $addFields: {
             nextAvailableDate: "$bookings.fromDate", // Use fromDate as nextAvailableDate
@@ -399,7 +395,6 @@ export const carsOnYard = catchAsyncErrors(
           const seconds = now.getSeconds();
           return new Date(year, month, day, hours, minutes, seconds);
         };
-        
 
         const currentDateTime = new Date();
         // Check if current time is after the booking end time
@@ -1121,7 +1116,6 @@ export const getPollutionOverDue = catchAsyncErrors(
     }
   }
 );
- 
 
 export const getPollutionDue = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -1230,6 +1224,31 @@ export const getPollutionDue = catchAsyncErrors(
       }
 
       res.status(200).json({ success: true });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const addServiceHistory = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+    const serviceHistoryEntry = req.body;
+    try {
+      const updatedCar = await CarModel.findByIdAndUpdate(
+        id,
+        { $push: { serviceHistory: serviceHistoryEntry } },
+        { new: true }
+      );
+      await updatedCar.save();
+
+      if (!updatedCar) {
+        return res.status(404).json({
+          success: false,
+          message: "Car not found",
+        });
+      }
+      res.status(200).json({ success: true, updatedCar });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
