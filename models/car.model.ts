@@ -43,6 +43,9 @@ const carSchema = new Schema<ICar>({
   transmission: {
     type: String,
   },
+  pollution: {
+    type: Date,
+  },
   insurance: {
     type: Date,
   },
