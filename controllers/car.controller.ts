@@ -1235,7 +1235,7 @@ export const addServiceHistory = catchAsyncErrors(
     const { id } = req.params;
     const serviceHistoryEntry = req.body;
     const { kilometreCovered } = req.body;
-
+    const date = new Date();
     try {
       const updatedCar = await CarModel.findByIdAndUpdate(
         id,
@@ -1243,7 +1243,7 @@ export const addServiceHistory = catchAsyncErrors(
           $push: { serviceHistory: serviceHistoryEntry },
           $set: {
             serviceKilometre: 0,
-            totalKmCovered: kilometreCovered,
+            lastService:date,
           },
         },
         { new: true }
