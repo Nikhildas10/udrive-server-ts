@@ -43,7 +43,7 @@ export const authorizeRoles = (...roles: string[]) => {
         )
       );
     }
-    // Continue processing if the user has the required role
+    // Continue processing if the user has the required role 
     next();
   };
 };

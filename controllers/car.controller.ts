@@ -1234,13 +1234,20 @@ export const addServiceHistory = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const serviceHistoryEntry = req.body;
+    const { kilometreCovered } = req.body;
+
     try {
       const updatedCar = await CarModel.findByIdAndUpdate(
         id,
-        { $push: { serviceHistory: serviceHistoryEntry } },
+        {
+          $push: { serviceHistory: serviceHistoryEntry },
+          $set: {
+            serviceKilometre: 0,
+            totalKmCovered: kilometreCovered,
+          },
+        },
         { new: true }
       );
-      await updatedCar.save();
 
       if (!updatedCar) {
         return res.status(404).json({
@@ -1248,6 +1255,7 @@ export const addServiceHistory = catchAsyncErrors(
           message: "Car not found",
         });
       }
+
       res.status(200).json({ success: true, updatedCar });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
