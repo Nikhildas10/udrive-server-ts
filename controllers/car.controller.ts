@@ -1235,6 +1235,19 @@ export const addServiceHistory = catchAsyncErrors(
     const { id } = req.params;
     const serviceHistoryEntry = req.body;
     const date = new Date();
+
+    let entryTotalAmount = 0;
+    if (
+      serviceHistoryEntry.worksDone &&
+      Array.isArray(serviceHistoryEntry.worksDone)
+    ) {
+      serviceHistoryEntry.worksDone.forEach((work) => {
+        entryTotalAmount += work.amount;
+      });
+    }
+    serviceHistoryEntry.totalAmount = entryTotalAmount;
+    
+
     try {
       const updatedCar = await CarModel.findByIdAndUpdate(
         id,
@@ -1247,24 +1260,30 @@ export const addServiceHistory = catchAsyncErrors(
         },
         { new: true }
       );
+
       if (!updatedCar) {
         return res.status(404).json({
           success: false,
           message: "Car not found",
         });
       }
+
       let totalAmount = 0;
       updatedCar.serviceHistory.forEach((entry) => {
-        entry.worksDone.forEach((work) => {
-          totalAmount += work.amount;
-        });
+        let entryTotalAmount = 0;
+        if (entry.worksDone && Array.isArray(entry.worksDone)) {
+          entry.worksDone.forEach((work) => {
+            entryTotalAmount += work.amount;
+          });
+        }
+        entry.totalServiceAmount = entryTotalAmount;
+        totalAmount += entryTotalAmount;
       });
 
-      if (totalAmount) {
-        updatedCar.totalServiceAmount = totalAmount;
-      }
+      updatedCar.totalServiceAmount = totalAmount;
       await updatedCar.save();
-      res.status(200).json({ success: true, updatedCar });
+
+      res.status(200).json({ success: true, serviceHistoryEntry });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
