@@ -1283,7 +1283,7 @@ export const addServiceHistory = catchAsyncErrors(
       updatedCar.totalServiceAmount = totalAmount;
       await updatedCar.save();
 
-      res.status(200).json({ success: true, serviceHistoryEntry });
+      res.status(200).json({ success: true, updatedCar });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
