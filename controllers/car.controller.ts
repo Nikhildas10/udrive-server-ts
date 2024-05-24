@@ -1234,7 +1234,6 @@ export const addServiceHistory = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const serviceHistoryEntry = req.body;
-    const { kilometreCovered } = req.body;
     const date = new Date();
     try {
       const updatedCar = await CarModel.findByIdAndUpdate(
@@ -1243,19 +1242,28 @@ export const addServiceHistory = catchAsyncErrors(
           $push: { serviceHistory: serviceHistoryEntry },
           $set: {
             serviceKilometre: 0,
-            lastService:date,
+            lastService: date,
           },
         },
         { new: true }
       );
-
       if (!updatedCar) {
         return res.status(404).json({
           success: false,
           message: "Car not found",
         });
       }
+      let totalAmount = 0;
+      updatedCar.serviceHistory.forEach((entry) => {
+        entry.worksDone.forEach((work) => {
+          totalAmount += work.amount;
+        });
+      });
 
+      if (totalAmount) {
+        updatedCar.totalServiceAmount = totalAmount;
+      }
+      await updatedCar.save();
       res.status(200).json({ success: true, updatedCar });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
