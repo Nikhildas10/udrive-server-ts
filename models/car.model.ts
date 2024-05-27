@@ -1,6 +1,27 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import { IBooking } from "./booking.model";
 
+interface IWorkDone {
+  description: string;
+  amount: number;
+}
+
+interface IServiceHistory {
+  date: Date;
+  worksDone: IWorkDone[];
+  totalServiceAmount: number;
+}
+const workDoneSchema = new Schema<IWorkDone>({
+  description: { type: String },
+  amount: { type: Number },
+});
+
+const serviceHistorySchema = new Schema<IServiceHistory>({
+  date: { type: Date, default: Date.now },
+  worksDone: [workDoneSchema],
+  totalServiceAmount: { type: Number, default: 0 },
+});
+
 export interface ICar extends Document {
   name: string;
   manufacturingCompany: string;
@@ -21,7 +42,7 @@ export interface ICar extends Document {
   bookings: IBooking[];
   isDeleted: boolean;
   carImage: object;
-  serviceHistory: Array;
+  serviceHistory: IServiceHistory[];
 }
 
 const carSchema = new Schema<ICar>({
@@ -68,9 +89,9 @@ const carSchema = new Schema<ICar>({
   vehicleNumber: {
     type: String,
   },
-  serviceHistory: {
-    type: Array,
-  },
+  serviceHistory: [
+   serviceHistorySchema
+  ],
   rcBook: {
     public_id: String,
     url: String,

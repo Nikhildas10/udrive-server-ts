@@ -1234,8 +1234,7 @@ export const addServiceHistory = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const serviceHistoryEntry = req.body;
-    const date = req.body?.date;
-
+    const date = req?.body?.date;
     let entryTotalAmount = 0;
     if (
       serviceHistoryEntry.worksDone &&
@@ -1246,7 +1245,6 @@ export const addServiceHistory = catchAsyncErrors(
       });
     }
     serviceHistoryEntry.totalAmount = entryTotalAmount;
-    
 
     try {
       const updatedCar = await CarModel.findByIdAndUpdate(
@@ -1283,6 +1281,46 @@ export const addServiceHistory = catchAsyncErrors(
       updatedCar.totalServiceAmount = totalAmount;
       await updatedCar.save();
 
+      res.status(200).json({ success: true, updatedCar });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const deleteServiceHistory = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { carId, serviceHistoryId } = req.params;
+    try {
+      const updatedCar = await CarModel.findByIdAndUpdate(
+        carId,
+        {
+          $pull: { serviceHistory: { _id: serviceHistoryId } },
+        },
+        { new: true }
+      );
+
+      if (!updatedCar) {
+        return res.status(404).json({
+          success: false,
+          message: "Car not found",
+        });
+      }
+
+      let totalAmount = 0;
+      updatedCar.serviceHistory.forEach((entry) => {
+        let entryTotalAmount = 0;
+        if (entry.worksDone && Array.isArray(entry.worksDone)) {
+          entry.worksDone.forEach((work) => {
+            entryTotalAmount += work.amount;
+          });
+        }
+        entry.totalServiceAmount = entryTotalAmount;
+        totalAmount += entryTotalAmount;
+      });
+
+      updatedCar.totalServiceAmount = totalAmount;
+      await updatedCar.save();
       res.status(200).json({ success: true, updatedCar });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));

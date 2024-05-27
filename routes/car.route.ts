@@ -3,7 +3,7 @@ import { isAuthenticated } from "../middleware/auth";
 
 import upload from "../middleware/multer";
 import multipleUpload from "../middleware/multer";
-import { addCars, addServiceHistory, carsOnYard, deleteCar, deleteMultipleCars, editCar, getAllCar, getCarTotalRevenue, getInsuaranceDue, getInsuaranceOverDue, getInsuranceDue, getMostBookedCars, getPollutionDue, getPollutionOverDue, getServiceDueCars, getServiceOverDueCars, getSingleCar, lastInsuranceKm, resetServiceKm, runningCars } from "../controllers/car.controller";
+import { addCars, addServiceHistory, carsOnYard, deleteCar, deleteMultipleCars, deleteServiceHistory, editCar, getAllCar, getCarTotalRevenue, getInsuaranceDue, getInsuaranceOverDue, getInsuranceDue, getMostBookedCars, getPollutionDue, getPollutionOverDue, getServiceDueCars, getServiceOverDueCars, getSingleCar, lastInsuranceKm, resetServiceKm, runningCars } from "../controllers/car.controller";
 import { getDashboardData } from "../controllers/dashboard.controller";
 
 const carRouter = express.Router();
@@ -28,5 +28,6 @@ carRouter.get("/get-insurance-overdue", isAuthenticated,getInsuaranceOverDue);
 carRouter.get("/get-pollution-overdue", isAuthenticated,getPollutionOverDue);
 carRouter.get("/get-pollution-notification", isAuthenticated,getPollutionDue);
 carRouter.put("/add-service-details/:id", isAuthenticated,addServiceHistory);
+carRouter.delete("/delete-service-details/:carId/:serviceHistoryId", isAuthenticated,deleteServiceHistory);
 
 export default carRouter; 
