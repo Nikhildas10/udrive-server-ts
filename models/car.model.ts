@@ -11,8 +11,7 @@ interface IServiceHistory {
   worksDone: IWorkDone[];
   description: string;
   serviceDoneAt: number;
-  totalAmount:number;
-  totalServiceAmount: number;
+  totalAmount: number;
 }
 const workDoneSchema = new Schema<IWorkDone>({
   description: { type: String },
@@ -22,8 +21,11 @@ const workDoneSchema = new Schema<IWorkDone>({
 const serviceHistorySchema = new Schema<IServiceHistory>({
   date: { type: Date, default: Date.now },
   worksDone: [workDoneSchema],
-  totalServiceAmount: { type: Number, default: 0 },
+  description: { type: String },
+  serviceDoneAt: { type: Number },
+  totalAmount: { type: Number, default: 0 },
 });
+
 
 export interface ICar extends Document {
   name: string;
@@ -61,7 +63,7 @@ const carSchema = new Schema<ICar>({
   },
   serviceKilometre: {
     type: Number,
-    default:0
+    default: 0,
   },
   fuelType: {
     type: String,
@@ -92,9 +94,7 @@ const carSchema = new Schema<ICar>({
   vehicleNumber: {
     type: String,
   },
-  serviceHistory: [
-   serviceHistorySchema
-  ],
+  serviceHistory: [serviceHistorySchema],
   rcBook: {
     public_id: String,
     url: String,
