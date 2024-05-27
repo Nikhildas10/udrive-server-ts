@@ -25,7 +25,9 @@ const io = new Server({
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected, carSelected, ...bookingData } = req.body;
+      const { customerSelected, carSelected,advanceAmount,total, ...bookingData } = req.body;
+      bookingData.advancePaid = advanceAmount && advanceAmount > 0 ? true : false;
+      bookingData.invoiceGenerated = total && total > 0 ? true : false;
 
       // Pass reference data to customer
       const customerId = customerSelected?._id;
@@ -52,6 +54,8 @@ export const createBooking = catchAsyncErrors(
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
+        advanceAmount,
+        total,
         carSelected: {
           rcBook: carSelected.rcBook,
           insurancePolicy: carSelected.insurancePolicy,
@@ -1132,6 +1136,9 @@ export const notUpdatedKilometre = catchAsyncErrors(
 export const addInvoice = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { id } = req.params;
+
+      const updatedBookings = await BookingModel.findByIdAndUpdate(id, {});
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
