@@ -1274,7 +1274,7 @@ export const addServiceHistory = catchAsyncErrors(
             entryTotalAmount += work.amount;
           });
         }
-        entry.totalServiceAmount = entryTotalAmount;
+        entry.totalAmount = entryTotalAmount;
         totalAmount += entryTotalAmount;
       });
 
@@ -1315,7 +1315,7 @@ export const deleteServiceHistory = catchAsyncErrors(
             entryTotalAmount += work.amount;
           });
         }
-        entry.totalServiceAmount = entryTotalAmount;
+        entry.totalAmount = entryTotalAmount;
         totalAmount += entryTotalAmount;
       });
 

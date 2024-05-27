@@ -11,7 +11,7 @@ interface IServiceHistory {
   worksDone: IWorkDone[];
   description: string;
   serviceDoneAt: number;
-  totalServiceAmount: number;
+  totalAmount: number;
 }
 const workDoneSchema = new Schema<IWorkDone>({
   description: { type: String },
@@ -23,7 +23,7 @@ const serviceHistorySchema = new Schema<IServiceHistory>({
   worksDone: [workDoneSchema],
   description: { type: String },
   serviceDoneAt: { type: Number },
-  totalServiceAmount: { type: Number, default: 0 },
+  totalAmount: { type: Number, default: 0 },
 });
 
 
