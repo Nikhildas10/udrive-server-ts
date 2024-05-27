@@ -7,6 +7,7 @@ export interface IBooking extends Document {
   dropPoint: string;
   carSelected: object;
   customerSelected: object;
+  driver: object;
   subTotals: number;
   total: number;
   discount: number;
@@ -73,6 +74,10 @@ const bookingSchema: Schema = new Schema(
         type: Object,
       },
     ],
+    driver: 
+      {
+        type: Object,
+      },
     isDeleted: {
       type: Boolean,
       default: false,

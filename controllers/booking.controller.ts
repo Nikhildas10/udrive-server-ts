@@ -25,8 +25,16 @@ const io = new Server({
 export const createBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { customerSelected, carSelected,advanceAmount,total, ...bookingData } = req.body;
-      bookingData.advancePaid = advanceAmount && advanceAmount > 0 ? true : false;
+      const {
+        customerSelected,
+        carSelected,
+        advanceAmount,
+        total,
+        driver,
+        ...bookingData
+      } = req.body;
+      bookingData.advancePaid =
+        advanceAmount && advanceAmount > 0 ? true : false;
       bookingData.invoiceGenerated = total && total > 0 ? true : false;
 
       // Pass reference data to customer
@@ -56,6 +64,7 @@ export const createBooking = catchAsyncErrors(
         ...bookingData,
         advanceAmount,
         total,
+        driver,
         carSelected: {
           rcBook: carSelected.rcBook,
           insurancePolicy: carSelected.insurancePolicy,
@@ -1137,8 +1146,21 @@ export const addInvoice = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
+      const updatedBookings = await BookingModel.findByIdAndUpdate(
+        id,
+        {
+          $push: { invoiceDetails: req?.body },
+          $set: {
+            invoiceGenerated: true,
+          },
+        },
+        { new: true }
+      );
 
-      const updatedBookings = await BookingModel.findByIdAndUpdate(id, {});
+      if (!updatedBookings) {
+        res.status(400).json({ success: false, message: "no bookings found" });
+      }
+      res.status(200).json({ success: true, updatedBookings });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
@@ -1147,15 +1169,58 @@ export const addInvoice = catchAsyncErrors(
 export const invoiceDueBefore5 = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Fetch all bookings where the invoice has not been generated
+      const bookings = await BookingModel.find({ invoiceGenerated: false ,isDeleted:false});
+
+      // Function to parse the date string into a Date object
+      const parseDate = (dateString: string): Date => {
+        const parts = dateString.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] + " " + parts[2];
+
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [time, period] = timePart.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
+
+        if (period === "PM" && hours !== 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
+
+        // Create a Date object in UTC and adjust for IST offset
+        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+        return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
+      };
+
+      // Function to get the current date and time in UTC
+      const getCurrentDateTimeUTC = () => {
+        return new Date();
+      };
+
+      // Calculate the current date and time in UTC
+      const currentDateTimeUTC = getCurrentDateTimeUTC();
+
+      // Filter bookings to find those with `fromDate` within the next 5 days
+      const filteredUpcomingBookings = bookings.filter((booking) => {
+        const fromDate = parseDate(booking.fromDate);
+        const fiveDaysFromNow = new Date(
+          currentDateTimeUTC.getTime() + 5 * 24 * 60 * 60 * 1000
+        );
+        return currentDateTimeUTC <= fromDate && fromDate <= fiveDaysFromNow;
+      });
+
+      res.status(200).json({
+        success: true,
+        bookings: filteredUpcomingBookings,
+      });
     } catch (err: any) {
-      next(new ErrorHandler(err.message, 400));
+      return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
 export const getNonInvoiceGenrerated = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({ invoiceGenerated: false });
+      const bookings = await BookingModel.find({ invoiceGenerated: false,isDeleted:false });
       if (!bookings) {
         res.status(400).json({ success: false, message: "no bookings found" });
       }

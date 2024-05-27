@@ -1,6 +1,7 @@
 import express from "express";
 import { isAuthenticated } from "../middleware/auth";
 import {
+  addInvoice,
   addKilometre,
   bookingStatus,
   createBooking,
@@ -17,6 +18,7 @@ import {
   getTotalRevenue,
   getUpcomingBookings,
   getUpcomingBookingsCount,
+  invoiceDueBefore5,
   notUpdatedKilometre,
 } from "../controllers/booking.controller";
 
@@ -38,6 +40,8 @@ bookingRouter.get("/get-active-bookings", isAuthenticated, getActiveBookings);
 bookingRouter.put("/add-kilometre/:id", isAuthenticated, addKilometre);
 bookingRouter.get("/not-updated-kilometre", isAuthenticated, notUpdatedKilometre);
 bookingRouter.get("/not-generated-invoice", isAuthenticated, getNonInvoiceGenrerated);
+bookingRouter.put("/add-invoice/:id", isAuthenticated, addInvoice);
+bookingRouter.get("/get-invoice-due", isAuthenticated, invoiceDueBefore5);
 
 export default bookingRouter;
  
