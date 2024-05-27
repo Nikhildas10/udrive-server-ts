@@ -9,6 +9,9 @@ interface IWorkDone {
 interface IServiceHistory {
   date: Date;
   worksDone: IWorkDone[];
+  description: string;
+  serviceDoneAt: number;
+  totalAmount:number;
   totalServiceAmount: number;
 }
 const workDoneSchema = new Schema<IWorkDone>({
