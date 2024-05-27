@@ -11,6 +11,7 @@ import {
   getAllBooking,
   getCancelledBookings,
   getCurrentlyActiveBookings,
+  getNonInvoiceGenrerated,
   getRevenueChartData,
   getSingleBooking,
   getTotalRevenue,
@@ -36,6 +37,7 @@ bookingRouter.get("/get-cancelled-bookings", isAuthenticated, getCancelledBookin
 bookingRouter.get("/get-active-bookings", isAuthenticated, getActiveBookings);
 bookingRouter.put("/add-kilometre/:id", isAuthenticated, addKilometre);
 bookingRouter.get("/not-updated-kilometre", isAuthenticated, notUpdatedKilometre);
+bookingRouter.get("/not-generated-invoice", isAuthenticated, getNonInvoiceGenrerated);
 
 export default bookingRouter;
  

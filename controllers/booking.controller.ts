@@ -126,10 +126,10 @@ export const createBooking = catchAsyncErrors(
         // Create a new Date object with the parsed values
         return new Date(year, month, day, hours, minutes);
       };
-      const date = parseDatee(bookingData?.fromDate)
+      const date = parseDatee(bookingData?.fromDate);
       const formattedDate = formatDate(date);
       console.log(formattedDate);
-      
+
       const notificationData = {
         currentDate: new Date(),
         type: "newBooking",
@@ -689,12 +689,11 @@ export const getUpcomingBookings = catchAsyncErrors(
 
       const currentDateTimeUTC = getCurrentDateTimeUTC();
       console.log(currentDateTimeUTC);
-      
 
       const filteredUpcomingBookings = upcomingBookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
         console.log(fromDate);
-        
+
         return currentDateTimeUTC < fromDate;
       });
 
@@ -832,8 +831,6 @@ export const getActiveBookings = catchAsyncErrors(
     }
   }
 );
-
-
 
 export const getCancelledBookings = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -1126,6 +1123,36 @@ export const notUpdatedKilometre = catchAsyncErrors(
       });
 
       res.status(200).json({ success: true, filteredBookings });
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const addInvoice = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+export const invoiceDueBefore5 = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+    } catch (err: any) {
+      next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+export const getNonInvoiceGenrerated = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bookings = await BookingModel.find({ invoiceGenerated: false });
+      if (!bookings) {
+        res.status(400).json({ success: false, message: "no bookings found" });
+      }
+      res.status(200).json({ success: true, bookings });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
