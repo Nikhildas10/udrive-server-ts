@@ -30,11 +30,22 @@ export const createBooking = catchAsyncErrors(
         carSelected,
         advanceAmount,
         total,
+        invoiceDetails,
         ...bookingData
       } = req.body;
       bookingData.advancePaid =
         advanceAmount && advanceAmount > 0 ? true : false;
       bookingData.invoiceGenerated = total && total > 0 ? true : false;
+
+//check invoice is null or not
+const filteredInvoiceDetails = invoiceDetails.filter((detail) => {
+  return (
+    detail &&
+    detail.name &&
+    detail.amount !== undefined &&
+    detail.amount !== null
+  );
+});
 
       // Pass reference data to customer
       const customerId = customerSelected?._id;
@@ -61,6 +72,7 @@ export const createBooking = catchAsyncErrors(
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
+        invoiceDetails:filteredInvoiceDetails,
         advanceAmount,
         total,
         carSelected: {
