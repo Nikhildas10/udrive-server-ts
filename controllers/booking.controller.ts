@@ -1166,7 +1166,6 @@ export const addInvoice = catchAsyncErrors(
             advanceAmount: bookingData?.advanceAmount,
             tax: bookingData?.tax,
             payment: bookingData?.payment,
-            balanceDue: bookingData?.balanceDue,
           },
         },
         { new: true }

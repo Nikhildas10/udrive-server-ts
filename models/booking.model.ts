@@ -14,25 +14,17 @@ export interface IBooking extends Document {
   kilometreCovered: number;
   tax: number;
   status: string;
-  invoiceDetails: IInvoiceDetail[];
+  invoiceDetails: Array;
   invoiceId: number;
   isDeleted: boolean;
   isKilometreUpdated: boolean;
   payment: string;
   advancePaid: boolean;
   advanceAmount: number;
-  balanceDue: number;
   invoiceGenerated: boolean;
 }
-export interface IInvoiceDetail {
-  name: string;
-  amount: number;
-}
 
-const invoiceDetailSchema = new Schema<IInvoiceDetail>({
-  name: { type: String },
-  amount: { type: Number },
-});
+
 
 const bookingSchema: Schema = new Schema(
   {
@@ -66,9 +58,6 @@ const bookingSchema: Schema = new Schema(
     discount: {
       type: Number,
     },
-    balanceDue: {
-      type: Number,
-    },
     status: {
       type: String,
       default: "active",
@@ -83,10 +72,15 @@ const bookingSchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
-    invoiceDetails: [invoiceDetailSchema],
-    driver: {
-      type: Object,
-    },
+    invoiceDetails: [
+      {
+        type: Object,
+      },
+    ],
+    driver: 
+      {
+        type: Object,
+      },
     isDeleted: {
       type: Boolean,
       default: false,
