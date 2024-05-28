@@ -30,7 +30,6 @@ export const createBooking = catchAsyncErrors(
         carSelected,
         advanceAmount,
         total,
-        driver,
         ...bookingData
       } = req.body;
       bookingData.advancePaid =
@@ -64,7 +63,6 @@ export const createBooking = catchAsyncErrors(
         ...bookingData,
         advanceAmount,
         total,
-        driver,
         carSelected: {
           rcBook: carSelected.rcBook,
           insurancePolicy: carSelected.insurancePolicy,
@@ -1145,13 +1143,15 @@ export const notUpdatedKilometre = catchAsyncErrors(
 export const addInvoice = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { driver,...bookingData } = req.body;
       const { id } = req.params;
       const updatedBookings = await BookingModel.findByIdAndUpdate(
         id,
         {
-          $push: { invoiceDetails: req?.body },
+          $push: { invoiceDetails: bookingData },
           $set: {
             invoiceGenerated: true,
+            driver:driver
           },
         },
         { new: true }
@@ -1170,7 +1170,10 @@ export const invoiceDueBefore5 = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Fetch all bookings where the invoice has not been generated
-      const bookings = await BookingModel.find({ invoiceGenerated: false ,isDeleted:false});
+      const bookings = await BookingModel.find({
+        invoiceGenerated: false,
+        isDeleted: false,
+      });
 
       // Function to parse the date string into a Date object
       const parseDate = (dateString: string): Date => {
@@ -1220,7 +1223,10 @@ export const invoiceDueBefore5 = catchAsyncErrors(
 export const getNonInvoiceGenrerated = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookings = await BookingModel.find({ invoiceGenerated: false,isDeleted:false });
+      const bookings = await BookingModel.find({
+        invoiceGenerated: false,
+        isDeleted: false,
+      });
       if (!bookings) {
         res.status(400).json({ success: false, message: "no bookings found" });
       }
