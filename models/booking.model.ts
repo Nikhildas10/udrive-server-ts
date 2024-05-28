@@ -21,6 +21,7 @@ export interface IBooking extends Document {
   payment: string;
   advancePaid: boolean;
   advanceAmount: number;
+  balanceDue: number;
   invoiceGenerated: boolean;
 }
 export interface IInvoiceDetail {
@@ -63,6 +64,9 @@ const bookingSchema: Schema = new Schema(
       type: Number,
     },
     discount: {
+      type: Number,
+    },
+    balanceDue: {
       type: Number,
     },
     status: {
