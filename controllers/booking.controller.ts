@@ -1157,6 +1157,7 @@ export const addInvoice = catchAsyncErrors(
             discount:bookingData?.discount,
             advanceAmount:bookingData?.advanceAmount,
             tax:bookingData?.tax,
+            payment:bookingData?.payment
           },
         },
         { new: true }
