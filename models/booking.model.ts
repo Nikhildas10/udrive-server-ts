@@ -14,7 +14,7 @@ export interface IBooking extends Document {
   kilometreCovered: number;
   tax: number;
   status: string;
-  invoiceDetails: Array;
+  invoiceDetails: IInvoiceDetail[];
   invoiceId: number;
   isDeleted: boolean;
   isKilometreUpdated: boolean;
@@ -23,6 +23,15 @@ export interface IBooking extends Document {
   advanceAmount: number;
   invoiceGenerated: boolean;
 }
+export interface IInvoiceDetail {
+  name: string;
+  amount: number;
+}
+
+const invoiceDetailSchema = new Schema<IInvoiceDetail>({
+  name: { type: String },
+  amount: { type: Number },
+});
 
 const bookingSchema: Schema = new Schema(
   {
@@ -70,15 +79,10 @@ const bookingSchema: Schema = new Schema(
       type: Number,
       default: 0,
     },
-    invoiceDetails: [
-      {
-        type: Object,
-      },
-    ],
-    driver: 
-      {
-        type: Object,
-      },
+    invoiceDetails: [invoiceDetailSchema],
+    driver: {
+      type: Object,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

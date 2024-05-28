@@ -1145,6 +1145,7 @@ export const addInvoice = catchAsyncErrors(
     try {
       const { driver,invoiceDetails,...bookingData } = req.body;
       const { id } = req.params;
+      
       const updatedBookings = await BookingModel.findByIdAndUpdate(
         id,
         {
