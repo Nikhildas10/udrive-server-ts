@@ -18,6 +18,7 @@ export interface IBooking extends Document {
   invoiceId: number;
   isDeleted: boolean;
   isKilometreUpdated: boolean;
+  payment: string;
   advancePaid: boolean;
   advanceAmount: number;
   invoiceGenerated: boolean;
@@ -89,6 +90,10 @@ const bookingSchema: Schema = new Schema(
     advancePaid: {
       type: Boolean,
       default: false,
+    },
+    payment: {
+      type: String,
+      default: "paid",
     },
     advanceAmount: {
       type: Number,

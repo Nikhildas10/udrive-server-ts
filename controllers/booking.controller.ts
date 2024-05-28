@@ -1143,15 +1143,20 @@ export const notUpdatedKilometre = catchAsyncErrors(
 export const addInvoice = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { driver,...bookingData } = req.body;
+      const { driver,invoiceDetails,...bookingData } = req.body;
       const { id } = req.params;
       const updatedBookings = await BookingModel.findByIdAndUpdate(
         id,
         {
-          $push: { invoiceDetails: bookingData },
+          $push: { invoiceDetails: invoiceDetails },
           $set: {
             invoiceGenerated: true,
-            driver:driver
+            driver:driver,
+            total:bookingData?.total,
+            subTotals:bookingData?.subTotals,
+            discount:bookingData?.discount,
+            advanceAmount:bookingData?.advanceAmount,
+            tax:bookingData?.tax,
           },
         },
         { new: true }
