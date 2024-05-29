@@ -1157,6 +1157,11 @@ export const addInvoice = catchAsyncErrors(
     try {
       const { driver, invoiceDetails, ...bookingData } = req.body;
       const { id } = req.params;
+      const booking:any=await BookingModel.findById(id)
+      const carId=booking?.carSelected?._id
+      const customerId=booking?.customerSelected?._id
+      const employeeId=req?.user?._id      
+
       const filteredInvoiceDetails = invoiceDetails.filter((detail: any) => {
         return (
           detail &&
@@ -1186,7 +1191,46 @@ export const addInvoice = catchAsyncErrors(
       if (!updatedBookings) {
         res.status(400).json({ success: false, message: "no bookings found" });
       }
-      res.status(200).json({ success: true, updatedBookings });
+
+      const car=await CarModel.findById(carId)
+      const customer=await CarModel.findById(customerId)
+      const employee=await CarModel.findById(employeeId)
+      
+      if (car) {
+          const bookingIndex = car.bookings.findIndex(
+            (booking) => booking._id.toString() === id.toString()
+          );
+
+          if (bookingIndex !== -1) {
+            car.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
+          }
+          car.markModified("bookings");
+          await  car.save()
+        }
+      if (customer) {
+          const bookingIndex = customer.bookings.findIndex(
+            (booking) => booking._id.toString() === id.toString()
+          );
+
+          if (bookingIndex !== -1) {
+            customer.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
+          }
+          customer.markModified("bookings");
+          await customer.save()
+        }
+      if (employee) {
+          const bookingIndex = employee.bookings.findIndex(
+            (booking) => booking._id.toString() === id.toString()
+          );
+
+          if (bookingIndex !== -1) {
+            employee.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
+          }
+          employee.markModified("bookings");
+          await employee.save()
+        }
+
+      res.status(200).json({ success: true,updatedBookings  });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
