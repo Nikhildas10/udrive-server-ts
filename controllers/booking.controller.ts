@@ -1297,13 +1297,12 @@ export const invoiceDueBefore5 = catchAsyncErrors(
       // Calculate the current date and time in UTC
       const currentDateTimeUTC = getCurrentDateTimeUTC();
 
-      // Filter bookings to find those with `fromDate` within the next 5 days
       const filteredUpcomingBookings = bookings.filter((booking) => {
         const fromDate = parseDate(booking.fromDate);
-        const fiveDaysFromNow = new Date(
-          currentDateTimeUTC.getTime() + 5 * 24 * 60 * 60 * 1000
-        );
-        return currentDateTimeUTC <= fromDate && fromDate <= fiveDaysFromNow;
+        const twoDatesFromNow = new Date(
+          currentDateTimeUTC.getTime() + 2 * 24 * 60 * 60 * 1000
+        );        
+        return fromDate <= twoDatesFromNow;
       });
 
       res.status(200).json({
