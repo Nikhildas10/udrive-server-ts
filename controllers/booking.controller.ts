@@ -37,15 +37,15 @@ export const createBooking = catchAsyncErrors(
         advanceAmount && advanceAmount > 0 ? true : false;
       bookingData.invoiceGenerated = total && total > 0 ? true : false;
 
-//check invoice is null or not
-const filteredInvoiceDetails = invoiceDetails.filter((detail) => {
-  return (
-    detail &&
-    detail.name &&
-    detail.amount !== undefined &&
-    detail.amount !== null
-  );
-});
+      //check invoice is null or not
+      const filteredInvoiceDetails = invoiceDetails.filter((detail) => {
+        return (
+          detail &&
+          detail.name &&
+          detail.amount !== undefined &&
+          detail.amount !== null
+        );
+      });
 
       // Pass reference data to customer
       const customerId = customerSelected?._id;
@@ -72,7 +72,7 @@ const filteredInvoiceDetails = invoiceDetails.filter((detail) => {
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
-        invoiceDetails:filteredInvoiceDetails,
+        invoiceDetails: filteredInvoiceDetails,
         advanceAmount,
         total,
         carSelected: {
@@ -1157,10 +1157,10 @@ export const addInvoice = catchAsyncErrors(
     try {
       const { driver, invoiceDetails, ...bookingData } = req.body;
       const { id } = req.params;
-      const booking:any=await BookingModel.findById(id)
-      const carId=booking?.carSelected?._id
-      const customerId=booking?.customerSelected?._id
-      const employeeId=req?.user?._id      
+      const booking: any = await BookingModel.findById(id);
+      const carId = booking?.carSelected?._id;
+      const customerId = booking?.customerSelected?._id;
+      const employeeId = req?.user?._id;
 
       const filteredInvoiceDetails = invoiceDetails.filter((detail: any) => {
         return (
@@ -1192,45 +1192,71 @@ export const addInvoice = catchAsyncErrors(
         res.status(400).json({ success: false, message: "no bookings found" });
       }
 
-      const car=await CarModel.findById(carId)
-      const customer=await CarModel.findById(customerId)
-      const employee=await CarModel.findById(employeeId)
-      
+      const car = await CarModel.findById(carId);
+      const customer = await customerModel.findById(customerId);
+      const employee = await employeeModel.findById(employeeId);
+
       if (car) {
-          const bookingIndex = car.bookings.findIndex(
-            (booking) => booking._id.toString() === id.toString()
-          );
+        const bookingIndex = car.bookings.findIndex(
+          (booking) => booking._id.toString() === id.toString()
+        );
 
-          if (bookingIndex !== -1) {
-            car.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
-          }
-          car.markModified("bookings");
-          await  car.save()
+        if (bookingIndex !== -1) {
+          car.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails);
+          car.bookings[bookingIndex].invoiceGenerated = true;
+          car.bookings[bookingIndex].driver = driver;
+          car.bookings[bookingIndex].total = bookingData?.total;
+          car.bookings[bookingIndex].subTotals = bookingData?.subTotals;
+          car.bookings[bookingIndex].discount = bookingData?.discount;
+          car.bookings[bookingIndex].advanceAmount = bookingData?.advanceAmount;
+          car.bookings[bookingIndex].tax = bookingData?.tax;
+          car.bookings[bookingIndex].payment = bookingData?.payment;
         }
+        car.markModified("bookings");
+        await car.save();
+      }
       if (customer) {
-          const bookingIndex = customer.bookings.findIndex(
-            (booking) => booking._id.toString() === id.toString()
-          );
+        const bookingIndex = customer.bookings.findIndex(
+          (booking) => booking._id.toString() === id.toString()
+        );
 
-          if (bookingIndex !== -1) {
-            customer.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
-          }
-          customer.markModified("bookings");
-          await customer.save()
+        if (bookingIndex !== -1) {
+          customer.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails);
+          customer.bookings[bookingIndex].invoiceGenerated = true;
+          customer.bookings[bookingIndex].driver = driver;
+          customer.bookings[bookingIndex].total = bookingData?.total;
+          customer.bookings[bookingIndex].subTotals = bookingData?.subTotals;
+          customer.bookings[bookingIndex].discount = bookingData?.discount;
+          customer.bookings[bookingIndex].advanceAmount =
+            bookingData?.advanceAmount;
+          customer.bookings[bookingIndex].tax = bookingData?.tax;
+          customer.bookings[bookingIndex].payment = bookingData?.payment;
         }
+        customer.markModified("bookings");
+        await customer.save();
+      }
       if (employee) {
-          const bookingIndex = employee.bookings.findIndex(
-            (booking) => booking._id.toString() === id.toString()
-          );
+        const bookingIndex = employee.bookings.findIndex(
+          (booking) => booking._id.toString() === id.toString()
+        );
 
-          if (bookingIndex !== -1) {
-            employee.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails) ;
-          }
-          employee.markModified("bookings");
-          await employee.save()
+        if (bookingIndex !== -1) {
+          employee.bookings[bookingIndex].invoiceDetails.push(...filteredInvoiceDetails);
+          employee.bookings[bookingIndex].invoiceGenerated = true;
+          employee.bookings[bookingIndex].driver = driver;
+          employee.bookings[bookingIndex].total = bookingData?.total;
+          employee.bookings[bookingIndex].subTotals = bookingData?.subTotals;
+          employee.bookings[bookingIndex].discount = bookingData?.discount;
+          employee.bookings[bookingIndex].advanceAmount =
+            bookingData?.advanceAmount;
+          employee.bookings[bookingIndex].tax = bookingData?.tax;
+          employee.bookings[bookingIndex].payment = bookingData?.payment;
         }
+        employee.markModified("bookings");
+        await employee.save();
+      }
 
-      res.status(200).json({ success: true,updatedBookings  });
+      res.status(200).json({ success: true, updatedBookings });
     } catch (err: any) {
       next(new ErrorHandler(err.message, 400));
     }
