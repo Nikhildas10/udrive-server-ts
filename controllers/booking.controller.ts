@@ -1262,7 +1262,7 @@ export const addInvoice = catchAsyncErrors(
     }
   }
 );
-export const invoiceDueBefore5 = catchAsyncErrors(
+export const invoiceDueBefore2 = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Fetch all bookings where the invoice has not been generated
