@@ -1298,11 +1298,11 @@ export const invoiceDueBefore2 = catchAsyncErrors(
       const currentDateTimeUTC = getCurrentDateTimeUTC();
 
       const filteredUpcomingBookings = bookings.filter((booking) => {
-        const fromDate = parseDate(booking.fromDate);
+        const toDate = parseDate(booking.toDate);
         const twoDatesFromNow = new Date(
           currentDateTimeUTC.getTime() + 2 * 24 * 60 * 60 * 1000
         );        
-        return fromDate <= twoDatesFromNow;
+        return toDate <= twoDatesFromNow;
       });
 
       res.status(200).json({
