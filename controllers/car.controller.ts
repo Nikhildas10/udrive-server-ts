@@ -1431,7 +1431,8 @@ export const carActivites = catchAsyncErrors(
 
       const deliveryCars = deliveryBookings.map((booking) => ({
         car: booking.carSelected,
-        date: booking.fromDate,
+        fromDate: booking.fromDate,
+        toDate: booking.toDate,
       }));
 
       const pickupBookings = bookings.filter((booking) => {
@@ -1442,7 +1443,8 @@ export const carActivites = catchAsyncErrors(
 
       const pickupCars = pickupBookings.map((booking) => ({
         car: booking.carSelected,
-        date: booking.toDate,
+        fromDate: booking.fromDate,
+        toDate: booking.toDate,
       }));
 
       res.status(200).json({ success: true, deliveryCars, pickupCars });
