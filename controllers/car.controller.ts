@@ -1424,9 +1424,9 @@ export const carActivites = catchAsyncErrors(
       };
 
       const deliveryBookings = bookings.filter((booking) => {
-        const fromDate = parseDate(booking.fromDate).toISOString();
+        const toDate = parseDate(booking.toDate).toISOString();
         const currentDate = new Date(date).toISOString();
-        return fromDate === currentDate;
+        return toDate === currentDate;
       });
 
       const deliveryCars = deliveryBookings.map((booking) => ({
@@ -1436,9 +1436,9 @@ export const carActivites = catchAsyncErrors(
       }));
 
       const pickupBookings = bookings.filter((booking) => {
-        const toDate = parseDate(booking.toDate).toISOString();
+        const fromDate = parseDate(booking.fromDate).toISOString();
         const currentDate = new Date(date).toISOString();
-        return toDate === currentDate;
+        return fromDate === currentDate;
       });
 
       const pickupCars = pickupBookings.map((booking) => ({
