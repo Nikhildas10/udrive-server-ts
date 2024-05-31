@@ -1332,8 +1332,8 @@ export const availableCarsOnDate = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { date } = req.body;
-      if(!date){
-        res.status(400).json({success:false,message:"enter a date"})
+      if (!date) {
+        res.status(400).json({ success: false, message: "enter a date" });
       }
       // Fetch running cars
       const runningCars = await CarModel.aggregate([
@@ -1351,26 +1351,21 @@ export const availableCarsOnDate = catchAsyncErrors(
           },
         },
       ]);
-      const parseDate = (dateString: string): Date => {
-        const parts = dateString.split(" ");
-        const datePart = parts[0];
-        const timePart = parts[1] + " " + parts[2];
+     const getDateOnlyFromString = (dateString: string): string => {
+       const [datePart] = dateString.split(" "); // Split the string by space and take the first part (date)
+       return datePart; // Return the date part only
+     };
 
-        const [day, month, year] = datePart.split("-").map(Number);
-        const [time, period] = timePart.split(" ");
-        let [hours, minutes] = time.split(":").map(Number);
-
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours === 12) hours = 0;
-
-        // Create a Date object in UTC and adjust for IST offset
-        const date = new Date(Date.UTC(year, month - 1, day, hours, minutes));
-        return new Date(date.getTime() - 5.5 * 60 * 60 * 1000); // Convert IST to UTC
-      };
+     const parseDate = (dateString: string): Date => {
+       const datePart = getDateOnlyFromString(dateString); // Get only the date part
+       const [day, month, year] = datePart.split("-").map(Number); // Split the date part by "-" and convert to numbers
+       const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0)); // Create a new Date object in UTC set to midnight
+       return date;
+     };
       const filteredRunningCars = runningCars.filter((car) => {
         const fromDateTime = parseDate(car.bookings.fromDate);
         const toDateTime = parseDate(car.bookings.toDate);
-        const currentDateTime = parseDate(date);
+        const currentDateTime = new Date(date);
         // Check if current time is after the booking end time
         if (currentDateTime > toDateTime) {
           return false;
@@ -1401,7 +1396,21 @@ export const availableCarsOnDate = catchAsyncErrors(
         };
       });
 
-      res.status(200).json({ success: true, availableCars: sortedNotRunningCars });
+      res
+        .status(200)
+        .json({ success: true, availableCars: sortedNotRunningCars });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const carActivites = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { date } = req.body;
+      const bookings = await BookingModel.find({ isDeleted: false });
+      const cars = bookings.filter((booking) => booking.carSelected);
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }

@@ -1262,7 +1262,7 @@ export const addInvoice = catchAsyncErrors(
     }
   }
 );
-export const invoiceDueBefore2 = catchAsyncErrors(
+export const invoiceDueBefore1 = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Fetch all bookings where the invoice has not been generated
@@ -1299,10 +1299,10 @@ export const invoiceDueBefore2 = catchAsyncErrors(
 
       const filteredUpcomingBookings = bookings.filter((booking) => {
         const toDate = parseDate(booking.toDate);
-        const twoDatesFromNow = new Date(
-          currentDateTimeUTC.getTime() + 2 * 24 * 60 * 60 * 1000
+        const oneDatesFromNow = new Date(
+          currentDateTimeUTC.getTime() + 1 * 24 * 60 * 60 * 1000
         );        
-        return toDate <= twoDatesFromNow;
+        return toDate <= oneDatesFromNow;
       });
 
       res.status(200).json({
