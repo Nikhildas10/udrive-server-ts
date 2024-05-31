@@ -1331,7 +1331,7 @@ export const deleteServiceHistory = catchAsyncErrors(
 export const availableCarsOnDate = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { date } = req.body;
+      const { date } = req.params;
       if (!date) {
         res.status(400).json({ success: false, message: "enter a date" });
       }
@@ -1410,7 +1410,35 @@ export const carActivites = catchAsyncErrors(
     try {
       const { date } = req.body;
       const bookings = await BookingModel.find({ isDeleted: false });
-      const cars = bookings.filter((booking) => booking.carSelected);
+   
+      const getDateOnlyFromString = (dateString: string): string => {
+        const [datePart] = dateString.split(" "); // Split the string by space and take the first part (date)
+        return datePart; // Return the date part only
+      };
+
+      const parseDate = (dateString: string): Date => {
+        const datePart = getDateOnlyFromString(dateString); // Get only the date part
+        const [day, month, year] = datePart.split("-").map(Number); // Split the date part by "-" and convert to numbers
+        const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0)); // Create a new Date object in UTC set to midnight
+        return date;
+      };
+
+
+      const deliveryBookings=bookings.filter((booking)=>{
+        const fromDate=parseDate(booking.fromDate).toISOString()
+        const currentDate=new Date(date).toISOString()
+      return fromDate===currentDate
+      })    
+      const deliveryCars = deliveryBookings.map((booking) => booking.carSelected);
+
+
+      const pickupBookings=bookings.filter((booking)=>{
+        const toDate=parseDate(booking.toDate).toISOString()
+        const currentDate=new Date(date).toISOString()
+      return toDate===currentDate
+      })    
+      const pickupCars = pickupBookings.map((booking) => booking.carSelected);
+      res.status(200).json({success:true,deliveryCars,pickupCars})
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
