@@ -30,5 +30,6 @@ carRouter.get("/get-pollution-notification", isAuthenticated,getPollutionDue);
 carRouter.put("/add-service-details/:id", isAuthenticated,addServiceHistory);
 carRouter.delete("/delete-service-details/:carId/:serviceHistoryId", isAuthenticated,deleteServiceHistory);
 carRouter.get("/get-available-cars/:date", isAuthenticated,availableCarsOnDate);
+carRouter.get("/get-car-activities/:date", isAuthenticated,carActivites);
 
 export default carRouter; 

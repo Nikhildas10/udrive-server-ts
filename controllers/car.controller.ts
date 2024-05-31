@@ -1408,7 +1408,7 @@ export const availableCarsOnDate = catchAsyncErrors(
 export const carActivites = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { date } = req.body;
+      const { date } = req.params;
       const bookings = await BookingModel.find({ isDeleted: false });
    
       const getDateOnlyFromString = (dateString: string): string => {
@@ -1423,14 +1423,12 @@ export const carActivites = catchAsyncErrors(
         return date;
       };
 
-
       const deliveryBookings=bookings.filter((booking)=>{
         const fromDate=parseDate(booking.fromDate).toISOString()
         const currentDate=new Date(date).toISOString()
       return fromDate===currentDate
       })    
       const deliveryCars = deliveryBookings.map((booking) => booking.carSelected);
-
 
       const pickupBookings=bookings.filter((booking)=>{
         const toDate=parseDate(booking.toDate).toISOString()
