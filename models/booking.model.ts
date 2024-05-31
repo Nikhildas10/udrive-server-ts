@@ -55,6 +55,9 @@ const bookingSchema: Schema = new Schema(
     total: {
       type: Number,
     },
+    costPerDay: {
+      type: Number,
+    },
     discount: {
       type: Number,
     },
