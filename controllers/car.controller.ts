@@ -1410,7 +1410,7 @@ export const carActivites = catchAsyncErrors(
     try {
       const { date } = req.params;
       const bookings = await BookingModel.find({ isDeleted: false });
-   
+
       const getDateOnlyFromString = (dateString: string): string => {
         const [datePart] = dateString.split(" "); // Split the string by space and take the first part (date)
         return datePart; // Return the date part only
@@ -1423,22 +1423,32 @@ export const carActivites = catchAsyncErrors(
         return date;
       };
 
-      const deliveryBookings=bookings.filter((booking)=>{
-        const fromDate=parseDate(booking.fromDate).toISOString()
-        const currentDate=new Date(date).toISOString()
-      return fromDate===currentDate
-      })    
-      const deliveryCars = deliveryBookings.map((booking) => booking.carSelected);
+      const deliveryBookings = bookings.filter((booking) => {
+        const fromDate = parseDate(booking.fromDate).toISOString();
+        const currentDate = new Date(date).toISOString();
+        return fromDate === currentDate;
+      });
 
-      const pickupBookings=bookings.filter((booking)=>{
-        const toDate=parseDate(booking.toDate).toISOString()
-        const currentDate=new Date(date).toISOString()
-      return toDate===currentDate
-      })    
-      const pickupCars = pickupBookings.map((booking) => booking.carSelected);
-      res.status(200).json({success:true,deliveryCars,pickupCars})
+      const deliveryCars = deliveryBookings.map((booking) => ({
+        car: booking.carSelected,
+        date: booking.fromDate,
+      }));
+
+      const pickupBookings = bookings.filter((booking) => {
+        const toDate = parseDate(booking.toDate).toISOString();
+        const currentDate = new Date(date).toISOString();
+        return toDate === currentDate;
+      });
+
+      const pickupCars = pickupBookings.map((booking) => ({
+        car: booking.carSelected,
+        date: booking.toDate,
+      }));
+
+      res.status(200).json({ success: true, deliveryCars, pickupCars });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
   }
 );
+
