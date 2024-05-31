@@ -86,6 +86,7 @@ export const createBooking = catchAsyncErrors(
           yearOfManufacturing: carSelected.yearOfManufacturing,
           fuelType: carSelected.fuelType,
           transmission: carSelected.transmission,
+          pollution:carSelected.pollution,
           insurance: carSelected.insurance,
           lastService: carSelected.lastService,
           serviceInterval: carSelected.serviceInterval,
