@@ -11,6 +11,8 @@ export interface IBooking extends Document {
   subTotals: number;
   total: number;
   discount: number;
+  pickupCost: number;
+  deliveryCost: number;
   kilometreCovered: number;
   tax: number;
   status: string;
@@ -56,6 +58,12 @@ const bookingSchema: Schema = new Schema(
       type: Number,
     },
     costPerDay: {
+      type: Number,
+    },
+    pickupCost: {
+      type: Number,
+    },
+    deliveryCost: {
       type: Number,
     },
     discount: {
