@@ -18,6 +18,7 @@ export interface IBooking extends Document {
   status: string;
   invoiceDetails: Array;
   invoiceId: number;
+  totalDuration:number;
   isDeleted: boolean;
   isKilometreUpdated: boolean;
   payment: string;
@@ -61,6 +62,9 @@ const bookingSchema: Schema = new Schema(
       type: Number,
     },
     pickupCost: {
+      type: Number,
+    },
+    totalDuration: {
       type: Number,
     },
     deliveryCost: {
