@@ -64,11 +64,11 @@ const customerSchema: Schema = new Schema({
     public_id: String,
     url: String,
   },
-  passportImage: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
+  passportImage: [
+    {
+      type: Object,
+    },
+  ],
   location: {
     type: String,
   },

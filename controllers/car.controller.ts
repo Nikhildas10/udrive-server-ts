@@ -10,6 +10,112 @@ import { format, parse } from "date-fns";
 import { notificationModel } from "../models/notification.model";
 import { emitSocketEvent } from "../server";
 
+// export const addCars = catchAsyncErrors(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const {
+//       name,
+//       manufacturingCompany,
+//       yearOfManufacturing,
+//       fuelType,
+//       transmission,
+//       insurance,
+//       vehicleNumber,
+//       lastService,
+//       lastServiceKilometre,
+//       serviceInterval,
+//       totalKmCovered,
+//       pollution,
+//     } = req.body;
+// console.log(req.body)
+//     try {
+//       let rcBookResult: any,
+//         insurancePolicyResult: any,
+//         pollutionCertificateResult: any,
+//         carImageResult: any;
+
+//       if (req.body.rcBook) {
+//         rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
+//           folder: "cars",
+//         });
+//       }
+
+//       if (req.body.insurancePolicy) {
+//         insurancePolicyResult = await cloudinary.uploader.upload(
+//           req.body.insurancePolicy,
+//           {
+//             folder: "cars",
+//           }
+//         );
+//       }
+
+//       if (req.body.pollutionCertificate) {
+//         pollutionCertificateResult = await cloudinary.uploader.upload(
+//           req.body.pollutionCertificate,
+//           {
+//             folder: "cars",
+//           }
+//         );
+//       }
+//       if (req.body.carImage) {
+//         carImageResult = await cloudinary.uploader.upload(req.body.carImage, {
+//           folder: "cars",
+//         });
+//       }
+
+//       const newCarData = {
+//         name,
+//         manufacturingCompany,
+//         yearOfManufacturing,
+//         fuelType,
+//         transmission,
+//         insurance,
+//         vehicleNumber,
+//         lastService,
+//         lastServiceKilometre,
+//         serviceInterval,
+//         pollution,
+//         totalKmCovered,
+//         rcBook: rcBookResult
+//           ? {
+//               public_id: rcBookResult.public_id,
+//               url: rcBookResult.secure_url,
+//               filetype: rcBookResult?.format == "pdf" ? "pdf" : "image",
+//             }
+//           : undefined,
+//         insurancePolicy: insurancePolicyResult
+//           ? {
+//               public_id: insurancePolicyResult.public_id,
+//               url: insurancePolicyResult.secure_url,
+//               filetype:
+//                 insurancePolicyResult?.format == "pdf" ? "pdf" : "image",
+//             }
+//           : undefined,
+//         pollutionCertificate: pollutionCertificateResult
+//           ? {
+//               public_id: pollutionCertificateResult.public_id,
+//               url: pollutionCertificateResult.secure_url,
+//               filetype:
+//                 pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
+//             }
+//           : undefined,
+//         carImage: carImageResult
+//           ? {
+//               public_id: carImageResult.public_id,
+//               url: carImageResult.secure_url,
+//             }
+//           : undefined,
+//       };
+//       // console.log(newCarData);
+
+//       const newCar: ICar = new CarModel(newCarData);
+//       const savedCar = await newCar.save();
+//       res.status(201).json({ success: true, savedCar });
+//     } catch (err: any) {
+//       return next(new ErrorHandler(err.message, 400));
+//     }
+//   }
+// );
+
 export const addCars = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
@@ -26,41 +132,71 @@ export const addCars = catchAsyncErrors(
       totalKmCovered,
       pollution,
     } = req.body;
-
+console.log("im body",req.body)
     try {
-      let rcBookResult: any,
-        insurancePolicyResult: any,
-        pollutionCertificateResult: any,
+      let rcBookResults: any[] = [],
+        insurancePolicyResults: any[] = [],
+        pollutionCertificateResults: any[] = [],
         carImageResult: any;
 
-      if (req.body.rcBook) {
-        rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
-          folder: "cars",
-        });
-      }
-
-      if (req.body.insurancePolicy) {
-        insurancePolicyResult = await cloudinary.uploader.upload(
-          req.body.insurancePolicy,
-          {
-            folder: "cars",
-          }
+      // Handle rcBook array upload
+      if (Array.isArray(req.body.rcBook)) {
+        rcBookResults = await Promise.all(
+          req.body.rcBook.map(async (file: any) => {
+            const result = await cloudinary.uploader.upload(file, {
+              folder: "cars",
+            });
+            return {
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result.format === "pdf" ? "pdf" : "image", // Determine filetype
+            };
+          })
         );
       }
 
-      if (req.body.pollutionCertificate) {
-        pollutionCertificateResult = await cloudinary.uploader.upload(
-          req.body.pollutionCertificate,
-          {
-            folder: "cars",
-          }
+      // Handle insurancePolicy array upload
+      if (Array.isArray(req.body.insurancePolicy)) {
+        insurancePolicyResults = await Promise.all(
+          req.body.insurancePolicy.map(async (file: any) => {
+            const result = await cloudinary.uploader.upload(file, {
+              folder: "cars",
+            });
+            return {
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result.format === "pdf" ? "pdf" : "image",
+            };
+          })
         );
       }
+
+      // Handle pollutionCertificate array upload
+      if (Array.isArray(req.body.pollutionCertificate)) {
+        pollutionCertificateResults = await Promise.all(
+          req.body.pollutionCertificate.map(async (file: any) => {
+            const result = await cloudinary.uploader.upload(file, {
+              folder: "cars",
+            });
+            return {
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result.format === "pdf" ? "pdf" : "image",
+            };
+          })
+        );
+      }
+
+      // Handle single carImage upload
       if (req.body.carImage) {
         carImageResult = await cloudinary.uploader.upload(req.body.carImage, {
           folder: "cars",
         });
       }
+
+      console.log("its insur",insurancePolicyResults)
+      console.log("its rc",rcBookResults)
+      console.log("its pollu",pollutionCertificateResults)
 
       const newCarData = {
         name,
@@ -75,29 +211,13 @@ export const addCars = catchAsyncErrors(
         serviceInterval,
         pollution,
         totalKmCovered,
-        rcBook: rcBookResult
-          ? {
-              public_id: rcBookResult.public_id,
-              url: rcBookResult.secure_url,
-              filetype: rcBookResult?.format == "pdf" ? "pdf" : "image",
-            }
-          : undefined,
-        insurancePolicy: insurancePolicyResult
-          ? {
-              public_id: insurancePolicyResult.public_id,
-              url: insurancePolicyResult.secure_url,
-              filetype:
-                insurancePolicyResult?.format == "pdf" ? "pdf" : "image",
-            }
-          : undefined,
-        pollutionCertificate: pollutionCertificateResult
-          ? {
-              public_id: pollutionCertificateResult.public_id,
-              url: pollutionCertificateResult.secure_url,
-              filetype:
-                pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
-            }
-          : undefined,
+        rcBook: rcBookResults.length > 0 ? rcBookResults : undefined, // Array of rcBook results
+        insurancePolicy:
+          insurancePolicyResults.length > 0 ? insurancePolicyResults : undefined, // Array of insurancePolicy results
+        pollutionCertificate:
+          pollutionCertificateResults.length > 0
+            ? pollutionCertificateResults
+            : undefined, // Array of pollutionCertificate results
         carImage: carImageResult
           ? {
               public_id: carImageResult.public_id,
@@ -105,7 +225,6 @@ export const addCars = catchAsyncErrors(
             }
           : undefined,
       };
-      // console.log(newCarData);
 
       const newCar: ICar = new CarModel(newCarData);
       const savedCar = await newCar.save();
@@ -115,6 +234,85 @@ export const addCars = catchAsyncErrors(
     }
   }
 );
+
+
+
+
+export const editCar = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log(req.body)
+      const { id } = req.params;
+      if (!id) {
+        return next(new ErrorHandler("Invalid car ID", 400));
+      }
+
+      const updatedCarData: any = { ...req.body };
+
+      // Helper function to upload images/files for array fields
+      const uploadArrayIfNotExists = async (fieldName: string) => {
+        if (!Array.isArray(req.body[fieldName])) return;
+
+        const uploadResults = await Promise.all(
+          req.body[fieldName].map(async (file: any) => {
+            if (file && !file.public_id) {
+              const result = await cloudinary.uploader.upload(file, {
+                folder: "cars",
+              });
+              return {
+                public_id: result.public_id,
+                url: result.secure_url,
+                filetype: result.format === "pdf" ? "pdf" : "image",
+              };
+            }
+            return file; // Return existing files with public_id
+          })
+        );
+
+        updatedCarData[fieldName] = uploadResults.length > 0 ? uploadResults : undefined;
+      };
+
+      // Handle array uploads for rcBook, insurancePolicy, pollutionCertificate
+      await Promise.all([
+        uploadArrayIfNotExists("rcBook"),
+        uploadArrayIfNotExists("insurancePolicy"),
+        uploadArrayIfNotExists("pollutionCertificate")
+      ]);
+
+      // Helper function to upload single image/file (like carImage)
+      const uploadSingleIfNotExists = async (imageField: string) => {
+        if (!req.body[imageField]) return;
+
+        if (!req.body[imageField].public_id) {
+          const result = await cloudinary.uploader.upload(req.body[imageField], {
+            folder: "cars",
+          });
+          updatedCarData[imageField] = {
+            public_id: result.public_id,
+            url: result.secure_url,
+            filetype: result.format === "pdf" ? "pdf" : "image",
+          };
+        }
+      };
+
+      // Handle single image upload for carImage
+      await uploadSingleIfNotExists("carImage");
+
+      const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
+        new: true,
+      });
+
+      if (!updatedCar) {
+        return next(new ErrorHandler("Car not found", 404));
+      }
+
+      res.status(200).json({ success: true, updatedCar });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
 
 export const getAllCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -145,62 +343,6 @@ export const getSingleCar = catchAsyncErrors(
     }
   }
 );
-
-export const editCar = catchAsyncErrors(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // console.log(req.body);
-    try {
-      const { id } = req.params;
-      if (!id) {
-        return next(new ErrorHandler("Invalid car ID", 400));
-      }
-
-      // console.log("editCar", req.body);
-      const updatedCarData: any = { ...req.body };
-
-      const uploadImageIfNotExists = async (imageField: string) => {
-        // Check if the image field is present in the request body
-        if (!req.body[imageField]) return;
-
-        // Check if the image already has a public_id (meaning it's not a new upload)
-        if (!req.body[imageField].public_id) {
-          const result = await cloudinary.uploader.upload(
-            req.body[imageField],
-            {
-              folder: "cars",
-            }
-          );
-          updatedCarData[imageField] = {
-            public_id: result.public_id,
-            url: result.secure_url,
-            filetype: result?.format === "pdf" ? "pdf" : "image",
-          };
-        }
-      };
-
-      await uploadImageIfNotExists("carImage");
-
-      await Promise.all([
-        uploadImageIfNotExists("rcBook"),
-        uploadImageIfNotExists("insurancePolicy"),
-        uploadImageIfNotExists("pollutionCertificate"),
-      ]);
-
-      const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
-        new: true,
-      });
-
-      if (!updatedCar) {
-        return next(new ErrorHandler("Car not found", 404));
-      }
-
-      res.status(200).json({ success: true, updatedCar });
-    } catch (err: any) {
-      return next(new ErrorHandler(err.message, 400));
-    }
-  }
-);
-
 export const deleteCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {

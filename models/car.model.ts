@@ -13,6 +13,7 @@ interface IServiceHistory {
   serviceDoneAt: number;
   totalAmount: number;
 }
+
 const workDoneSchema = new Schema<IWorkDone>({
   description: { type: String },
   amount: { type: Number },
@@ -25,7 +26,6 @@ const serviceHistorySchema = new Schema<IServiceHistory>({
   serviceDoneAt: { type: Number },
   totalAmount: { type: Number, default: 0 },
 });
-
 
 export interface ICar extends Document {
   name: string;
@@ -41,9 +41,9 @@ export interface ICar extends Document {
   totalServiceAmount: number;
   totalKmCovered: number;
   vehicleNumber: string;
-  rcBook?: object;
-  insurancePolicy?: object;
-  pollutionCertificate?: object;
+  rcBook?: Array<{ public_id: string; url: string; filetype: string }>;
+  insurancePolicy?: { public_id: string; url: string; filetype: string };
+  pollutionCertificate?: { public_id: string; url: string; filetype: string };
   bookings: IBooking[];
   isDeleted: boolean;
   carImage: object;
@@ -90,26 +90,25 @@ const carSchema = new Schema<ICar>({
     type: Number,
     default: 0,
   },
-
   vehicleNumber: {
     type: String,
   },
   serviceHistory: [serviceHistorySchema],
-  rcBook: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
-  insurancePolicy: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
-  pollutionCertificate: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
+  rcBook: [
+    {
+      type: Object,
+    },
+  ],
+  insurancePolicy: [
+    {
+      type: Object,
+    },
+  ],
+  pollutionCertificate:[
+    {
+      type: Object,
+    },
+  ],
   carImage: {
     public_id: String,
     url: String,
