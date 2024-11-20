@@ -32,6 +32,7 @@ app.use(
       "https://u-drive-three.vercel.app",
       "http://localhost:3031",
       "http://localhost:3030",
+      "https://u-drrive.vercel.app",
     ],
     credentials: true,
   })
