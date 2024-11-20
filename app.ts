@@ -31,6 +31,7 @@ app.use(
     origin: [
       "https://u-drive-three.vercel.app",
       "https://udrive-main.vercel.app",
+      "https://u-drrive.vercel.app",
       "http://localhost:3031",
       "http://localhost:3030",
     ],
