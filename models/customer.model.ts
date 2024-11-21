@@ -38,15 +38,14 @@ const customerSchema: Schema = new Schema({
   },
   email: {
     type: String,
-    required: true,
   },
   passportNumber: {
     type: String,
-    required: true,
+    // required: true,
   },
   pincode: {
     type: Number,
-    required: true,
+    // required: true,
   },
   state: {
     type: String,
@@ -54,7 +53,7 @@ const customerSchema: Schema = new Schema({
   },
   address: {
     type: String,
-    required: true,
+    // required: true,
   },
   locality: {
     type: String,

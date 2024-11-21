@@ -95,11 +95,13 @@ const carSchema = new Schema<ICar>({
     type: String,
   },
   serviceHistory: [serviceHistorySchema],
-  rcBook: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
+  rcBook: [
+    {
+      public_id: String,
+      url: String,
+      filetype: String,
+    },
+  ],
   insurancePolicy: {
     public_id: String,
     url: String,

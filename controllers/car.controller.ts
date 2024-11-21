@@ -39,6 +39,22 @@ export const addCars = catchAsyncErrors(
         });
       }
 
+      //  let rcBookResults: any[] = [];
+      //  let insurancePolicyResult: any,
+      //    pollutionCertificateResult: any,
+      //    carImageResult: any;
+
+      //  // Handle multiple rcBook uploads
+      //  if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
+      //    rcBookResults = await Promise.all(
+      //      req.body.rcBook.map(async (base64Image: string) => {
+      //        return await cloudinary.uploader.upload(base64Image, {
+      //          folder: "cars",
+      //        });
+      //      })
+      //    );
+      //  }
+
       if (req.body.insurancePolicy) {
         insurancePolicyResult = await cloudinary.uploader.upload(
           req.body.insurancePolicy,
@@ -56,6 +72,7 @@ export const addCars = catchAsyncErrors(
           }
         );
       }
+
       if (req.body.carImage) {
         carImageResult = await cloudinary.uploader.upload(req.body.carImage, {
           folder: "cars",
@@ -75,19 +92,19 @@ export const addCars = catchAsyncErrors(
         serviceInterval,
         pollution,
         totalKmCovered,
-        rcBook: rcBookResult
-          ? {
-              public_id: rcBookResult.public_id,
-              url: rcBookResult.secure_url,
-              filetype: rcBookResult?.format == "pdf" ? "pdf" : "image",
-            }
+        rcBook: rcBookResults.length
+          ? rcBookResults.map((result) => ({
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result?.format === "pdf" ? "pdf" : "image",
+            }))
           : undefined,
         insurancePolicy: insurancePolicyResult
           ? {
               public_id: insurancePolicyResult.public_id,
               url: insurancePolicyResult.secure_url,
               filetype:
-                insurancePolicyResult?.format == "pdf" ? "pdf" : "image",
+                insurancePolicyResult?.format === "pdf" ? "pdf" : "image",
             }
           : undefined,
         pollutionCertificate: pollutionCertificateResult
@@ -95,7 +112,7 @@ export const addCars = catchAsyncErrors(
               public_id: pollutionCertificateResult.public_id,
               url: pollutionCertificateResult.secure_url,
               filetype:
-                pollutionCertificateResult?.format == "pdf" ? "pdf" : "image",
+                pollutionCertificateResult?.format === "pdf" ? "pdf" : "image",
             }
           : undefined,
         carImage: carImageResult
@@ -105,7 +122,6 @@ export const addCars = catchAsyncErrors(
             }
           : undefined,
       };
-      // console.log(newCarData);
 
       const newCar: ICar = new CarModel(newCarData);
       const savedCar = await newCar.save();

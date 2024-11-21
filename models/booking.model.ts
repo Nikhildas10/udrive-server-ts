@@ -14,7 +14,7 @@ export interface IBooking extends Document {
   pickupCost: number;
   deliveryCost: number;
   kilometreCovered: number;
-  tax: number;
+  // tax: number;
   minimumKilometer: number;
   costAfterMinimumKm: number;
   status: string;
@@ -85,9 +85,9 @@ const bookingSchema: Schema = new Schema(
       type: String,
       default: "active",
     },
-    tax: {
-      type: Number,
-    },
+    // tax: {
+    //   type: Number,
+    // },
     invoiceId: {
       type: Number,
     },

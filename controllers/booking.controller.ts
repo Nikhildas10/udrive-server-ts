@@ -104,10 +104,10 @@ export const createBooking = catchAsyncErrors(
           abroadNumber: customerSelected.abroadNumber,
           nativeNumber: customerSelected.nativeNumber,
           email: customerSelected.email,
-          passportNumber: customerSelected.passportNumber,
-          pincode: customerSelected.pincode,
+          // passportNumber: customerSelected.passportNumber,
+          // pincode: customerSelected.pincode,
           state: customerSelected.state,
-          address: customerSelected.address,
+          // address: customerSelected.address,
           locality: customerSelected.locality,
           cityOrDistrict: customerSelected.cityOrDistrict,
           isDeleted: customerSelected.isDeleted,
@@ -400,10 +400,10 @@ export const editBooking = catchAsyncErrors(
           abroadNumber: newCustomer?.abroadNumber,
           nativeNumber: newCustomer?.nativeNumber,
           email: newCustomer?.email,
-          passportNumber: newCustomer?.passportNumber,
-          pincode: newCustomer?.pincode,
+          // passportNumber: newCustomer?.passportNumber,
+          // pincode: newCustomer?.pincode,
           state: newCustomer?.state,
-          address: newCustomer?.address,
+          // address: newCustomer?.address,
           locality: newCustomer?.locality,
           cityOrDistrict: newCustomer?.cityOrDistrict,
           isDeleted: newCustomer?.isDeleted,
@@ -1182,7 +1182,7 @@ export const addInvoice = catchAsyncErrors(
             subTotals: bookingData?.subTotals,
             discount: bookingData?.discount,
             advanceAmount: bookingData?.advanceAmount,
-            tax: bookingData?.tax,
+            // tax: bookingData?.tax,
             payment: bookingData?.payment,
           },
         },
@@ -1210,7 +1210,7 @@ export const addInvoice = catchAsyncErrors(
           car.bookings[bookingIndex].subTotals = bookingData?.subTotals;
           car.bookings[bookingIndex].discount = bookingData?.discount;
           car.bookings[bookingIndex].advanceAmount = bookingData?.advanceAmount;
-          car.bookings[bookingIndex].tax = bookingData?.tax;
+          // car.bookings[bookingIndex].tax = bookingData?.tax;
           car.bookings[bookingIndex].payment = bookingData?.payment;
         }
         car.markModified("bookings");
@@ -1230,7 +1230,7 @@ export const addInvoice = catchAsyncErrors(
           customer.bookings[bookingIndex].discount = bookingData?.discount;
           customer.bookings[bookingIndex].advanceAmount =
             bookingData?.advanceAmount;
-          customer.bookings[bookingIndex].tax = bookingData?.tax;
+          // customer.bookings[bookingIndex].tax = bookingData?.tax;
           customer.bookings[bookingIndex].payment = bookingData?.payment;
         }
         customer.markModified("bookings");
@@ -1250,7 +1250,7 @@ export const addInvoice = catchAsyncErrors(
           employee.bookings[bookingIndex].discount = bookingData?.discount;
           employee.bookings[bookingIndex].advanceAmount =
             bookingData?.advanceAmount;
-          employee.bookings[bookingIndex].tax = bookingData?.tax;
+          // employee.bookings[bookingIndex].tax = bookingData?.tax;
           employee.bookings[bookingIndex].payment = bookingData?.payment;
         }
         employee.markModified("bookings");
