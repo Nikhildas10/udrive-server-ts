@@ -14,10 +14,10 @@ export interface ICustomer extends Document {
   locality: string;
   cityOrDistrict: string;
   bookings: IBooking[];
-  isDeleted:boolean;
-  customerImage:object;
-  passportImage:object;
-  location:string;
+  isDeleted: boolean;
+  customerImage: object;
+  passportImage: object;
+  location: string;
 }
 
 const customerSchema: Schema = new Schema({
@@ -63,11 +63,13 @@ const customerSchema: Schema = new Schema({
     public_id: String,
     url: String,
   },
-  passportImage: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
+  passportImage: [
+    {
+      public_id: String,
+      url: String,
+      filetype: String,
+    },
+  ],
   location: {
     type: String,
   },

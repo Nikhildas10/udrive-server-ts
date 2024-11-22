@@ -10,8 +10,9 @@ export const createCustomer = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       let customerImageResult: any;
-      let passportImageResult: any;
+      let passportImageResults: any[] = [];
 
+      // Upload the customer image if it exists
       if (req.body.customerImage) {
         customerImageResult = await cloudinary.uploader.upload(
           req.body.customerImage,
@@ -20,15 +21,18 @@ export const createCustomer = catchAsyncErrors(
           }
         );
       }
-      if (req.body.passportImage) {
-        passportImageResult = await cloudinary.uploader.upload(
-          req.body.passportImage,
-          {
-            folder: "customers",
-          }
+
+      // Upload all passport images if they exist
+      if (req.body.passportImage && Array.isArray(req.body.passportImage)) {
+        passportImageResults = await Promise.all(
+          req.body.passportImage.map(async (base64Image: string) => {
+            return await cloudinary.uploader.upload(base64Image, {
+              folder: "cars",
+            });
+          })
         );
       }
-
+      // Prepare customer data
       const customerData = {
         ...req.body,
         customerImage: customerImageResult
@@ -37,16 +41,18 @@ export const createCustomer = catchAsyncErrors(
               url: customerImageResult.secure_url,
             }
           : undefined,
-        passportImage: passportImageResult
-          ? {
-              public_id: passportImageResult.public_id,
-              url: passportImageResult.secure_url,
-              filetype: passportImageResult?.format == "pdf" ? "pdf" : "image",
-            }
+        passportImage: passportImageResults.length
+          ? passportImageResults.map((result) => ({
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result?.format === "pdf" ? "pdf" : "image",
+            }))
           : undefined,
       };
 
+      // Create the customer in the database
       const data = await customerModel.create(customerData);
+
       res.status(200).json({ success: true, data });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));

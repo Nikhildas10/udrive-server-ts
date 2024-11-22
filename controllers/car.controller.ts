@@ -28,32 +28,32 @@ export const addCars = catchAsyncErrors(
     } = req.body;
 
     try {
-      let rcBookResult: any,
-        insurancePolicyResult: any,
-        pollutionCertificateResult: any,
-        carImageResult: any;
+      // let rcBookResult: any,
+      //   insurancePolicyResult: any,
+      //   pollutionCertificateResult: any,
+      //   carImageResult: any;
 
-      if (req.body.rcBook) {
-        rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
-          folder: "cars",
-        });
-      }
+      // if (req.body.rcBook) {
+      //   rcBookResult = await cloudinary.uploader.upload(req.body.rcBook, {
+      //     folder: "cars",
+      //   });
+      // }
 
-      //  let rcBookResults: any[] = [];
-      //  let insurancePolicyResult: any,
-      //    pollutionCertificateResult: any,
-      //    carImageResult: any;
+       let rcBookResults: any[] = [];
+       let insurancePolicyResult: any,
+         pollutionCertificateResult: any,
+         carImageResult: any;
 
-      //  // Handle multiple rcBook uploads
-      //  if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
-      //    rcBookResults = await Promise.all(
-      //      req.body.rcBook.map(async (base64Image: string) => {
-      //        return await cloudinary.uploader.upload(base64Image, {
-      //          folder: "cars",
-      //        });
-      //      })
-      //    );
-      //  }
+       // Handle multiple rcBook uploads
+       if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
+         rcBookResults = await Promise.all(
+           req.body.rcBook.map(async (base64Image: string) => {
+             return await cloudinary.uploader.upload(base64Image, {
+               folder: "cars",
+             });
+           })
+         );
+       }
 
       if (req.body.insurancePolicy) {
         insurancePolicyResult = await cloudinary.uploader.upload(
