@@ -164,44 +164,55 @@ export const getSingleCar = catchAsyncErrors(
 
 export const editCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    // console.log(req.body);
     try {
       const { id } = req.params;
       if (!id) {
         return next(new ErrorHandler("Invalid car ID", 400));
       }
 
-      // console.log("editCar", req.body);
       const updatedCarData: any = { ...req.body };
 
-      const uploadImageIfNotExists = async (imageField: string) => {
-        // Check if the image field is present in the request body
-        if (!req.body[imageField]) return;
-
-        // Check if the image already has a public_id (meaning it's not a new upload)
-        if (!req.body[imageField].public_id) {
-          const result = await cloudinary.uploader.upload(
-            req.body[imageField],
-            {
-              folder: "cars",
+      // Function to handle rcBook updates
+      const processRcBookImages = async (rcBook: any[]) => {
+        return Promise.all(
+          rcBook.map(async (image: any) => {
+            if (typeof image === "string" && image.startsWith("data:")) {
+              // If it's a Base64 string, upload it
+              const result = await cloudinary.uploader.upload(image, {
+                folder: "cars",
+              });
+              return {
+                public_id: result.public_id,
+                url: result.secure_url,
+                filetype: result.format === "pdf" ? "pdf" : "image",
+              };
+            } else if (typeof image === "string" && image.startsWith("http")) {
+              // If it's a hosted URL, assume it's already uploaded
+              return {
+                public_id: null, // Hosted URLs might not have a public_id
+                url: image,
+                filetype: image.endsWith(".pdf") ? "pdf" : "image",
+              };
+            } else if (
+              typeof image === "object" &&
+              image.url &&
+              image.filetype
+            ) {
+              // If it's already in object format, keep it as-is
+              return image;
+            } else {
+              throw new Error("Invalid rcBook data format");
             }
-          );
-          updatedCarData[imageField] = {
-            public_id: result.public_id,
-            url: result.secure_url,
-            filetype: result?.format === "pdf" ? "pdf" : "image",
-          };
-        }
+          })
+        );
       };
 
-      await uploadImageIfNotExists("carImage");
+      // Process rcBook field if provided
+      if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
+        updatedCarData.rcBook = await processRcBookImages(req.body.rcBook);
+      }
 
-      await Promise.all([
-        uploadImageIfNotExists("rcBook"),
-        uploadImageIfNotExists("insurancePolicy"),
-        uploadImageIfNotExists("pollutionCertificate"),
-      ]);
-
+      // Update car data in the database
       const updatedCar = await CarModel.findByIdAndUpdate(id, updatedCarData, {
         new: true,
       });
@@ -216,6 +227,7 @@ export const editCar = catchAsyncErrors(
     }
   }
 );
+
 
 export const deleteCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {

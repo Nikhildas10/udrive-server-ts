@@ -67,42 +67,50 @@ export const updateCustomer = async (
 ) => {
   try {
     const customerId: string = req.params.id;
-    const updatedData = req.body;
+    const updatedData = { ...req.body };
 
-    let updatedCustomerImageResult: any;
-    let updatedPassportImageResult: any;
-
+    // Check and process customerImage
     if (req.body.customerImage) {
-      updatedCustomerImageResult = await cloudinary.uploader.upload(
-        req.body.customerImage,
-        {
-          folder: "customers",
-        }
-      );
-    }
-    if (req.body.passportImage) {
-      updatedPassportImageResult = await cloudinary.uploader.upload(
-        req.body.passportImage,
-        {
-          folder: "customers",
-        }
-      );
+      if (req.body.customerImage.startsWith("data:")) {
+        // Upload new customer image if it's Base64
+        const uploadedCustomerImage = await cloudinary.uploader.upload(
+          req.body.customerImage,
+          { folder: "customers" }
+        );
+        updatedData.customerImage = {
+          public_id: uploadedCustomerImage.public_id,
+          url: uploadedCustomerImage.secure_url,
+        };
+      }
     }
 
-    if (updatedCustomerImageResult) {
-      updatedData.customerImage = {
-        public_id: updatedCustomerImageResult.public_id,
-        url: updatedCustomerImageResult.secure_url,
-      };
-    }
-    if (updatedPassportImageResult) {
-      updatedData.passportImage = {
-        public_id: updatedPassportImageResult.public_id,
-        url: updatedPassportImageResult.secure_url,
-        filetype: updatedPassportImageResult?.format == "pdf" ? "pdf" : "image",
-      };
+    // Check and process passportImage
+    if (req.body.passportImage && Array.isArray(req.body.passportImage)) {
+      const updatedPassportImages = await Promise.all(
+        req.body.passportImage.map(async (image: string) => {
+          if (image.startsWith("data:")) {
+            // Upload new image if it's Base64
+            const result = await cloudinary.uploader.upload(image, {
+              folder: "customers",
+            });
+            return {
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result?.format === "pdf" ? "pdf" : "image",
+            };
+          } else {
+            // Return the existing URL directly
+            return {
+              url: image, // Keep the current URL as is
+              filetype: image.endsWith(".pdf") ? "pdf" : "image",
+            };
+          }
+        })
+      );
+      updatedData.passportImage = updatedPassportImages;
     }
 
+    // Update the customer in the database
     const updatedCustomer = await customerModel.findByIdAndUpdate(
       customerId,
       updatedData,
