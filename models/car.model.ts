@@ -26,7 +26,6 @@ const serviceHistorySchema = new Schema<IServiceHistory>({
   totalAmount: { type: Number, default: 0 },
 });
 
-
 export interface ICar extends Document {
   name: string;
   manufacturingCompany: string;
@@ -102,16 +101,20 @@ const carSchema = new Schema<ICar>({
       filetype: String,
     },
   ],
-  insurancePolicy: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
-  pollutionCertificate: {
-    public_id: String,
-    url: String,
-    filetype: String,
-  },
+  insurancePolicy: [
+    {
+      public_id: String,
+      url: String,
+      filetype: String,
+    },
+  ],
+  pollutionCertificate: [
+    {
+      public_id: String,
+      url: String,
+      filetype: String,
+    },
+  ],
   carImage: {
     public_id: String,
     url: String,

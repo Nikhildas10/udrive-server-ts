@@ -39,37 +39,42 @@ export const addCars = catchAsyncErrors(
       //   });
       // }
 
-       let rcBookResults: any[] = [];
-       let insurancePolicyResult: any,
-         pollutionCertificateResult: any,
-         carImageResult: any;
+      let rcBookResults: any[] = [];
+      let insurancePolicyResult: any[] = [];
+      let pollutionCertificateResult: any[] = [];
+      let carImageResult: any;
 
-       // Handle multiple rcBook uploads
-       if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
-         rcBookResults = await Promise.all(
-           req.body.rcBook.map(async (base64Image: string) => {
-             return await cloudinary.uploader.upload(base64Image, {
-               folder: "cars",
-             });
-           })
-         );
-       }
-
-      if (req.body.insurancePolicy) {
-        insurancePolicyResult = await cloudinary.uploader.upload(
-          req.body.insurancePolicy,
-          {
-            folder: "cars",
-          }
+      // Handle multiple rcBook uploads
+      if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
+        rcBookResults = await Promise.all(
+          req.body.rcBook.map(async (base64Image: string) => {
+            return await cloudinary.uploader.upload(base64Image, {
+              folder: "cars",
+            });
+          })
         );
       }
 
-      if (req.body.pollutionCertificate) {
-        pollutionCertificateResult = await cloudinary.uploader.upload(
-          req.body.pollutionCertificate,
-          {
-            folder: "cars",
-          }
+      if (req.body.insurancePolicy && Array.isArray(req.body.insurancePolicy)) {
+        insurancePolicyResult = await Promise.all(
+          req.body.insurancePolicy.map(async (base64Image: string) => {
+            return await cloudinary.uploader.upload(base64Image, {
+              folder: "cars",
+            });
+          })
+        );
+      }
+
+      if (
+        req.body.pollutionCertificate &&
+        Array.isArray(req.body.pollutionCertificate)
+      ) {
+        pollutionCertificateResult = await Promise.all(
+          req.body.pollutionCertificate.map(async (base64Image: string) => {
+            return await cloudinary.uploader.upload(base64Image, {
+              folder: "cars",
+            });
+          })
         );
       }
 
@@ -99,21 +104,19 @@ export const addCars = catchAsyncErrors(
               filetype: result?.format === "pdf" ? "pdf" : "image",
             }))
           : undefined,
-        insurancePolicy: insurancePolicyResult
-          ? {
-              public_id: insurancePolicyResult.public_id,
-              url: insurancePolicyResult.secure_url,
-              filetype:
-                insurancePolicyResult?.format === "pdf" ? "pdf" : "image",
-            }
+        insurancePolicy: insurancePolicyResult.length
+          ? insurancePolicyResult.map((result) => ({
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result?.format === "pdf" ? "pdf" : "image",
+            }))
           : undefined,
-        pollutionCertificate: pollutionCertificateResult
-          ? {
-              public_id: pollutionCertificateResult.public_id,
-              url: pollutionCertificateResult.secure_url,
-              filetype:
-                pollutionCertificateResult?.format === "pdf" ? "pdf" : "image",
-            }
+        pollutionCertificate: pollutionCertificateResult.length
+          ? pollutionCertificateResult.map((result) => ({
+              public_id: result.public_id,
+              url: result.secure_url,
+              filetype: result?.format === "pdf" ? "pdf" : "image",
+            }))
           : undefined,
         carImage: carImageResult
           ? {
@@ -172,10 +175,10 @@ export const editCar = catchAsyncErrors(
 
       const updatedCarData: any = { ...req.body };
 
-      // Function to handle rcBook updates
-      const processRcBookImages = async (rcBook: any[]) => {
+      // Function to handle image updates (rcBook, insurancePolicy, pollutionCertificate)
+      const processImageUpdates = async (images: any[]) => {
         return Promise.all(
-          rcBook.map(async (image: any) => {
+          images.map(async (image: any) => {
             if (typeof image === "string" && image.startsWith("data:")) {
               // If it's a Base64 string, upload it
               const result = await cloudinary.uploader.upload(image, {
@@ -201,7 +204,7 @@ export const editCar = catchAsyncErrors(
               // If it's already in object format, keep it as-is
               return image;
             } else {
-              throw new Error("Invalid rcBook data format");
+              throw new Error("Invalid image data format");
             }
           })
         );
@@ -209,7 +212,24 @@ export const editCar = catchAsyncErrors(
 
       // Process rcBook field if provided
       if (req.body.rcBook && Array.isArray(req.body.rcBook)) {
-        updatedCarData.rcBook = await processRcBookImages(req.body.rcBook);
+        updatedCarData.rcBook = await processImageUpdates(req.body.rcBook);
+      }
+
+      // Process insurancePolicy field if provided
+      if (req.body.insurancePolicy && Array.isArray(req.body.insurancePolicy)) {
+        updatedCarData.insurancePolicy = await processImageUpdates(
+          req.body.insurancePolicy
+        );
+      }
+
+      // Process pollutionCertificate field if provided
+      if (
+        req.body.pollutionCertificate &&
+        Array.isArray(req.body.pollutionCertificate)
+      ) {
+        updatedCarData.pollutionCertificate = await processImageUpdates(
+          req.body.pollutionCertificate
+        );
       }
 
       // Update car data in the database
@@ -227,7 +247,6 @@ export const editCar = catchAsyncErrors(
     }
   }
 );
-
 
 export const deleteCar = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -1379,17 +1398,17 @@ export const availableCarsOnDate = catchAsyncErrors(
           },
         },
       ]);
-     const getDateOnlyFromString = (dateString: string): string => {
-       const [datePart] = dateString.split(" "); // Split the string by space and take the first part (date)
-       return datePart; // Return the date part only
-     };
+      const getDateOnlyFromString = (dateString: string): string => {
+        const [datePart] = dateString.split(" "); // Split the string by space and take the first part (date)
+        return datePart; // Return the date part only
+      };
 
-     const parseDate = (dateString: string): Date => {
-       const datePart = getDateOnlyFromString(dateString); // Get only the date part
-       const [day, month, year] = datePart.split("-").map(Number); // Split the date part by "-" and convert to numbers
-       const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0)); // Create a new Date object in UTC set to midnight
-       return date;
-     };
+      const parseDate = (dateString: string): Date => {
+        const datePart = getDateOnlyFromString(dateString); // Get only the date part
+        const [day, month, year] = datePart.split("-").map(Number); // Split the date part by "-" and convert to numbers
+        const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0)); // Create a new Date object in UTC set to midnight
+        return date;
+      };
       const filteredRunningCars = runningCars.filter((car) => {
         const fromDateTime = parseDate(car.bookings.fromDate);
         const toDateTime = parseDate(car.bookings.toDate);
@@ -1481,4 +1500,3 @@ export const carActivites = catchAsyncErrors(
     }
   }
 );
-
