@@ -69,10 +69,34 @@ export const createBooking = catchAsyncErrors(
       if (!car) {
         return next(new ErrorHandler("Car not found", 404));
       }
+      const requestedFromDate=parseDate(bookingData.fromDate);
+      const requestedToDate=parseDate(bookingData.toDate);
+     if (car.bookings.length > 0) {
+       const isDateColliding = car.bookings.some((booking) => {
+         const bookingFromDate = parseDate(booking.fromDate);
+         const bookingToDate = parseDate(booking.toDate);
+
+         // Check if the requested date range overlaps with the existing booking
+         return (
+           (requestedFromDate <= bookingToDate &&
+             requestedFromDate >= bookingFromDate) || // Overlaps at the start
+           (requestedToDate <= bookingToDate &&
+             requestedToDate >= bookingFromDate) || // Overlaps at the end
+           (requestedFromDate <= bookingFromDate &&
+             requestedToDate >= bookingToDate) // Fully overlaps
+         );
+       });
+
+       if (isDateColliding) {
+         return next(
+           new ErrorHandler("Car is unavailable for the selected date", 400)
+         );
+       }
+     }
 
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
-        invoiceDetails: filteredInvoiceDetails,
+        invoiceDetails: filteredInvoiceDetails, 
         advanceAmount,
         total,
         carSelected: {
@@ -327,7 +351,7 @@ export const deleteMultipleBookings = catchAsyncErrors(
           );
           await employee.save();
         }
-
+ 
         const car = await CarModel.findById(booking.carSelected?._id);
         if (car) {
           car.bookings = car.bookings.filter(
@@ -371,6 +395,42 @@ export const editBooking = catchAsyncErrors(
       if (!employee) {
         return next(new ErrorHandler("Employee not found", 404));
       }
+      if (newCar?._id) {
+        const requestedFromDate = parseDate(bookingData.fromDate);
+        const requestedToDate = parseDate(bookingData.toDate);
+
+        const car = await CarModel.findById(newCar._id);
+        if (!car) {
+          return next(new ErrorHandler("Car not found", 404));
+        }
+
+        const isDateColliding = car.bookings.some((booking) => {
+          // Skip the current booking being edited
+          if (booking._id.toString() === id) {
+            return false;
+          }
+
+          const bookingFromDate = parseDate(booking.fromDate);
+          const bookingToDate = parseDate(booking.toDate);
+
+          // Check for date overlap
+          return (
+            (requestedFromDate <= bookingToDate &&
+              requestedFromDate >= bookingFromDate) || // Overlaps at the start
+            (requestedToDate <= bookingToDate &&
+              requestedToDate >= bookingFromDate) || // Overlaps at the end
+            (requestedFromDate <= bookingFromDate &&
+              requestedToDate >= bookingToDate) // Fully overlaps
+          );
+        });
+
+        if (isDateColliding) {
+          return next(
+            new ErrorHandler("Car is unavailable for the selected date", 400)
+          );
+        }
+      }
+
       const bookingDataWithoutCircularRefs = {
         ...bookingData,
         carSelected: {
