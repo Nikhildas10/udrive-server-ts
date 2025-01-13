@@ -18,6 +18,7 @@ import {
   getUpcomingBookings,
   getUpcomingBookingsCount,
   invoiceDueBefore1,
+  isCarBooked,
   notUpdatedKilometre,
 } from "../controllers/booking.controller";
 
@@ -41,6 +42,7 @@ bookingRouter.get("/not-updated-kilometre", isAuthenticated, notUpdatedKilometre
 bookingRouter.get("/not-generated-invoice", isAuthenticated, getNonInvoiceGenrerated);
 bookingRouter.put("/add-invoice/:id", isAuthenticated, addInvoice);
 bookingRouter.get("/get-invoice-due", isAuthenticated, invoiceDueBefore1);
+bookingRouter.post("/is-car-booked", isAuthenticated, isCarBooked);
 
 export default bookingRouter;
  

@@ -558,6 +558,80 @@ export const editBooking = catchAsyncErrors(
   }
 );
 
+export const isCarBooked = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { carId, fromDate, toDate, bookingId } = req.body;
+
+    // Validate parameters
+    if (!carId || !fromDate || !toDate) {
+      return next(new ErrorHandler("Invalid parameters", 400));
+    }
+
+    const requestedFromDate = parseDate(fromDate as string);
+    const requestedToDate = parseDate(toDate as string);
+
+    if (!requestedFromDate || !requestedToDate) {
+      return next(new ErrorHandler("Invalid date format", 400));
+    }
+
+    // Check if we are editing a booking
+    const isEditingBooking = bookingId !== undefined;
+
+    // If we are editing a booking, get the current booking
+    let currentBooking;
+    if (isEditingBooking) {
+      currentBooking = await BookingModel.findById(bookingId);
+      if (!currentBooking) {
+        return next(new ErrorHandler("Booking not found", 404));
+      }
+    }
+
+    // If the selected car is the current car (the one in the booking being edited), return 200
+    if (
+      isEditingBooking &&
+      currentBooking.carSelected?._id?.toString() === carId
+    ) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Car is available" });
+    }
+
+    // Fetch the selected car
+    const car = await CarModel.findById(carId);
+    if (!car) {
+      return next(new ErrorHandler("Car not found", 404));
+    }
+
+    // Check if the selected car is available for the given dates
+    const isCarAvailable = car.bookings.every((booking) => {
+      const bookingFromDate = parseDate(booking.fromDate);
+      const bookingToDate = parseDate(booking.toDate);
+
+      return (
+        requestedToDate < bookingFromDate || // New booking ends before current booking starts
+        requestedFromDate > bookingToDate // New booking starts after current booking ends
+      );
+    });
+
+    if (isCarAvailable) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Car is available" });
+    } else {
+      return next(
+        new ErrorHandler("Car is unavailable for the selected dates", 400)
+      );
+    }
+  } catch (err: any) {
+    return next(new ErrorHandler(err.message, 500));
+  }
+};
+
+
 export const getAllBooking = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
